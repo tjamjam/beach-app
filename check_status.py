@@ -1,0 +1,83 @@
+import requests
+import pdfplumber
+import io
+import os
+
+# --- CONFIGURATION ---
+# IMPORTANT: Replace this with your own secret topic from ntfy.sh
+NTFY_TOPIC = "lakewood-beach-water-quality-report" 
+# --- END CONFIGURATION ---
+
+PDF_URL = "https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx"
+TARGET_BEACH = "Leddy Beach South"
+STATUS_FILE = "current_status.txt"
+
+def get_current_status():
+    """Fetches and parses the PDF to get the latest status color."""
+    try:
+        response = requests.get(PDF_URL, timeout=20)
+        response.raise_for_status()
+
+        with pdfplumber.open(io.BytesIO(response.content)) as pdf:
+            if not pdf.pages: return "error"
+            page = pdf.pages[0]
+            table = page.extract_table()
+            if not table: return "error"
+
+            for row in table:
+                if row and row[0] and TARGET_BEACH in row[0]:
+                    status_text = row[3].strip().lower() if len(row) > 3 and row[3] else ""
+                    if "open" in status_text: return "green"
+                    if "advisory" in status_text: return "yellow"
+                    if "closed" in status_text: return "red"
+                    return "unknown"
+            return "not_found"
+    except Exception as e:
+        print(f"Error fetching or parsing PDF: {e}")
+        return "error"
+
+def send_notification(message):
+    """Sends a push notification using ntfy.sh."""
+    try:
+        requests.post(
+            f"https://ntfy.sh/{NTFY_TOPIC}",
+            data=message.encode('utf-8'),
+            headers={"Title": "Beach Status Change!"}
+        )
+        print(f"Notification sent: {message}")
+    except Exception as e:
+        print(f"Failed to send notification: {e}")
+
+def main():
+    print("--- Starting Beach Status Check ---")
+
+    # Read the last known status from our file
+    try:
+        with open(STATUS_FILE, 'r') as f:
+            old_status = f.read().strip()
+    except FileNotFoundError:
+        old_status = "unknown"
+    print(f"Last known status: {old_status.upper()}")
+
+    # Get the new status
+    new_status = get_current_status()
+    print(f"Newly fetched status: {new_status.upper()}")
+
+    # Compare and act
+    if new_status != "error" and new_status != old_status:
+        print("Status has changed! Sending notification and updating file.")
+        
+        # Capitalize for the message
+        message = f"Leddy Beach South status changed from {old_status.upper()} to {new_status.upper()}."
+        send_notification(message)
+        
+        # Update the status file with the new status
+        with open(STATUS_FILE, 'w') as f:
+            f.write(new_status)
+    else:
+        print("Status has not changed or there was an error. No action needed.")
+
+    print("--- Check Complete ---")
+
+if __name__ == "__main__":
+    main()
