@@ -81,12 +81,16 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // 1. CONFIGURATION
-            const STATUS_API_URL = 'https://beach-api.terrencefradet.workers.dev';
-            const SUBSCRIBE_API_URL = 'https://beach-api.terrencefradet.workers.dev';
-            const STATIONS = {
-                primary: { url: 'https://www.ndbc.noaa.gov/data/realtime2/BTVL1.txt', infoUrl: 'https://www.ndbc.noaa.gov/station_page.php?station=btvl1', photoUrl: 'https://www.ndbc.noaa.gov/images/stations/btvl1.jpg', name: 'NDBC Station BTVL1 (Colchester Reef)', coords: { lat: 44.522, lon: -73.337 } },
-                backup: { url: 'https://api.weather.gov/stations/KBTV/observations/latest', infoUrl: 'https://www.weather.gov/station/KBTV', photoUrl: '', name: "Burlington Int'l Airport (KBTV)", coords: { lat: 44.472, lon: -73.153 } }
-            };
+            const BASE_API_URL = 'https://beach-api.terrencefradet.workers.dev';
+            
+            // The other URLs are now built from this base URL
+            const STATUS_API_URL = BASE_API_URL + '/status';
+            const SUBSCRIBE_API_URL = BASE_API_URL + '/subscribe';
+            const MARINE_WEATHER_API_URL = BASE_API_URL + '/weather';
+            
+            // The backup URL does not need a proxy
+            const BACKUP_WEATHER_URL = 'https://api.weather.gov/stations/KBTV/observations/latest';
+
             const LAKEWOOD_BEACH = { lat: 44.500056, lon: -73.248890 };
             const PENINSULA_WEST = { lat: 44.497102, lon: -73.273952 };
             const PENINSULA_EAST = { lat: 44.488317, lon: -73.249118 };
