@@ -80,29 +80,25 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. CONFIGURATION
+            // --- SECTION 1: CONFIGURATION (ALL CONSTANTS) ---
             const BASE_API_URL = 'https://beach-api.terrencefradet.workers.dev';
-            
-            // The other URLs are now built from this base URL
             const STATUS_API_URL = BASE_API_URL + '/status';
             const SUBSCRIBE_API_URL = BASE_API_URL + '/subscribe';
             const MARINE_WEATHER_API_URL = BASE_API_URL + '/weather';
-            
-            // The backup URL does not need a proxy
             const BACKUP_WEATHER_URL = 'https://api.weather.gov/stations/KBTV/observations/latest';
-
+            const STATIONS = {
+                primary: { infoUrl: 'https://www.ndbc.noaa.gov/station_page.php?station=btvl1', photoUrl: 'https://www.ndbc.noaa.gov/images/stations/btvl1.jpg', name: 'NDBC Station BTVL1 (Colchester Reef)', coords: { lat: 44.522, lon: -73.337 } },
+                backup: { infoUrl: 'https://www.weather.gov/station/KBTV', photoUrl: '', name: "Burlington Int'l Airport (KBTV)", coords: { lat: 44.472, lon: -73.153 } }
+            };
             const LAKEWOOD_BEACH = { lat: 44.500056, lon: -73.248890 };
             const PENINSULA_WEST = { lat: 44.497102, lon: -73.273952 };
             const PENINSULA_EAST = { lat: 44.488317, lon: -73.249118 };
             
-            // We need a separate Pipedream proxy for the NDBC data
-            const NDBC_PROXY_URL = 'https://beach-api.terrencefradet.workers.dev';
-            
-            // 2. DOM ELEMENTS
+            // --- SECTION 2: DOM ELEMENTS (ALL getElementById) ---
             const dom = {};
             ['red-light', 'yellow-light', 'green-light', 'status-text', 'weather-loader', 'weather-content', 'map-container', 'weather-details', 'data-source-info', 'station-photo', 'suggestion-container', 'email-form', 'email-input', 'form-message', 'last-updated'].forEach(id => dom[id] = document.getElementById(id));
 
-            // 3. LOGIC FUNCTIONS
+            // --- SECTION 3: FUNCTION DEFINITIONS (All functions are defined here) ---
             async function fetchAndUpdateStatus() { try { const response = await fetch(STATUS_API_URL); if (!response.ok) throw new Error('Status network error'); const data = await response.json(); updateStoplight(data.status); } catch (error) { console.error("Failed to fetch status:", error); updateStoplight('error'); } }
             function updateStoplight(status) { dom['red-light'].classList.remove('red'); dom['yellow-light'].classList.remove('yellow'); dom['green-light'].classList.remove('green'); let message = '', color = '#555'; switch (status) { case 'green': dom['green-light'].classList.add('green'); message = 'Open for Swimming'; color = '#00a045'; break; case 'yellow': dom['yellow-light'].classList.add('yellow'); message = 'Advisory / Caution'; color = '#c7a900'; break; case 'red': dom['red-light'].classList.add('red'); message = 'Closed for Swimming'; color = '#c21616'; break; default: message = 'Could not determine status.'; break; } dom['status-text'].textContent = message; dom['status-text'].style.color = color; dom['last-updated'].textContent = new Date().toLocaleTimeString(); }
             
@@ -117,7 +113,7 @@
 
             async function fetchPrimaryWeather() {
                 try {
-                    const response = await fetch(NDBC_PROXY_URL);
+                    const response = await fetch(MARINE_WEATHER_API_URL);
                     if (!response.ok) throw new Error('Buoy data network error');
                     const textData = await response.text();
                     const weatherData = parseBuoyData(textData);
@@ -132,7 +128,7 @@
 
             async function fetchBackupWeather() {
                 try {
-                    const response = await fetch(STATIONS.backup.url);
+                    const response = await fetch(BACKUP_WEATHER_URL);
                     if (!response.ok) throw new Error('Backup station network error');
                     const data = await response.json();
                     const weatherData = parseAirportData(data.properties);
@@ -196,9 +192,10 @@
             function getBearing(start, end) { const r = (d) => d * Math.PI / 180; const sLat = r(start.lat), sLon = r(start.lon), eLat = r(end.lat), eLon = r(end.lon), dLon = eLon - sLon; const y = Math.sin(dLon) * Math.cos(eLat); const x = Math.cos(sLat) * Math.sin(eLat) - Math.sin(sLat) * Math.cos(eLat) * Math.cos(dLon); return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360; }
             function getWaveEstimate(windSpeed, windDirection) { if (isNaN(windSpeed) || isNaN(windDirection)) return 'N/A'; const bearingToWest = getBearing(LAKEWOOD_BEACH, PENINSULA_WEST); const bearingToEast = getBearing(LAKEWOOD_BEACH, PENINSULA_EAST); const isSheltered = windDirection >= bearingToEast && windDirection <= bearingToWest; if (isSheltered) return "Calm (Sheltered)"; if (windSpeed < 5) return "Calm (< 0.5 ft)"; if (windSpeed < 12) return "Light Chop (0.5 - 1.5 ft)"; if (windSpeed < 20) return "Moderate Waves (1.5 - 3 ft)"; return "Rough (3+ ft)"; }
             
+            // --- SECTION 4: EVENT LISTENERS ---
             dom['email-form'].addEventListener('submit', async (event) => { event.preventDefault(); const email = dom['email-input'].value; dom['form-message'].textContent = 'Subscribing...'; try { const response = await fetch(SUBSCRIBE_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email }) }); if (!response.ok) throw new Error('Subscription failed'); const data = await response.json(); dom['form-message'].textContent = data.message; dom['form-message'].style.color = 'green'; dom['email-input'].value = ''; } catch (error) { dom['form-message'].textContent = 'Subscription failed. Please try again.'; dom['form-message'].style.color = 'red'; } });
 
-            // 5. INITIALIZATION
+            // --- SECTION 5: INITIALIZATION (Run the app) ---
             fetchAndUpdateStatus();
             createMap(LAKEWOOD_BEACH, "Map of Lakewood Beach");
             fetchPrimaryWeather();
