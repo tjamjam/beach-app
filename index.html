@@ -24,13 +24,14 @@
         .map-container iframe { width: 100%; height: 200px; border: 1px solid #ccc; border-radius: 10px; }
         .weather-details p { margin: 8px 0; font-size: 1.1em; }
         .weather-details p strong { color: #0056b3; }
-        .station-info-grid { display: grid; grid-template-columns: 80px 1fr; gap: 15px; align-items: center; text-align: left; margin-top: 10px; }
-        #station-photo { width: 80px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid #ddd; }
-        #data-source-info { font-size: 0.9em; color: #666; }
+        /* --- UPDATED STYLES --- */
+        #data-source-info { font-size: 0.9em; color: #666; margin-top: 15px; text-align: center; }
         .suggestion-section { margin-top: 20px; text-align: center; }
         .suggestion-list { list-style: none; padding: 0; margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; }
         .suggestion-item { display: flex; align-items: center; background-color: #f9f9f9; padding: 8px; border-radius: 8px; }
-        .suggestion-item i { font-size: 20px; color: #007bff; margin-right: 10px; width: 25px; text-align: center; }
+        .suggestion-item i { font-size: 24px; color: #007bff; margin-right: 12px; width: 30px; text-align: center; }
+        .suggestion-item span { font-size: 1.1em; } /* Making text slightly larger to match icon */
+        /* --- END UPDATED STYLES --- */
         .subscribe-form { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; text-align: center;}
         .subscribe-form input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 200px; }
         .subscribe-form button { padding: 10px 15px; border: none; background-color: #007bff; color: white; border-radius: 5px; cursor: pointer; }
@@ -66,10 +67,8 @@
                     <div class="map-container" id="map-container"></div>
                     <div class="weather-details" id="weather-details"></div>
                 </div>
-                <div class="station-info-grid">
-                    <img id="station-photo" src="" alt="Weather station image">
-                    <p id="data-source-info"></p>
-                </div>
+                <!-- FIX 2: Station photo element is completely removed -->
+                <p id="data-source-info"></p>
                 <div class="suggestion-section">
                     <p><strong>Suggestions:</strong></p>
                     <div id="suggestion-container"></div>
@@ -80,122 +79,66 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- SECTION 1: CONFIGURATION (ALL CONSTANTS) ---
+            // 1. CONFIGURATION
             const BASE_API_URL = 'https://beach-api.terrencefradet.workers.dev';
             const STATUS_API_URL = BASE_API_URL + '/status';
             const SUBSCRIBE_API_URL = BASE_API_URL + '/subscribe';
             const MARINE_WEATHER_API_URL = BASE_API_URL + '/weather';
             const BACKUP_WEATHER_URL = 'https://api.weather.gov/stations/KBTV/observations/latest';
             const STATIONS = {
-                primary: { infoUrl: 'https://www.ndbc.noaa.gov/station_page.php?station=btvl1', photoUrl: 'https://www.ndbc.noaa.gov/images/stations/btvl1.jpg', name: 'NDBC Station BTVL1 (Colchester Reef)', coords: { lat: 44.522, lon: -73.337 } },
-                backup: { infoUrl: 'https://www.weather.gov/station/KBTV', photoUrl: '', name: "Burlington Int'l Airport (KBTV)", coords: { lat: 44.472, lon: -73.153 } }
+                // FIX 3: Updated infoUrls to the correct, working links
+                primary: { infoUrl: 'https://www.ndbc.noaa.gov/station_page.php?station=BTVL1', name: 'NDBC Station BTVL1 (Colchester Reef)', coords: { lat: 44.522, lon: -73.337 } },
+                backup: { infoUrl: 'https://www.weather.gov/wrh/timeseries?site=KBTV', name: "Burlington Int'l Airport (KBTV)", coords: { lat: 44.472, lon: -73.153 } }
             };
             const LAKEWOOD_BEACH = { lat: 44.500056, lon: -73.248890 };
             const PENINSULA_WEST = { lat: 44.497102, lon: -73.273952 };
             const PENINSULA_EAST = { lat: 44.488317, lon: -73.249118 };
             
-            // --- SECTION 2: DOM ELEMENTS (ALL getElementById) ---
+            // 2. DOM ELEMENTS
             const dom = {};
-            ['red-light', 'yellow-light', 'green-light', 'status-text', 'weather-loader', 'weather-content', 'map-container', 'weather-details', 'data-source-info', 'station-photo', 'suggestion-container', 'email-form', 'email-input', 'form-message', 'last-updated'].forEach(id => dom[id] = document.getElementById(id));
+            // FIX 2: Removed 'station-photo' from the list
+            ['red-light', 'yellow-light', 'green-light', 'status-text', 'weather-loader', 'weather-content', 'map-container', 'weather-details', 'data-source-info', 'suggestion-container', 'email-form', 'email-input', 'form-message', 'last-updated'].forEach(id => dom[id] = document.getElementById(id));
 
-            // --- SECTION 3: FUNCTION DEFINITIONS (All functions are defined here) ---
-            async function fetchAndUpdateStatus() { try { const response = await fetch(STATUS_API_URL); if (!response.ok) throw new Error('Status network error'); const data = await response.json(); updateStoplight(data.status); } catch (error) { console.error("Failed to fetch status:", error); updateStoplight('error'); } }
-            function updateStoplight(status) { dom['red-light'].classList.remove('red'); dom['yellow-light'].classList.remove('yellow'); dom['green-light'].classList.remove('green'); let message = '', color = '#555'; switch (status) { case 'green': dom['green-light'].classList.add('green'); message = 'Open for Swimming'; color = '#00a045'; break; case 'yellow': dom['yellow-light'].classList.add('yellow'); message = 'Advisory / Caution'; color = '#c7a900'; break; case 'red': dom['red-light'].classList.add('red'); message = 'Closed for Swimming'; color = '#c21616'; break; default: message = 'Could not determine status.'; break; } dom['status-text'].textContent = message; dom['status-text'].style.color = color; dom['last-updated'].textContent = new Date().toLocaleTimeString(); }
-            
-            function createMap(coords, title) {
-                dom['map-container'].innerHTML = '';
-                const { lat, lon } = coords;
-                const iframe = document.createElement('iframe');
-                iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.05},${lat-0.025},${lon+0.05},${lat+0.025}&layer=mapnik&marker=${lat},${lon}`;
-                iframe.title = title;
-                dom['map-container'].appendChild(iframe);
-            }
-
-            async function fetchPrimaryWeather() {
-                try {
-                    const response = await fetch(MARINE_WEATHER_API_URL);
-                    if (!response.ok) throw new Error('Buoy data network error');
-                    const textData = await response.text();
-                    const weatherData = parseBuoyData(textData);
-                    if (!weatherData) throw new Error('Failed to parse buoy data');
-                    updateWeatherUI(weatherData, STATIONS.primary);
-                } catch (error) {
-                    console.warn("Primary station (Buoy) failed:", error);
-                    dom['data-source-info'].textContent = 'Primary station offline. Using backup...';
-                    fetchBackupWeather();
-                }
-            }
-
-            async function fetchBackupWeather() {
-                try {
-                    const response = await fetch(BACKUP_WEATHER_URL);
-                    if (!response.ok) throw new Error('Backup station network error');
-                    const data = await response.json();
-                    const weatherData = parseAirportData(data.properties);
-                    updateWeatherUI(weatherData, STATIONS.backup);
-                    createMap(STATIONS.backup.coords, STATIONS.backup.name);
-                } catch (error) {
-                    console.error("Backup station also failed:", error);
-                    dom['weather-loader'].style.display = 'none';
-                    dom['weather-details'].innerHTML = `<p>All weather sources are currently unavailable.</p>`;
-                    dom['weather-content'].style.display = 'block';
-                }
-            }
-            
+            // 3. LOGIC FUNCTIONS
             function updateWeatherUI(data, station) {
                 const airTempF = !isNaN(data.airTemp) ? (data.airTemp * 9/5 + 32).toFixed(0) : 'N/A';
                 const waterTempF = !isNaN(data.waterTemp) ? (data.waterTemp * 9/5 + 32).toFixed(0) : 'N/A';
                 const waveEstimate = getWaveEstimate(data.windSpeed, data.numericWindDirection);
                 dom['weather-details'].innerHTML = `<p><strong>Wind:</strong> ${data.windDirection} at ${data.windSpeed} mph</p><p><strong>Air Temp:</strong> ${airTempF}°F</p>${(waterTempF !== 'N/A' ? `<p><strong>Water Temp:</strong> ${waterTempF}°F</p>` : '')}<p><strong>Waves:</strong> ${waveEstimate}</p>`;
+                
+                // FIX 3: This link will now be correct
                 const dataSourceLink = document.createElement('a');
                 dataSourceLink.href = station.infoUrl;
                 dataSourceLink.target = '_blank';
                 dataSourceLink.textContent = `Data from ${station.name}`;
                 dom['data-source-info'].innerHTML = '';
                 dom['data-source-info'].appendChild(dataSourceLink);
-                dom['station-photo'].src = station.photoUrl || 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2m-7.07 1.07 1.41 1.41M22 12h-2m-2.43-7.07-1.41 1.41M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-4a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path></svg>');
+                
                 const suggestionList = getSuggestionList(airTempF, waveEstimate, data.conditions);
                 updateSuggestionUI(suggestionList);
+                
                 dom['weather-loader'].style.display = 'none';
                 dom['weather-content'].style.display = 'block';
             }
 
-            function updateSuggestionUI(suggestionList) {
-                if (suggestionList.length === 0) {
-                    dom['suggestion-container'].innerHTML = '<p>No specific suggestions at this time.</p>';
-                    return;
-                }
-                let html = '<ul class="suggestion-list">';
-                suggestionList.forEach(item => {
-                    html += `<li class="suggestion-item"><i class="${item.icon}"></i><span>${item.name}</span></li>`;
-                });
-                html += '</ul>';
-                dom['suggestion-container'].innerHTML = html;
-            }
-
-            function getSuggestionList(temp, waveEstimate, conditions) {
-                const suggestions = [];
-                const lowerConditions = (conditions || "").toLowerCase();
-                if (temp !== 'N/A') {
-                    if (temp >= 75) { suggestions.push({ name: 'T-Shirt & Shorts', icon: 'fa-solid fa-shirt' }); } 
-                    else if (temp >= 65) { suggestions.push({ name: 'Light Jacket', icon: 'fa-solid fa-layer-group' }); }
-                    else { suggestions.push({ name: 'Warm Coat', icon: 'fa-solid fa-mitten' }); }
-                }
-                if (waveEstimate.includes('Calm') || waveEstimate.includes('Light Chop')) { suggestions.push({ name: 'Paddleboard/Kayak', icon: 'fa-solid fa-water' }); }
-                if (lowerConditions.includes('rain') || lowerConditions.includes('shower')) { suggestions.push({ name: 'Umbrella', icon: 'fa-solid fa-umbrella' }); }
-                if (lowerConditions.includes('sunny') || lowerConditions.includes('clear')) { suggestions.push({ name: 'Sunglasses', icon: 'fa-solid fa-glasses' }); }
-                return suggestions;
-            }
-
+            // All other functions are unchanged from the last working version.
+            // They are included here for completeness.
+            async function fetchAndUpdateStatus() { try { const response = await fetch(STATUS_API_URL); if (!response.ok) throw new Error('Status network error'); const data = await response.json(); updateStoplight(data.status); } catch (error) { console.error("Failed to fetch status:", error); updateStoplight('error'); } }
+            function updateStoplight(status) { dom['red-light'].classList.remove('red'); dom['yellow-light'].classList.remove('yellow'); dom['green-light'].classList.remove('green'); let message = '', color = '#555'; switch (status) { case 'green': dom['green-light'].classList.add('green'); message = 'Open for Swimming'; color = '#00a045'; break; case 'yellow': dom['yellow-light'].classList.add('yellow'); message = 'Advisory / Caution'; color = '#c7a900'; break; case 'red': dom['red-light'].classList.add('red'); message = 'Closed for Swimming'; color = '#c21616'; break; default: message = 'Could not determine status.'; break; } dom['status-text'].textContent = message; dom['status-text'].style.color = color; dom['last-updated'].textContent = new Date().toLocaleTimeString(); }
+            function createMap(coords, title) { dom['map-container'].innerHTML = ''; const { lat, lon } = coords; const iframe = document.createElement('iframe'); iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.05},${lat-0.025},${lon+0.05},${lat+0.025}&layer=mapnik&marker=${lat},${lon}`; iframe.title = title; dom['map-container'].appendChild(iframe); }
+            async function fetchPrimaryWeather() { try { const response = await fetch(MARINE_WEATHER_API_URL); if (!response.ok) throw new Error('Buoy data network error'); const textData = await response.text(); const weatherData = parseBuoyData(textData); if (!weatherData) throw new Error('Failed to parse buoy data'); updateWeatherUI(weatherData, STATIONS.primary); } catch (error) { console.warn("Primary station (Buoy) failed:", error); dom['data-source-info'].textContent = 'Primary station offline. Using backup...'; fetchBackupWeather(); } }
+            async function fetchBackupWeather() { try { const response = await fetch(BACKUP_WEATHER_URL); if (!response.ok) throw new Error('Backup station network error'); const data = await response.json(); const weatherData = parseAirportData(data.properties); updateWeatherUI(weatherData, STATIONS.backup); createMap(STATIONS.backup.coords, STATIONS.backup.name); } catch (error) { console.error("Backup station also failed:", error); dom['weather-loader'].style.display = 'none'; dom['weather-details'].innerHTML = `<p>All weather sources are currently unavailable.</p>`; dom['weather-content'].style.display = 'block'; } }
+            function updateSuggestionUI(suggestionList) { if (suggestionList.length === 0) { dom['suggestion-container'].innerHTML = '<p>No specific suggestions at this time.</p>'; return; } let html = '<ul class="suggestion-list">'; suggestionList.forEach(item => { html += `<li class="suggestion-item"><i class="${item.icon}"></i><span>${item.name}</span></li>`; }); html += '</ul>'; dom['suggestion-container'].innerHTML = html; }
+            function getSuggestionList(temp, waveEstimate, conditions) { const suggestions = []; const lowerConditions = (conditions || "").toLowerCase(); if (temp !== 'N/A') { if (temp >= 75) { suggestions.push({ name: 'T-Shirt & Shorts', icon: 'fa-solid fa-shirt' }); } else if (temp >= 65) { suggestions.push({ name: 'Light Jacket', icon: 'fa-solid fa-layer-group' }); } else { suggestions.push({ name: 'Warm Coat', icon: 'fa-solid fa-mitten' }); } } if (waveEstimate.includes('Calm') || waveEstimate.includes('Light Chop')) { suggestions.push({ name: 'Paddleboard/Kayak', icon: 'fa-solid fa-water' }); } if (lowerConditions.includes('rain') || lowerConditions.includes('shower')) { suggestions.push({ name: 'Umbrella', icon: 'fa-solid fa-umbrella' }); } if (lowerConditions.includes('sunny') || lowerConditions.includes('clear')) { suggestions.push({ name: 'Sunglasses', icon: 'fa-solid fa-glasses' }); } return suggestions; }
             function parseBuoyData(text) { const lines = text.split('\n'); if (lines.length < 2) return null; const headers = lines[0].trim().split(/\s+/); const data = lines[2].trim().split(/\s+/); const getVal = (colName) => { const index = headers.indexOf(colName); return index !== -1 && data[index] !== 'MM' ? data[index] : null; }; const windSpeedMps = parseFloat(getVal('WSPD')); if (isNaN(windSpeedMps)) return null; const windSpeedMph = (windSpeedMps * 2.237).toFixed(1); const windDirDeg = parseFloat(getVal('WDIR')); const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']; const windDirCardinal = !isNaN(windDirDeg) ? directions[Math.round(windDirDeg / 22.5) % 16] : 'N/A'; return { airTemp: getVal('ATMP'), waterTemp: getVal('WTMP'), windDirection: windDirCardinal, windSpeed: windSpeedMph, numericWindDirection: windDirDeg, conditions: "N/A" }; }
             function parseAirportData(properties) { const windSpeedMps = properties.windSpeed.value; const windSpeedMph = windSpeedMps !== null ? (windSpeedMps * 2.237).toFixed(1) : 'N/A'; const windDirDeg = properties.windDirection.value; const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']; const windDirCardinal = windDirDeg !== null ? directions[Math.round(windDirDeg / 22.5) % 16] : 'N/A'; return { airTemp: properties.temperature.value, waterTemp: 'N/A', windDirection: windDirCardinal, windSpeed: windSpeedMph, numericWindDirection: windDirDeg, conditions: properties.textDescription }; }
             function getBearing(start, end) { const r = (d) => d * Math.PI / 180; const sLat = r(start.lat), sLon = r(start.lon), eLat = r(end.lat), eLon = r(end.lon), dLon = eLon - sLon; const y = Math.sin(dLon) * Math.cos(eLat); const x = Math.cos(sLat) * Math.sin(eLat) - Math.sin(sLat) * Math.cos(eLat) * Math.cos(dLon); return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360; }
             function getWaveEstimate(windSpeed, windDirection) { if (isNaN(windSpeed) || isNaN(windDirection)) return 'N/A'; const bearingToWest = getBearing(LAKEWOOD_BEACH, PENINSULA_WEST); const bearingToEast = getBearing(LAKEWOOD_BEACH, PENINSULA_EAST); const isSheltered = windDirection >= bearingToEast && windDirection <= bearingToWest; if (isSheltered) return "Calm (Sheltered)"; if (windSpeed < 5) return "Calm (< 0.5 ft)"; if (windSpeed < 12) return "Light Chop (0.5 - 1.5 ft)"; if (windSpeed < 20) return "Moderate Waves (1.5 - 3 ft)"; return "Rough (3+ ft)"; }
             
-            // --- SECTION 4: EVENT LISTENERS ---
+            // 4. EVENT LISTENERS
             dom['email-form'].addEventListener('submit', async (event) => { event.preventDefault(); const email = dom['email-input'].value; dom['form-message'].textContent = 'Subscribing...'; try { const response = await fetch(SUBSCRIBE_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email }) }); if (!response.ok) throw new Error('Subscription failed'); const data = await response.json(); dom['form-message'].textContent = data.message; dom['form-message'].style.color = 'green'; dom['email-input'].value = ''; } catch (error) { dom['form-message'].textContent = 'Subscription failed. Please try again.'; dom['form-message'].style.color = 'red'; } });
 
-            // --- SECTION 5: INITIALIZATION (Run the app) ---
+            // 5. INITIALIZATION
             fetchAndUpdateStatus();
             createMap(LAKEWOOD_BEACH, "Map of Lakewood Beach");
             fetchPrimaryWeather();
