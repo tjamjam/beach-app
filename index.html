@@ -34,6 +34,15 @@
         .subscribe-form input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 200px; }
         .subscribe-form button { padding: 10px 15px; border: none; background-color: #007bff; color: white; border-radius: 5px; cursor: pointer; }
         #form-message { margin-top: 10px; font-size: 0.9em; }
+        
+        /* --- NEW FORECAST STYLES --- */
+        #hourly-forecast-section { margin-top: 20px; text-align: center; }
+        #hourly-forecast-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .forecast-hour { background-color: #f9f9f9; padding: 10px; border-radius: 8px; font-size: 0.9em; }
+        .forecast-time { font-weight: bold; font-size: 1.1em; }
+        .forecast-icon img { width: 50px; height: 50px; }
+        .forecast-temp { font-size: 1.4em; }
+        .forecast-detail { color: #666; }
     </style>
 </head>
 <body>
@@ -58,7 +67,7 @@
 
         <div class="divider"></div>
         <div class="weather-map-section">
-            <h2 style="text-align: center;">Lake Champlain Conditions</h2>
+            <h2 style="text-align: center;">Current Conditions</h2>
             <div id="weather-loader" class="loader"></div>
             <div id="weather-content" style="display: none;">
                 <div class="weather-map-grid">
@@ -70,18 +79,24 @@
                     <p><strong>Suggestions:</strong></p>
                     <div id="suggestion-container"></div>
                 </div>
+                <!-- NEW HOURLY FORECAST SECTION -->
+                <div id="hourly-forecast-section">
+                    <h3>Upcoming Hours</h3>
+                    <div id="hourly-forecast-grid"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- SECTION 1: CONFIGURATION (ALL CONSTANTS) ---
+            // --- SECTION 1: CONFIGURATION ---
             const BASE_API_URL = 'https://beach-api.terrencefradet.workers.dev';
             const STATUS_API_URL = BASE_API_URL + '/status';
             const SUBSCRIBE_API_URL = BASE_API_URL + '/subscribe';
             const MARINE_WEATHER_API_URL = BASE_API_URL + '/weather';
             const BACKUP_WEATHER_URL = 'https://api.weather.gov/stations/KBTV/observations/latest';
+            const HOURLY_FORECAST_URL = 'https://api.weather.gov/gridpoints/BTV/61,77/forecast/hourly';
             const STATIONS = {
                 primary: { infoUrl: 'https://www.ndbc.noaa.gov/station_page.php?station=BTVL1', name: 'NDBC Station BTVL1 (Colchester Reef)', coords: { lat: 44.522, lon: -73.337 } },
                 backup: { infoUrl: 'https://www.weather.gov/wrh/timeseries?site=KBTV', name: "Burlington Int'l Airport (KBTV)", coords: { lat: 44.472, lon: -73.153 } }
@@ -90,11 +105,12 @@
             const PENINSULA_WEST = { lat: 44.497102, lon: -73.273952 };
             const PENINSULA_EAST = { lat: 44.488317, lon: -73.249118 };
             
-            // --- SECTION 2: DOM ELEMENTS (ALL getElementById) ---
+            // --- SECTION 2: DOM ELEMENTS ---
             const dom = {};
-            ['red-light', 'yellow-light', 'green-light', 'status-text', 'weather-loader', 'weather-content', 'map-container', 'weather-details', 'data-source-info', 'suggestion-container', 'email-form', 'email-input', 'form-message', 'last-updated'].forEach(id => dom[id] = document.getElementById(id));
+            ['red-light', 'yellow-light', 'green-light', 'status-text', 'weather-loader', 'weather-content', 'map-container', 'weather-details', 'data-source-info', 'suggestion-container', 'email-form', 'email-input', 'form-message', 'last-updated', 'hourly-forecast-grid'].forEach(id => dom[id] = document.getElementById(id));
 
-            // --- SECTION 3: FUNCTION DEFINITIONS (All functions are defined here) ---
+            // --- SECTION 3: FUNCTION DEFINITIONS ---
+            
             async function fetchAndUpdateStatus() { try { const response = await fetch(STATUS_API_URL); if (!response.ok) throw new Error('Status network error'); const data = await response.json(); updateStoplight(data.status); } catch (error) { console.error("Failed to fetch status:", error); updateStoplight('error'); } }
             function updateStoplight(status) { dom['red-light'].classList.remove('red'); dom['yellow-light'].classList.remove('yellow'); dom['green-light'].classList.remove('green'); let message = '', color = '#555'; switch (status) { case 'green': dom['green-light'].classList.add('green'); message = 'Open for Swimming'; color = '#00a045'; break; case 'yellow': dom['yellow-light'].classList.add('yellow'); message = 'Advisory / Caution'; color = '#c7a900'; break; case 'red': dom['red-light'].classList.add('red'); message = 'Closed for Swimming'; color = '#c21616'; break; default: message = 'Could not determine status.'; break; } dom['status-text'].textContent = message; dom['status-text'].style.color = color; dom['last-updated'].textContent = new Date().toLocaleTimeString(); }
             
@@ -176,6 +192,43 @@
                 return suggestions;
             }
 
+            // --- NEW: HOURLY FORECAST FUNCTIONS ---
+            async function fetchAndUpdateHourlyForecast() {
+                try {
+                    const response = await fetch(HOURLY_FORECAST_URL);
+                    if (!response.ok) throw new Error('Hourly forecast network error');
+                    const data = await response.json();
+                    const nextThreeHours = data.properties.periods.slice(1, 4);
+                    updateHourlyForecastUI(nextThreeHours);
+                } catch (error) {
+                    console.error("Failed to fetch hourly forecast:", error);
+                    dom['hourly-forecast-grid'].innerHTML = `<p style="grid-column: 1 / -1;">Forecast unavailable.</p>`;
+                }
+            }
+
+            function updateHourlyForecastUI(periods) {
+                let html = '';
+                periods.forEach(period => {
+                    const time = new Date(period.startTime);
+                    const formattedTime = time.toLocaleString('en-US', { hour: 'numeric', hour12: true });
+                    const feelsLikeC = period.apparentTemperature.value;
+                    const feelsLikeF = !isNaN(feelsLikeC) ? (feelsLikeC * 9/5 + 32).toFixed(0) : period.temperature;
+                    const precipChance = period.probabilityOfPrecipitation.value || 0;
+                    
+                    html += `
+                        <div class="forecast-hour">
+                            <div class="forecast-time">${formattedTime}</div>
+                            <div class="forecast-icon"><img src="${period.icon}" alt="${period.shortForecast}"></div>
+                            <div class="forecast-temp">${period.temperature}°F</div>
+                            <div class="forecast-detail">Feels like ${feelsLikeF}°</div>
+                            <div class="forecast-detail">${period.windSpeed} ${period.windDirection}</div>
+                            <div class="forecast-detail">💧 ${precipChance}%</div>
+                        </div>
+                    `;
+                });
+                dom['hourly-forecast-grid'].innerHTML = html;
+            }
+
             function parseBuoyData(text) { const lines = text.split('\n'); if (lines.length < 2) return null; const headers = lines[0].trim().split(/\s+/); const data = lines[2].trim().split(/\s+/); const getVal = (colName) => { const index = headers.indexOf(colName); return index !== -1 && data[index] !== 'MM' ? data[index] : null; }; const windSpeedMps = parseFloat(getVal('WSPD')); if (isNaN(windSpeedMps)) return null; const windSpeedMph = (windSpeedMps * 2.237).toFixed(1); const windDirDeg = parseFloat(getVal('WDIR')); const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']; const windDirCardinal = !isNaN(windDirDeg) ? directions[Math.round(windDirDeg / 22.5) % 16] : 'N/A'; return { airTemp: getVal('ATMP'), waterTemp: getVal('WTMP'), windDirection: windDirCardinal, windSpeed: windSpeedMph, numericWindDirection: windDirDeg, conditions: "N/A" }; }
             function parseAirportData(properties) { const windSpeedMps = properties.windSpeed.value; const windSpeedMph = windSpeedMps !== null ? (windSpeedMps * 2.237).toFixed(1) : 'N/A'; const windDirDeg = properties.windDirection.value; const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']; const windDirCardinal = windDirDeg !== null ? directions[Math.round(windDirDeg / 22.5) % 16] : 'N/A'; return { airTemp: properties.temperature.value, waterTemp: 'N/A', windDirection: windDirCardinal, windSpeed: windSpeedMph, numericWindDirection: windDirDeg, conditions: properties.textDescription }; }
             function getBearing(start, end) { const r = (d) => d * Math.PI / 180; const sLat = r(start.lat), sLon = r(start.lon), eLat = r(end.lat), eLon = r(end.lon), dLon = eLon - sLon; const y = Math.sin(dLon) * Math.cos(eLat); const x = Math.cos(sLat) * Math.sin(eLat) - Math.sin(sLat) * Math.cos(eLat) * Math.cos(dLon); return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360; }
@@ -188,6 +241,7 @@
             fetchAndUpdateStatus();
             createMap(LAKEWOOD_BEACH, "Map of Lakewood Beach");
             fetchPrimaryWeather();
+            fetchAndUpdateHourlyForecast();
         });
     </script>
 </body>
