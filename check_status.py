@@ -4,7 +4,7 @@ import io
 import os
 
 # --- CONFIGURATION ---
-NTFY_TOPIC = "leddy-beach-status-terrence-2025"  # Your secret topic
+NTFY_TOPIC = "lakewood-beach-water-quality-report"  # Your secret topic
 
 # --- NEW: PIPEDREAM CONFIGURATION ---
 # The ID of your Data Store, copied from the Pipedream URL
