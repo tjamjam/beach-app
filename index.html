@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lakewood Beach Status & Weather</title>
-    <!-- We need to include a special library to read PDFs in the browser -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <style>
         body { background-color: #f0f0f0; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px 0; margin: 0; color: #333; }
-        .container { text-align: center; background-color: white; padding: 20px 40px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 90%; width: 400px; }
+        .container { text-align: center; background-color: white; padding: 20px 40px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 90%; width: 450px; }
         h1 { margin-top: 0; }
         .stoplight { background-color: #222; width: 120px; height: 340px; border-radius: 20px; display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 20px 0; margin: 20px auto; border: 5px solid #111; }
         .light { width: 90px; height: 90px; border-radius: 50%; background-color: #444; transition: all 0.3s ease; }
@@ -19,21 +17,15 @@
         .timestamp { font-size: 0.8em; color: #888; }
         .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid #3498db; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* --- NEW WEATHER STYLES --- */
         .divider { border-top: 1px solid #eee; margin: 30px 0; }
-        .weather-section { text-align: center; }
-        .weather-display { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 10px 0; }
-        #weather-icon { width: 75px; height: 75px; }
-        #weather-temp { font-size: 3em; font-weight: bold; }
-        #weather-conditions { font-size: 1.2em; color: #555; }
-        #clothing-suggestion { font-size: 1.1em; font-style: italic; color: #333; margin-top: 15px; }
-
-        /* --- SUBSCRIPTION FORM STYLES --- */
-        .subscribe-form { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
+        .weather-map-section { text-align: left; }
+        .weather-map-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center; }
+        .map-container iframe { width: 100%; height: 200px; border: 1px solid #ccc; border-radius: 10px; }
+        .weather-details p { margin: 8px 0; font-size: 1.1em; }
+        .weather-details p strong { color: #0056b3; }
+        .subscribe-form { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; text-align: center;}
         .subscribe-form input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 200px; }
         .subscribe-form button { padding: 10px 15px; border: none; background-color: #007bff; color: white; border-radius: 5px; cursor: pointer; }
-        .subscribe-form button:hover { background-color: #0056b3; }
         #form-message { margin-top: 10px; font-size: 0.9em; }
     </style>
 </head>
@@ -48,21 +40,16 @@
         <p id="status-text">Checking status...</p>
         <p class="timestamp">Last updated: <span id="last-updated"></span></p>
 
-        <!-- NEW WEATHER SECTION -->
         <div class="divider"></div>
-        <div class="weather-section">
-            <h2>Local Weather</h2>
+        <div class="weather-map-section">
+            <h2 style="text-align: center;">Lake Champlain Conditions</h2>
             <div id="weather-loader" class="loader"></div>
-            <div id="weather-content" style="display: none;">
-                <div class="weather-display">
-                    <img id="weather-icon" src="" alt="Weather icon">
-                    <span id="weather-temp"></span>
-                </div>
-                <p id="weather-conditions"></p>
-                <p id="clothing-suggestion"></p>
+            <div id="weather-map-content" class="weather-map-grid" style="display: none;">
+                <div class="map-container" id="map-container"></div>
+                <div class="weather-details" id="weather-details"></div>
             </div>
+            <p style="text-align: center; font-size: 0.8em; color: #666;">Data from NDBC Station BTVL1 (Colchester Reef)</p>
         </div>
-        <!-- END OF NEW WEATHER SECTION -->
 
         <div class="subscribe-form">
             <p>Get email alerts for status changes:</p>
@@ -75,111 +62,39 @@
     </div>
 
     <script>
-        // Set the workerSrc for the PDF.js library
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;
-
-        // --- CONFIGURATION ---
-        const STATUS_API_URL = 'PASTE_YOUR_STATUS_CHECKER_URL_HERE';
-        const SUBSCRIBE_API_URL = 'PASTE_YOUR_SUBSCRIBE_HANDLER_URL_HERE';
-        // NWS API endpoint for Burlington, VT. No key required!
-        const WEATHER_API_URL = 'https://api.weather.gov/gridpoints/BTV/61,77/forecast/hourly';
+        // --- FINAL CONFIGURATION ---
+        const STATUS_API_URL = 'https://eo6zftgq4yj13zb.m.pipedream.net';
+        const SUBSCRIBE_API_URL = 'https://eofuxbkxc94zvam.m.pipedream.net';
+        const PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
+        const MARINE_WEATHER_URL = 'https://www.ndbc.noaa.gov/data/realtime2/BTVL1.txt';
+        const BUOY_COORDS = { lat: 44.522, lon: -73.337 };
         // --- END CONFIGURATION ---
 
         document.addEventListener('DOMContentLoaded', () => {
-            // --- ALL YOUR EXISTING CODE FOR BEACH STATUS AND SUBSCRIPTIONS IS HERE ---
-            // (No changes needed to the existing functions)
-            
-            // --- NEW: Weather Functions ---
-            const weatherLoader = document.getElementById('weather-loader');
-            const weatherContent = document.getElementById('weather-content');
-            const weatherIcon = document.getElementById('weather-icon');
-            const weatherTemp = document.getElementById('weather-temp');
-            const weatherConditions = document.getElementById('weather-conditions');
-            const clothingSuggestion = document.getElementById('clothing-suggestion');
-
-            async function fetchAndUpdateWeather() {
-                try {
-                    const response = await fetch(WEATHER_API_URL);
-                    if (!response.ok) throw new Error('Weather network response was not ok');
-                    const data = await response.json();
-                    
-                    // The first period in the forecast is the current hour
-                    const currentHour = data.properties.periods[0];
-                    const temp = currentHour.temperature;
-                    const conditions = currentHour.shortForecast;
-                    const iconUrl = currentHour.icon;
-
-                    updateWeatherUI(temp, conditions, iconUrl);
-
-                } catch (error) {
-                    console.error("Failed to fetch weather:", error);
-                    weatherLoader.style.display = 'none';
-                    weatherConditions.textContent = 'Could not load weather data.';
-                    weatherContent.style.display = 'block';
-                }
-            }
-
-            function getClothingSuggestion(temp, conditions) {
-                const lowerConditions = conditions.toLowerCase();
-                let suggestion = "";
-
-                // Base temperature suggestion
-                if (temp >= 75) {
-                    suggestion = "It's warm! Shorts and a t-shirt are perfect.";
-                } else if (temp >= 65) {
-                    suggestion = "A great day for pants and a light top.";
-                } else if (temp >= 50) {
-                    suggestion = "A bit chilly. A sweater or light jacket is a good idea.";
-                } else {
-                    suggestion = "It's cold! Bundle up with a warm jacket.";
-                }
-
-                // Add precipitation suggestion
-                if (lowerConditions.includes('rain') || lowerConditions.includes('shower') || lowerConditions.includes('thunderstorm')) {
-                    suggestion += " Don't forget a raincoat or umbrella!";
-                } else if (lowerConditions.includes('snow')) {
-                    suggestion += " A winter coat and boots are a must!";
-                }
-                
-                return suggestion;
-            }
-            
-            function updateWeatherUI(temp, conditions, iconUrl) {
-                weatherIcon.src = iconUrl;
-                weatherTemp.textContent = `${temp}°F`;
-                weatherConditions.textContent = conditions;
-                clothingSuggestion.textContent = getClothingSuggestion(temp, conditions);
-
-                weatherLoader.style.display = 'none';
-                weatherContent.style.display = 'block';
-            }
-
-            // --- Call your functions ---
+            // --- Call all startup functions ---
             fetchAndUpdateStatus();
-            fetchAndUpdateWeather(); // Call the new weather function!
+            createMap();
+            fetchAndUpdateMarineWeather();
 
-            // (The existing functions for updateStoplight and emailForm are here)
-            // No changes needed to them. Here they are for completeness:
-
+            // --- STOPLIGHT LOGIC ---
             const redLight = document.getElementById('red-light');
             const yellowLight = document.getElementById('yellow-light');
             const greenLight = document.getElementById('green-light');
             const statusText = document.getElementById('status-text');
 
             async function fetchAndUpdateStatus() {
-                // This function is unchanged
                 try {
                     const response = await fetch(STATUS_API_URL);
-                    if (!response.ok) throw new Error('Network error');
+                    if (!response.ok) throw new Error('Status network error');
                     const data = await response.json();
                     updateStoplight(data.status);
                 } catch (error) {
+                    console.error("Failed to fetch status:", error);
                     updateStoplight('error');
                 }
             }
             
             function updateStoplight(status) {
-                // This function is unchanged
                 redLight.classList.remove('red');
                 yellowLight.classList.remove('yellow');
                 greenLight.classList.remove('green');
@@ -203,16 +118,80 @@
                 document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
             }
 
+            // --- MARINE WEATHER & MAP LOGIC ---
+            const weatherLoader = document.getElementById('weather-loader');
+            const weatherMapContent = document.getElementById('weather-map-content');
+            const mapContainer = document.getElementById('map-container');
+            const weatherDetails = document.getElementById('weather-details');
+
+            function createMap() {
+                const { lat, lon } = BUOY_COORDS;
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.05},${lat-0.05},${lon+0.05},${lat+0.05}&layer=mapnik&marker=${lat},${lon}`;
+                iframe.title = "Map of Colchester Reef Buoy";
+                mapContainer.appendChild(iframe);
+            }
+
+            async function fetchAndUpdateMarineWeather() {
+                try {
+                    const response = await fetch(PROXY_URL + MARINE_WEATHER_URL);
+                    if (!response.ok) throw new Error('Buoy data network error');
+                    const textData = await response.text();
+                    
+                    const weatherData = parseBuoyData(textData);
+                    updateWeatherUI(weatherData);
+                } catch (error) {
+                    console.error("Failed to fetch marine weather:", error);
+                    weatherLoader.style.display = 'none';
+                    weatherDetails.innerHTML = `<p>Could not load buoy data. CORS proxy may need activation.</p>`;
+                    weatherMapContent.style.display = 'grid';
+                }
+            }
+            
+            function parseBuoyData(text) {
+                const lines = text.split('\n');
+                if (lines.length < 2) return null;
+                const headers = lines[0].trim().split(/\s+/);
+                const data = lines[2].trim().split(/\s+/);
+                const getVal = (colName) => {
+                    const index = headers.indexOf(colName);
+                    return index !== -1 && data[index] !== 'MM' ? data[index] : 'N/A';
+                };
+                const windSpeedMps = parseFloat(getVal('WSPD'));
+                const windSpeedMph = !isNaN(windSpeedMps) ? (windSpeedMps * 2.237).toFixed(1) : 'N/A';
+                const windDirDeg = parseFloat(getVal('WDIR'));
+                const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+                const windDirCardinal = !isNaN(windDirDeg) ? directions[Math.round(windDirDeg / 22.5) % 16] : 'N/A';
+                return { airTemp: getVal('ATMP'), waterTemp: getVal('WTMP'), windDirection: windDirCardinal, windSpeed: windSpeedMph };
+            }
+
+            function updateWeatherUI(data) {
+                if (!data) {
+                    weatherDetails.innerHTML = `<p>Could not parse buoy data.</p>`;
+                } else {
+                    const airTempC = parseFloat(data.airTemp);
+                    const waterTempC = parseFloat(data.waterTemp);
+                    const airTempF = !isNaN(airTempC) ? (airTempC * 9/5 + 32).toFixed(0) : 'N/A';
+                    const waterTempF = !isNaN(waterTempC) ? (waterTempC * 9/5 + 32).toFixed(0) : 'N/A';
+                    weatherDetails.innerHTML = `
+                        <p><strong>Wind:</strong> ${data.windDirection} at ${data.windSpeed} mph</p>
+                        <p><strong>Air Temp:</strong> ${airTempF}°F</p>
+                        <p><strong>Water Temp:</strong> ${waterTempF}°F</p>
+                    `;
+                }
+                weatherLoader.style.display = 'none';
+                weatherMapContent.style.display = 'grid';
+            }
+
+            // --- EMAIL SUBSCRIPTION LOGIC ---
             const emailForm = document.getElementById('email-form');
             const emailInput = document.getElementById('email-input');
             const formMessage = document.getElementById('form-message');
 
             emailForm.addEventListener('submit', async (event) => {
-                // This function is unchanged
                 event.preventDefault();
                 const email = emailInput.value;
                 formMessage.textContent = 'Subscribing...';
-                formMessage.style.color = '#555';
                 try {
                     const response = await fetch(SUBSCRIBE_API_URL, {
                         method: 'POST',
@@ -229,7 +208,6 @@
                     formMessage.style.color = 'red';
                 }
             });
-
         });
     </script>
 </body>
