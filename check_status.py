@@ -5,46 +5,33 @@ import os
 
 # --- CONFIGURATION ---
 NTFY_TOPIC = "lakewood-beach-water-quality-report"
-DATA_STORE_ID = "ds_REu3MVg"
-PDF_TARGET_BEACH = "Leddy Beach South"
-DISPLAY_BEACH_NAME = "Lakewood Beach"
+# --- THIS IS THE ONLY URL YOU NEED TO PASTE ---
+GET_SUBSCRIBERS_URL = "https://eoswixs40jyde1u.m.pipedream.net"
 # --- END CONFIGURATION ---
 
-PIPEDREAM_API_KEY = os.environ.get("PIPEDREAM_API_KEY")
+PDF_TARGET_BEACH = "Leddy Beach South"
+DISPLAY_BEACH_NAME = "Lakewood Beach"
 PDF_URL = "https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx"
 STATUS_FILE = "current_status.txt"
 
 def get_subscribers():
-    """Fetches the list of emails from the Pipedream Data Store."""
-    if not PIPEDREAM_API_KEY:
-        print("Error: PIPEDREAM_API_KEY secret is not set.")
+    """Fetches the list of emails from our dedicated Pipedream workflow."""
+    if not GET_SUBSCRIBERS_URL or "PASTE" in GET_SUBSCRIBERS_URL:
+        print("CRITICAL ERROR: The Pipedream URL for getting subscribers is not set.")
         return []
-    print("Fetching subscriber list from Pipedream...")
+    
+    print("Fetching subscriber list from Pipedream API workflow...")
     try:
-        # --- THIS IS THE CORRECTED URL ---
-        url = f"https://api.pipedream.com/v1/data_stores/{DATA_STORE_ID}/keys/subscriber_list"
-        # --- END OF CORRECTION ---
-
-        headers = {"Authorization": f"Bearer {PIPEDREAM_API_KEY}"}
-        response = requests.get(url, headers=headers)
+        response = requests.get(GET_SUBSCRIBERS_URL)
         response.raise_for_status()
-        
         data = response.json()
-        
-        subscribers = []
-        if isinstance(data, dict):
-            subscribers = list(data.values())
-        elif isinstance(data, list):
-            subscribers = data
-        
+        # The Pipedream workflow we built returns {"subscribers": ["email1", ...]}
+        subscribers = data.get("subscribers", [])
         print(f"Found {len(subscribers)} subscribers.")
         return subscribers
-
     except Exception as e:
         print(f"Failed to fetch subscribers from Pipedream: {e}")
         return []
-
-# The rest of the file is unchanged.
 
 def get_current_status():
     try:
