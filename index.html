@@ -106,25 +106,63 @@
             const dom = {};
             ['red-light', 'yellow-light', 'green-light', 'status-text', 'weather-loader', 'weather-content', 'map-container', 'weather-details', 'data-source-info', 'station-photo', 'icon-tshirt', 'icon-jacket', 'icon-paddleboard', 'icon-umbrella', 'email-form', 'email-input', 'form-message', 'last-updated'].forEach(id => dom[id] = document.getElementById(id));
 
-            async function fetchPrimaryWeather() { /* ... unchanged ... */ } // Functions are below
-            async function fetchAndUpdateStatus() { /* ... unchanged ... */ }
+            async function fetchAndUpdateStatus() { try { const response = await fetch(STATUS_API_URL); if (!response.ok) throw new Error('Status network error'); const data = await response.json(); updateStoplight(data.status); } catch (error) { console.error("Failed to fetch status:", error); updateStoplight('error'); } }
+            function updateStoplight(status) { dom['red-light'].classList.remove('red'); dom['yellow-light'].classList.remove('yellow'); dom['green-light'].classList.remove('green'); let message = '', color = '#555'; switch (status) { case 'green': dom['green-light'].classList.add('green'); message = 'Open for Swimming'; color = '#00a045'; break; case 'yellow': dom['yellow-light'].classList.add('yellow'); message = 'Advisory / Caution'; color = '#c7a900'; break; case 'red': dom['red-light'].classList.add('red'); message = 'Closed for Swimming'; color = '#c21616'; break; default: message = 'Could not determine status.'; break; } dom['status-text'].textContent = message; dom['status-text'].style.color = color; dom['last-updated'].textContent = new Date().toLocaleTimeString(); }
+            
+            function createMap(coords, title) {
+                dom['map-container'].innerHTML = '';
+                const { lat, lon } = coords;
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.05},${lat-0.025},${lon+0.05},${lat+0.025}&layer=mapnik&marker=${lat},${lon}`;
+                iframe.title = title;
+                dom['map-container'].appendChild(iframe);
+            }
 
+            async function fetchPrimaryWeather() {
+                try {
+                    const response = await fetch(PROXY_URL + STATIONS.primary.url);
+                    if (!response.ok) throw new Error('Buoy data network error');
+                    const textData = await response.text();
+                    const weatherData = parseBuoyData(textData);
+                    if (!weatherData) throw new Error('Failed to parse buoy data');
+                    updateWeatherUI(weatherData, STATIONS.primary);
+                } catch (error) {
+                    console.warn("Primary station (Buoy) failed:", error);
+                    dom['data-source-info'].textContent = 'Primary station offline. Using backup...';
+                    fetchBackupWeather();
+                }
+            }
+
+            async function fetchBackupWeather() {
+                try {
+                    const response = await fetch(STATIONS.backup.url);
+                    if (!response.ok) throw new Error('Backup station network error');
+                    const data = await response.json();
+                    const weatherData = parseAirportData(data.properties);
+                    updateWeatherUI(weatherData, STATIONS.backup);
+                    createMap(STATIONS.backup.coords, STATIONS.backup.name);
+                } catch (error) {
+                    console.error("Backup station also failed:", error);
+                    dom['weather-loader'].style.display = 'none';
+                    dom['weather-details'].innerHTML = `<p>All weather sources are currently unavailable.</p>`;
+                    dom['weather-content'].style.display = 'block';
+                }
+            }
+            
             function updateWeatherUI(data, station) {
                 const airTempF = !isNaN(data.airTemp) ? (data.airTemp * 9/5 + 32).toFixed(0) : 'N/A';
                 const waterTempF = !isNaN(data.waterTemp) ? (data.waterTemp * 9/5 + 32).toFixed(0) : 'N/A';
                 const waveEstimate = getWaveEstimate(data.windSpeed, data.numericWindDirection);
                 dom['weather-details'].innerHTML = `<p><strong>Wind:</strong> ${data.windDirection} at ${data.windSpeed} mph</p><p><strong>Air Temp:</strong> ${airTempF}°F</p>${(waterTempF !== 'N/A' ? `<p><strong>Water Temp:</strong> ${waterTempF}°F</p>` : '')}<p><strong>Waves:</strong> ${waveEstimate}</p>`;
-                
                 const dataSourceLink = document.createElement('a');
                 dataSourceLink.href = station.infoUrl;
                 dataSourceLink.target = '_blank';
                 dataSourceLink.textContent = `Data from ${station.name}`;
                 dom['data-source-info'].innerHTML = '';
                 dom['data-source-info'].appendChild(dataSourceLink);
-
                 dom['station-photo'].src = station.photoUrl || 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(ICONS.airport);
+                dom['station-photo'].alt = station.name;
                 updateSuggestionIcons(airTempF, waveEstimate, data.conditions);
-                
                 dom['weather-loader'].style.display = 'none';
                 dom['weather-content'].style.display = 'block';
             }
@@ -132,7 +170,7 @@
             function updateSuggestionIcons(temp, waveEstimate, conditions) {
                 ['tshirt', 'jacket', 'paddleboard', 'umbrella'].forEach(icon => dom[`icon-${icon}`].style.display = 'none');
                 if (temp !== 'N/A') {
-                    if (temp >= 75) { dom['icon-tshirt'].innerHTML = ICONS.tshirt; dom['icon-tshirt'].style.display = 'inline-block'; }
+                    if (temp >= 70) { dom['icon-tshirt'].innerHTML = ICONS.tshirt; dom['icon-tshirt'].style.display = 'inline-block'; }
                     else { dom['icon-jacket'].innerHTML = ICONS.jacket; dom['icon-jacket'].style.display = 'inline-block'; }
                 }
                 if (waveEstimate.includes('Calm') || waveEstimate.includes('Light Chop')) {
@@ -145,28 +183,15 @@
                     dom['icon-umbrella'].style.display = 'inline-block';
                 }
             }
-            
-            function createMap(coords, title) {
-                dom['map-container'].innerHTML = ''; // Clear previous map
-                const { lat, lon } = coords;
-                const iframe = document.createElement('iframe');
-                iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.05},${lat-0.025},${lon+0.05},${lat+0.025}&layer=mapnik&marker=${lat},${lon}`;
-                iframe.title = title;
-                dom['map-container'].appendChild(iframe);
-            }
 
-            async function fetchPrimaryWeather() { try { const response = await fetch(PROXY_URL + STATIONS.primary.url); if (!response.ok) throw new Error('Buoy data network error'); const textData = await response.text(); const weatherData = parseBuoyData(textData); if (!weatherData) throw new Error('Failed to parse buoy data'); updateWeatherUI(weatherData, STATIONS.primary); } catch (error) { console.warn("Primary station (Buoy) failed:", error); dom['data-source-info'].textContent = 'Primary station offline. Using backup...'; fetchBackupWeather(); } }
-            async function fetchBackupWeather() { try { const response = await fetch(STATIONS.backup.url); if (!response.ok) throw new Error('Backup station network error'); const data = await response.json(); const weatherData = parseAirportData(data.properties); updateWeatherUI(weatherData, STATIONS.backup); createMap(STATIONS.backup.coords, STATIONS.backup.name); } catch (error) { console.error("Backup station also failed:", error); dom['weather-loader'].style.display = 'none'; dom['weather-details'].innerHTML = `<p>All weather sources are currently unavailable.</p>`; dom['weather-content'].style.display = 'block'; } }
             function parseBuoyData(text) { const lines = text.split('\n'); if (lines.length < 2) return null; const headers = lines[0].trim().split(/\s+/); const data = lines[2].trim().split(/\s+/); const getVal = (colName) => { const index = headers.indexOf(colName); return index !== -1 && data[index] !== 'MM' ? data[index] : null; }; const windSpeedMps = parseFloat(getVal('WSPD')); if (isNaN(windSpeedMps)) return null; const windSpeedMph = (windSpeedMps * 2.237).toFixed(1); const windDirDeg = parseFloat(getVal('WDIR')); const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']; const windDirCardinal = !isNaN(windDirDeg) ? directions[Math.round(windDirDeg / 22.5) % 16] : 'N/A'; return { airTemp: getVal('ATMP'), waterTemp: getVal('WTMP'), windDirection: windDirCardinal, windSpeed: windSpeedMph, numericWindDirection: windDirDeg, conditions: "N/A" }; }
             function parseAirportData(properties) { const windSpeedMps = properties.windSpeed.value; const windSpeedMph = windSpeedMps !== null ? (windSpeedMps * 2.237).toFixed(1) : 'N/A'; const windDirDeg = properties.windDirection.value; const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']; const windDirCardinal = windDirDeg !== null ? directions[Math.round(windDirDeg / 22.5) % 16] : 'N/A'; return { airTemp: properties.temperature.value, waterTemp: 'N/A', windDirection: windDirCardinal, windSpeed: windSpeedMph, numericWindDirection: windDirDeg, conditions: properties.textDescription }; }
-            async function fetchAndUpdateStatus() { try { const response = await fetch(STATUS_API_URL); if (!response.ok) throw new Error('Status network error'); const data = await response.json(); updateStoplight(data.status); } catch (error) { console.error("Failed to fetch status:", error); updateStoplight('error'); } }
-            function updateStoplight(status) { dom['red-light'].classList.remove('red'); dom['yellow-light'].classList.remove('yellow'); dom['green-light'].classList.remove('green'); let message = '', color = '#555'; switch (status) { case 'green': dom['green-light'].classList.add('green'); message = 'Open for Swimming'; color = '#00a045'; break; case 'yellow': dom['yellow-light'].classList.add('yellow'); message = 'Advisory / Caution'; color = '#c7a900'; break; case 'red': dom['red-light'].classList.add('red'); message = 'Closed for Swimming'; color = '#c21616'; break; default: message = 'Could not determine status.'; break; } dom['status-text'].textContent = message; dom['status-text'].style.color = color; dom['last-updated'].textContent = new Date().toLocaleTimeString(); }
             function getBearing(start, end) { const r = (d) => d * Math.PI / 180; const sLat = r(start.lat), sLon = r(start.lon), eLat = r(end.lat), eLon = r(end.lon), dLon = eLon - sLon; const y = Math.sin(dLon) * Math.cos(eLat); const x = Math.cos(sLat) * Math.sin(eLat) - Math.sin(sLat) * Math.cos(eLat) * Math.cos(dLon); return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360; }
             function getWaveEstimate(windSpeed, windDirection) { if (isNaN(windSpeed) || isNaN(windDirection)) return 'N/A'; const bearingToWest = getBearing(LAKEWOOD_BEACH, PENINSULA_WEST); const bearingToEast = getBearing(LAKEWOOD_BEACH, PENINSULA_EAST); const isSheltered = windDirection >= bearingToEast && windDirection <= bearingToWest; if (isSheltered) return "Calm (Sheltered)"; if (windSpeed < 5) return "Calm (< 0.5 ft)"; if (windSpeed < 12) return "Light Chop (0.5 - 1.5 ft)"; if (windSpeed < 20) return "Moderate Waves (1.5 - 3 ft)"; return "Rough (3+ ft)"; }
             
             dom['email-form'].addEventListener('submit', async (event) => { event.preventDefault(); const email = dom['email-input'].value; dom['form-message'].textContent = 'Subscribing...'; try { const response = await fetch(SUBSCRIBE_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email }) }); if (!response.ok) throw new Error('Subscription failed'); const data = await response.json(); dom['form-message'].textContent = data.message; dom['form-message'].style.color = 'green'; dom['email-input'].value = ''; } catch (error) { dom['form-message'].textContent = 'Subscription failed. Please try again.'; dom['form-message'].style.color = 'red'; } });
 
-            // INITIALIZATION
+            // 5. INITIALIZATION
             fetchAndUpdateStatus();
             createMap(LAKEWOOD_BEACH, "Map of Lakewood Beach");
             fetchPrimaryWeather();
