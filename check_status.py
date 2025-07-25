@@ -6,8 +6,7 @@ import os
 # --- CONFIGURATION ---
 NTFY_TOPIC = "lakewood-beach-water-quality-report"
 CLOUDFLARE_WORKER_URL = "https://beach-api.terrencefradet.workers.dev" # Your Cloudflare URL
-# The API token will be read from GitHub Secrets
-CF_API_TOKEN = os.environ.get("CF_API_TOKEN")
+CF_API_TOKEN = os.environ.get("CF_API_TOKEN") # The secret token
 # --- END CONFIGURATION ---
 
 PDF_TARGET_BEACH = "Leddy Beach South"
@@ -23,7 +22,9 @@ def get_subscribers():
 
     print("Fetching subscriber list from Cloudflare Worker...")
     try:
+        # We call the SECURE endpoint now
         url = f"{CLOUDFLARE_WORKER_URL}/get-subscribers"
+        # We provide the secret token in the headers
         headers = {"X-API-Token": CF_API_TOKEN}
         response = requests.get(url, headers=headers)
         response.raise_for_status()
@@ -37,6 +38,7 @@ def get_subscribers():
 
 # --- ALL OTHER FUNCTIONS BELOW THIS LINE ARE UNCHANGED ---
 def get_current_status():
+    # ... (code is correct and unchanged)
     try:
         response = requests.get(PDF_URL, timeout=20)
         response.raise_for_status()
@@ -57,6 +59,7 @@ def get_current_status():
         return "error"
 
 def send_notifications(message, email_list):
+    # ... (code is correct and unchanged)
     print(f"Sending notifications for message: {message}")
     requests.post(f"https://ntfy.sh/{NTFY_TOPIC}", data=message.encode('utf-8'), headers={"Title": "Beach Status Change!"})
     for email in email_list:
@@ -66,6 +69,7 @@ def send_notifications(message, email_list):
             print(f"Failed to send email to {email}: {e}")
 
 def main():
+    # ... (code is correct and unchanged)
     print("--- Starting Beach Status Check ---")
     try:
         with open(STATUS_FILE, 'r') as f:
