@@ -40,6 +40,16 @@
         </div>
         <p id="status-text">Checking status...</p>
         <p class="timestamp">Last updated: <span id="last-updated"></span></p>
+        
+        <!-- FIX 1: SUBSCRIPTION FORM MOVED HERE -->
+        <div class="subscribe-form">
+            <p>Get email alerts for status changes:</p>
+            <form id="email-form">
+                <input type="email" id="email-input" placeholder="Enter your email" required>
+                <button type="submit">Subscribe</button>
+            </form>
+            <p id="form-message"></p>
+        </div>
 
         <div class="divider"></div>
         <div class="weather-map-section">
@@ -51,15 +61,6 @@
             </div>
             <p id="data-source-info"></p>
         </div>
-
-        <div class="subscribe-form">
-            <p>Get email alerts for status changes:</p>
-            <form id="email-form">
-                <input type="email" id="email-input" placeholder="Enter your email" required>
-                <button type="submit">Subscribe</button>
-            </form>
-            <p id="form-message"></p>
-        </div>
     </div>
 
     <script>
@@ -67,8 +68,6 @@
             // 1. CONFIGURATION
             const STATUS_API_URL = 'https://eo6zftgq4yj13zb.m.pipedream.net';
             const SUBSCRIBE_API_URL = 'https://eofuxbkxc94zvam.m.pipedream.net';
-            
-            // --- NEW: Geographic and Weather Source Configuration ---
             const PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
             const PRIMARY_WEATHER_URL = 'https://www.ndbc.noaa.gov/data/realtime2/BTVL1.txt';
             const BACKUP_WEATHER_URL = 'https://api.weather.gov/stations/KBTV/observations/latest';
@@ -76,8 +75,9 @@
             const LAKEWOOD_BEACH = { lat: 44.500056, lon: -73.248890 };
             const PENINSULA_WEST = { lat: 44.497102, lon: -73.273952 };
             const PENINSULA_EAST = { lat: 44.488317, lon: -73.249118 };
-            
-            // 2. DOM ELEMENTS (all defined at the top)
+            const AIRPORT_COORDS = { lat: 44.472, lon: -73.153 }; // FIX 2: Added airport coordinates
+
+            // 2. DOM ELEMENTS
             const redLight = document.getElementById('red-light');
             const yellowLight = document.getElementById('yellow-light');
             const greenLight = document.getElementById('green-light');
@@ -93,91 +93,75 @@
 
             // 3. LOGIC FUNCTIONS
             
-            // --- NEW: Wave Estimation Logic ---
-            function toRadians(degrees) { return degrees * Math.PI / 180; }
-
-            function getBearing(start, end) {
-                const startLat = toRadians(start.lat);
-                const startLon = toRadians(start.lon);
-                const endLat = toRadians(end.lat);
-                const endLon = toRadians(end.lon);
-                const deltaLon = endLon - startLon;
-
-                const y = Math.sin(deltaLon) * Math.cos(endLat);
-                const x = Math.cos(startLat) * Math.sin(endLat) - Math.sin(startLat) * Math.cos(endLat) * Math.cos(deltaLon);
-                let bearing = Math.atan2(y, x) * 180 / Math.PI;
-                return (bearing + 360) % 360; // Normalize to 0-360
-            }
-
-            function getWaveEstimate(windSpeed, windDirection) {
-                // Wind direction is where the wind is coming FROM.
-                // We need to find the direction TO the peninsulas to define the sheltered area.
-                const bearingToWest = getBearing(LAKEWOOD_BEACH, PENINSULA_WEST); // approx 253°
-                const bearingToEast = getBearing(LAKEWOOD_BEACH, PENINSULA_EAST); // approx 181°
-
-                // The wind is ONSHORE if it's coming from the lake, roughly between West and North and East.
-                // A wind FROM 181° to 253° would be sheltered (offshore).
-                // Therefore, wind is ONSHORE if it's NOT between 181° and 253°.
-                const isSheltered = windDirection >= bearingToEast && windDirection <= bearingToWest;
-
-                if (isSheltered) {
-                    return "Calm (Sheltered)";
-                }
-
-                // If onshore, estimate waves based on wind speed
-                if (windSpeed < 5) return "Calm (< 0.5 ft)";
-                if (windSpeed < 12) return "Light Chop (0.5 - 1.5 ft)";
-                if (windSpeed < 20) return "Moderate Waves (1.5 - 3 ft)";
-                return "Rough (3+ ft)";
+            // FIX 2: createMap now accepts coordinates and a title
+            function createMap(coords, title) {
+                mapContainer.innerHTML = ''; // Clear any previous map
+                const { lat, lon } = coords;
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.05},${lat-0.025},${lon+0.05},${lat+0.025}&layer=mapnik&marker=${lat},${lon}`;
+                iframe.title = title;
+                mapContainer.appendChild(iframe);
             }
             
-            // --- Fallback Weather Logic ---
-            async function fetchPrimaryWeather() { /* ... unchanged ... */ }
-            async function fetchBackupWeather() { /* ... unchanged ... */ }
-            function parseBuoyData(text) { /* ... unchanged ... */ }
-            function parseAirportData(properties) { /* ... unchanged ... */ }
-            function updateWeatherUI(data, stationName) { /* ... This function is now updated ... */ }
+            async function fetchPrimaryWeather() {
+                try {
+                    const response = await fetch(PROXY_URL + PRIMARY_WEATHER_URL);
+                    if (!response.ok) throw new Error('Buoy data network error');
+                    const textData = await response.text();
+                    const weatherData = parseBuoyData(textData);
+                    if (!weatherData) throw new Error('Failed to parse buoy data');
+                    updateWeatherUI(weatherData, "NDBC Station BTVL1 (Colchester Reef)");
+                } catch (error) {
+                    console.warn("Primary station (Buoy) failed:", error);
+                    dataSourceInfo.textContent = 'Primary station offline. Using backup...';
+                    fetchBackupWeather();
+                }
+            }
+
+            async function fetchBackupWeather() {
+                try {
+                    const response = await fetch(BACKUP_WEATHER_URL);
+                    if (!response.ok) throw new Error('Backup station network error');
+                    const data = await response.json();
+                    const weatherData = parseAirportData(data.properties);
+                    updateWeatherUI(weatherData, "Burlington Int'l Airport (KBTV)");
+                    // FIX 2: Update the map to show the new data source location
+                    createMap(AIRPORT_COORDS, "Map of Burlington Int'l Airport");
+                } catch (error) {
+                    console.error("Backup station also failed:", error);
+                    weatherLoader.style.display = 'none';
+                    weatherDetails.innerHTML = `<p>All weather sources are currently unavailable.</p>`;
+                    weatherMapContent.style.display = 'grid';
+                }
+            }
             
             function updateWeatherUI(data, stationName) {
                 const airTempC = parseFloat(data.airTemp);
                 const waterTempC = parseFloat(data.waterTemp);
                 const airTempF = !isNaN(airTempC) ? (airTempC * 9/5 + 32).toFixed(0) : 'N/A';
                 const waterTempF = !isNaN(waterTempC) ? (waterTempC * 9/5 + 32).toFixed(0) : 'N/A';
-
-                // --- NEW: Calculate and add wave estimate ---
                 const waveEstimate = getWaveEstimate(data.windSpeed, data.numericWindDirection);
-                // --- END NEW ---
-
                 let waterTempHtml = (waterTempF !== 'N/A') ? `<p><strong>Water Temp:</strong> ${waterTempF}°F</p>` : '';
-
-                weatherDetails.innerHTML = `
-                    <p><strong>Wind:</strong> ${data.windDirection} at ${data.windSpeed} mph</p>
-                    <p><strong>Air Temp:</strong> ${airTempF}°F</p>
-                    ${waterTempHtml}
-                    <p><strong>Waves:</strong> ${waveEstimate}</p>
-                `;
+                weatherDetails.innerHTML = `<p><strong>Wind:</strong> ${data.windDirection} at ${data.windSpeed} mph</p><p><strong>Air Temp:</strong> ${airTempF}°F</p>${waterTempHtml}<p><strong>Waves:</strong> ${waveEstimate}</p>`;
                 dataSourceInfo.textContent = `Data from ${stationName}`;
                 weatherLoader.style.display = 'none';
                 weatherMapContent.style.display = 'grid';
             }
-
-            // Unchanged functions (pasted for completeness)
-            async function fetchPrimaryWeather() { try { const response = await fetch(PROXY_URL + PRIMARY_WEATHER_URL); if (!response.ok) throw new Error('Buoy data network error'); const textData = await response.text(); const weatherData = parseBuoyData(textData); if (!weatherData) throw new Error('Failed to parse buoy data'); updateWeatherUI(weatherData, "NDBC Station BTVL1 (Colchester Reef)"); } catch (error) { console.warn("Primary station (Buoy) failed:", error); dataSourceInfo.textContent = 'Primary station offline. Using backup...'; fetchBackupWeather(); } }
-            async function fetchBackupWeather() { try { const response = await fetch(BACKUP_WEATHER_URL); if (!response.ok) throw new Error('Backup station network error'); const data = await response.json(); const weatherData = parseAirportData(data.properties); updateWeatherUI(weatherData, "Burlington Int'l Airport (KBTV)"); } catch (error) { console.error("Backup station also failed:", error); weatherLoader.style.display = 'none'; weatherDetails.innerHTML = `<p>All weather sources are currently unavailable.</p>`; weatherMapContent.style.display = 'grid'; } }
+            
+            // Other unchanged functions are here for completeness
+            function getBearing(start, end) { const toRadians = (d) => d * Math.PI / 180; const startLat = toRadians(start.lat); const startLon = toRadians(start.lon); const endLat = toRadians(end.lat); const endLon = toRadians(end.lon); const deltaLon = endLon - startLon; const y = Math.sin(deltaLon) * Math.cos(endLat); const x = Math.cos(startLat) * Math.sin(endLat) - Math.sin(startLat) * Math.cos(endLat) * Math.cos(deltaLon); let bearing = Math.atan2(y, x) * 180 / Math.PI; return (bearing + 360) % 360; }
+            function getWaveEstimate(windSpeed, windDirection) { if (isNaN(windSpeed) || isNaN(windDirection)) return 'N/A'; const bearingToWest = getBearing(LAKEWOOD_BEACH, PENINSULA_WEST); const bearingToEast = getBearing(LAKEWOOD_BEACH, PENINSULA_EAST); const isSheltered = windDirection >= bearingToEast && windDirection <= bearingToWest; if (isSheltered) return "Calm (Sheltered)"; if (windSpeed < 5) return "Calm (< 0.5 ft)"; if (windSpeed < 12) return "Light Chop (0.5 - 1.5 ft)"; if (windSpeed < 20) return "Moderate Waves (1.5 - 3 ft)"; return "Rough (3+ ft)"; }
             function parseBuoyData(text) { const lines = text.split('\n'); if (lines.length < 2) return null; const headers = lines[0].trim().split(/\s+/); const data = lines[2].trim().split(/\s+/); const getVal = (colName) => { const index = headers.indexOf(colName); return index !== -1 && data[index] !== 'MM' ? data[index] : null; }; const windSpeedMps = parseFloat(getVal('WSPD')); if (isNaN(windSpeedMps)) return null; const windSpeedMph = (windSpeedMps * 2.237).toFixed(1); const windDirDeg = parseFloat(getVal('WDIR')); const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']; const windDirCardinal = !isNaN(windDirDeg) ? directions[Math.round(windDirDeg / 22.5) % 16] : 'N/A'; return { airTemp: getVal('ATMP'), waterTemp: getVal('WTMP'), windDirection: windDirCardinal, windSpeed: windSpeedMph, numericWindDirection: windDirDeg }; }
             function parseAirportData(properties) { const windSpeedMps = properties.windSpeed.value; const windSpeedMph = windSpeedMps !== null ? (windSpeedMps * 2.237).toFixed(1) : 'N/A'; const windDirDeg = properties.windDirection.value; const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']; const windDirCardinal = windDirDeg !== null ? directions[Math.round(windDirDeg / 22.5) % 16] : 'N/A'; return { airTemp: properties.temperature.value, waterTemp: 'N/A', windDirection: windDirCardinal, windSpeed: windSpeedMph, numericWindDirection: windDirDeg }; }
-            
-            // Other top-level functions
             async function fetchAndUpdateStatus() { try { const response = await fetch(STATUS_API_URL); if (!response.ok) throw new Error('Status network error'); const data = await response.json(); updateStoplight(data.status); } catch (error) { console.error("Failed to fetch status:", error); updateStoplight('error'); } }
             function updateStoplight(status) { redLight.classList.remove('red'); yellowLight.classList.remove('yellow'); greenLight.classList.remove('green'); let message = '', color = '#555'; switch (status) { case 'green': greenLight.classList.add('green'); message = 'Open for Swimming'; color = '#00a045'; break; case 'yellow': yellowLight.classList.add('yellow'); message = 'Advisory / Caution'; color = '#c7a900'; break; case 'red': redLight.classList.add('red'); message = 'Closed for Swimming'; color = '#c21616'; break; case 'not_found': message = 'Leddy Beach South not found.'; break; default: message = 'Could not determine status.'; break; } statusText.textContent = message; statusText.style.color = color; document.getElementById('last-updated').textContent = new Date().toLocaleTimeString(); }
-            function createMap() { const { lat, lon } = LAKEWOOD_BEACH; const iframe = document.createElement('iframe'); iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.01},${lat-0.01},${lon+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lon}`; iframe.title = "Map of Lakewood Beach"; mapContainer.appendChild(iframe); }
             
             // 4. EVENT LISTENERS
             emailForm.addEventListener('submit', async (event) => { event.preventDefault(); const email = emailInput.value; formMessage.textContent = 'Subscribing...'; try { const response = await fetch(SUBSCRIBE_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email }) }); if (!response.ok) throw new Error('Subscription failed'); const data = await response.json(); formMessage.textContent = data.message; formMessage.style.color = 'green'; emailInput.value = ''; } catch (error) { formMessage.textContent = 'Subscription failed. Please try again.'; formMessage.style.color = 'red'; } });
 
             // 5. INITIALIZATION
             fetchAndUpdateStatus();
-            createMap();
+            createMap(LAKEWOOD_BEACH, "Map of Lakewood Beach"); // Create the initial map pointing to the beach
             fetchPrimaryWeather();
         });
     </script>
