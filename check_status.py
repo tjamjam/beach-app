@@ -5,8 +5,9 @@ import os
 
 # --- CONFIGURATION ---
 NTFY_TOPIC = "lakewood-beach-water-quality-report"
-# --- THIS IS THE ONLY URL YOU NEED TO PASTE ---
-GET_SUBSCRIBERS_URL = "https://eoswixs40jyde1u.m.pipedream.net"
+CLOUDFLARE_WORKER_URL = "https://beach-api.terrencefradet.workers.dev" # Your Cloudflare URL
+# The API token will be read from GitHub Secrets
+CF_API_TOKEN = os.environ.get("CF_API_TOKEN")
 # --- END CONFIGURATION ---
 
 PDF_TARGET_BEACH = "Leddy Beach South"
@@ -15,24 +16,26 @@ PDF_URL = "https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx
 STATUS_FILE = "current_status.txt"
 
 def get_subscribers():
-    """Fetches the list of emails from our dedicated Pipedream workflow."""
-    if not GET_SUBSCRIBERS_URL or "PASTE" in GET_SUBSCRIBERS_URL:
-        print("CRITICAL ERROR: The Pipedream URL for getting subscribers is not set.")
+    """Fetches the list of emails from our secure Cloudflare Worker."""
+    if not CF_API_TOKEN:
+        print("Error: CF_API_TOKEN secret is not set.")
         return []
-    
-    print("Fetching subscriber list from Pipedream API workflow...")
+
+    print("Fetching subscriber list from Cloudflare Worker...")
     try:
-        response = requests.get(GET_SUBSCRIBERS_URL)
+        url = f"{CLOUDFLARE_WORKER_URL}/get-subscribers"
+        headers = {"X-API-Token": CF_API_TOKEN}
+        response = requests.get(url, headers=headers)
         response.raise_for_status()
         data = response.json()
-        # The Pipedream workflow we built returns {"subscribers": ["email1", ...]}
         subscribers = data.get("subscribers", [])
         print(f"Found {len(subscribers)} subscribers.")
         return subscribers
     except Exception as e:
-        print(f"Failed to fetch subscribers from Pipedream: {e}")
+        print(f"Failed to fetch subscribers from Cloudflare: {e}")
         return []
 
+# --- ALL OTHER FUNCTIONS BELOW THIS LINE ARE UNCHANGED ---
 def get_current_status():
     try:
         response = requests.get(PDF_URL, timeout=20)
