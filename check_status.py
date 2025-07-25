@@ -4,8 +4,8 @@ import io
 import os
 
 # --- CONFIGURATION ---
-# IMPORTANT: Replace this with your own secret topic from ntfy.sh
-NTFY_TOPIC = "lakewood-beach-water-quality-report" 
+NTFY_TOPIC = "lakewood-beach-water-quality-report"  # Your secret topic
+YOUR_EMAIL = "terrencefradet@gmail.com" # <-- IMPORTANT: REPLACE WITH YOUR ACTUAL EMAIL
 # --- END CONFIGURATION ---
 
 PDF_URL = "https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx"
@@ -37,21 +37,27 @@ def get_current_status():
         return "error"
 
 def send_notification(message):
-    """Sends a push notification using ntfy.sh."""
+    """Sends a push notification AND an email using ntfy.sh."""
     try:
+        # --- THIS IS THE MODIFIED PART ---
+        headers = {
+            "Title": "Beach Status Change!",
+            "Email": YOUR_EMAIL  # <-- This new header tells ntfy to send an email
+        }
+        # --- END OF MODIFICATION ---
+        
         requests.post(
             f"https://ntfy.sh/{NTFY_TOPIC}",
             data=message.encode('utf-8'),
-            headers={"Title": "Beach Status Change!"}
+            headers=headers # Pass the updated headers here
         )
-        print(f"Notification sent: {message}")
+        print(f"Notification sent to push/desktop and to email: {message}")
     except Exception as e:
         print(f"Failed to send notification: {e}")
 
 def main():
     print("--- Starting Beach Status Check ---")
 
-    # Read the last known status from our file
     try:
         with open(STATUS_FILE, 'r') as f:
             old_status = f.read().strip()
@@ -59,19 +65,15 @@ def main():
         old_status = "unknown"
     print(f"Last known status: {old_status.upper()}")
 
-    # Get the new status
     new_status = get_current_status()
     print(f"Newly fetched status: {new_status.upper()}")
 
-    # Compare and act
     if new_status != "error" and new_status != old_status:
         print("Status has changed! Sending notification and updating file.")
         
-        # Capitalize for the message
         message = f"Leddy Beach South status changed from {old_status.upper()} to {new_status.upper()}."
         send_notification(message)
         
-        # Update the status file with the new status
         with open(STATUS_FILE, 'w') as f:
             f.write(new_status)
     else:
