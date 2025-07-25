@@ -6,8 +6,8 @@ import os
 # --- CONFIGURATION ---
 NTFY_TOPIC = "lakewood-beach-water-quality-report"
 DATA_STORE_ID = "ds_REu3MVg"
-PDF_TARGET_BEACH = "Leddy Beach South"  # <-- The real data source from the PDF
-DISPLAY_BEACH_NAME = "Lakewood Beach"  # <-- The name you want to see in alerts
+PDF_TARGET_BEACH = "Leddy Beach South"
+DISPLAY_BEACH_NAME = "Lakewood Beach"
 # --- END CONFIGURATION ---
 
 PIPEDREAM_API_KEY = os.environ.get("PIPEDREAM_API_KEY")
@@ -15,26 +15,36 @@ PDF_URL = "https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx
 STATUS_FILE = "current_status.txt"
 
 def get_subscribers():
+    """Fetches the list of emails from the Pipedream Data Store."""
     if not PIPEDREAM_API_KEY:
         print("Error: PIPEDREAM_API_KEY secret is not set.")
         return []
     print("Fetching subscriber list from Pipedream...")
     try:
-        url = f"https://api.pipedream.com/v1/data/{DATA_STORE_ID}/subscriber_list"
+        # --- THIS IS THE CORRECTED URL ---
+        url = f"https://api.pipedream.com/v1/data_stores/{DATA_STORE_ID}/keys/subscriber_list"
+        # --- END OF CORRECTION ---
+
         headers = {"Authorization": f"Bearer {PIPEDREAM_API_KEY}"}
         response = requests.get(url, headers=headers)
         response.raise_for_status()
+        
         data = response.json()
+        
         subscribers = []
         if isinstance(data, dict):
             subscribers = list(data.values())
         elif isinstance(data, list):
             subscribers = data
+        
         print(f"Found {len(subscribers)} subscribers.")
         return subscribers
+
     except Exception as e:
         print(f"Failed to fetch subscribers from Pipedream: {e}")
         return []
+
+# The rest of the file is unchanged.
 
 def get_current_status():
     try:
@@ -45,7 +55,6 @@ def get_current_status():
             table = page.extract_table()
             if not table: return "error"
             for row in table:
-                # Still searching for the real data source
                 if row and row[0] and PDF_TARGET_BEACH in row[0]:
                     status_text = row[3].strip().lower() if len(row) > 3 and row[3] else ""
                     if "open" in status_text: return "green"
@@ -79,12 +88,7 @@ def main():
     if new_status != "error" and new_status != old_status:
         print("Status has changed! Fetching subscribers and sending notifications.")
         subscriber_emails = get_subscribers()
-        
-        # --- THIS IS THE MODIFIED PART ---
-        # The message now uses the display name
         message = f"{DISPLAY_BEACH_NAME} status changed from {old_status.upper()} to {new_status.upper()}."
-        # --- END OF MODIFICATION ---
-        
         if subscriber_emails:
             send_notifications(message, subscriber_emails)
         else:
