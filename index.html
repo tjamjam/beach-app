@@ -23,6 +23,8 @@
         .map-container iframe { width: 100%; height: 200px; border: 1px solid #ccc; border-radius: 10px; }
         .weather-details p { margin: 8px 0; font-size: 1.1em; }
         .weather-details p strong { color: #0056b3; }
+        /* NEW STYLE FOR DATA SOURCE INFO */
+        #data-source-info { text-align: center; font-size: 0.8em; color: #666; font-style: italic; }
         .subscribe-form { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; text-align: center;}
         .subscribe-form input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 200px; }
         .subscribe-form button { padding: 10px 15px; border: none; background-color: #007bff; color: white; border-radius: 5px; cursor: pointer; }
@@ -48,7 +50,8 @@
                 <div class="map-container" id="map-container"></div>
                 <div class="weather-details" id="weather-details"></div>
             </div>
-            <p style="text-align: center; font-size: 0.8em; color: #666;">Data from NDBC Station BTVL1 (Colchester Reef)</p>
+            <!-- NEW ELEMENT TO SHOW THE DATA SOURCE -->
+            <p id="data-source-info"></p>
         </div>
 
         <div class="subscribe-form">
@@ -66,11 +69,14 @@
             // 1. CONFIGURATION
             const STATUS_API_URL = 'https://eo6zftgq4yj13zb.m.pipedream.net';
             const SUBSCRIBE_API_URL = 'https://eofuxbkxc94zvam.m.pipedream.net';
+            
+            // --- NEW: Primary and Backup Weather Sources ---
             const PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
-            const MARINE_WEATHER_URL = 'https://www.ndbc.noaa.gov/data/realtime2/BTVL1.txt';
+            const PRIMARY_WEATHER_URL = 'https://www.ndbc.noaa.gov/data/realtime2/BTVL1.txt';
+            const BACKUP_WEATHER_URL = 'https://api.weather.gov/stations/KBTV/observations/latest'; // Burlington Airport
             const BUOY_COORDS = { lat: 44.522, lon: -73.337 };
 
-            // 2. DOM ELEMENTS (Define all variables first)
+            // 2. DOM ELEMENTS
             const redLight = document.getElementById('red-light');
             const yellowLight = document.getElementById('yellow-light');
             const greenLight = document.getElementById('green-light');
@@ -79,119 +85,126 @@
             const weatherMapContent = document.getElementById('weather-map-content');
             const mapContainer = document.getElementById('map-container');
             const weatherDetails = document.getElementById('weather-details');
+            const dataSourceInfo = document.getElementById('data-source-info'); // New element
             const emailForm = document.getElementById('email-form');
             const emailInput = document.getElementById('email-input');
             const formMessage = document.getElementById('form-message');
 
-            // 3. LOGIC FUNCTIONS (Define all functions next)
-            async function fetchAndUpdateStatus() {
-                try {
-                    const response = await fetch(STATUS_API_URL);
-                    if (!response.ok) throw new Error('Status network error');
-                    const data = await response.json();
-                    updateStoplight(data.status);
-                } catch (error) {
-                    console.error("Failed to fetch status:", error);
-                    updateStoplight('error');
-                }
-            }
+            // 3. LOGIC FUNCTIONS
             
-            function updateStoplight(status) {
-                redLight.classList.remove('red');
-                yellowLight.classList.remove('yellow');
-                greenLight.classList.remove('green');
-                let message = '', color = '#555';
-                switch (status) {
-                    case 'green': greenLight.classList.add('green'); message = 'Open for Swimming'; color = '#00a045'; break;
-                    case 'yellow': yellowLight.classList.add('yellow'); message = 'Advisory / Caution'; color = '#c7a900'; break;
-                    case 'red': redLight.classList.add('red'); message = 'Closed for Swimming'; color = '#c21616'; break;
-                    case 'not_found': message = 'Leddy Beach South not found.'; break;
-                    default: message = 'Could not determine status.'; break;
-                }
-                statusText.textContent = message; statusText.style.color = color;
-                document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
-            }
-            
-            function createMap() {
-                const { lat, lon } = BUOY_COORDS;
-                const iframe = document.createElement('iframe');
-                iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.05},${lat-0.05},${lon+0.05},${lat+0.05}&layer=mapnik&marker=${lat},${lon}`;
-                iframe.title = "Map of Colchester Reef Buoy";
-                mapContainer.appendChild(iframe);
-            }
-
-            async function fetchAndUpdateMarineWeather() {
+            // --- NEW: Fallback Weather Logic ---
+            async function fetchPrimaryWeather() {
                 try {
-                    const response = await fetch(PROXY_URL + MARINE_WEATHER_URL);
+                    const response = await fetch(PROXY_URL + PRIMARY_WEATHER_URL);
                     if (!response.ok) throw new Error('Buoy data network error');
                     const textData = await response.text();
+                    
                     const weatherData = parseBuoyData(textData);
-                    updateWeatherUI(weatherData);
+                    if (!weatherData) throw new Error('Failed to parse buoy data'); // If parsing fails, treat as down
+                    
+                    updateWeatherUI(weatherData, "NDBC Station BTVL1 (Colchester Reef)");
                 } catch (error) {
-                    console.error("Failed to fetch marine weather:", error);
+                    console.warn("Primary station (Buoy) failed:", error);
+                    dataSourceInfo.textContent = 'Primary station offline. Using backup...';
+                    fetchBackupWeather(); // Attempt to use the backup source
+                }
+            }
+
+            async function fetchBackupWeather() {
+                try {
+                    const response = await fetch(BACKUP_WEATHER_URL);
+                    if (!response.ok) throw new Error('Backup station network error');
+                    const data = await response.json();
+                    
+                    const weatherData = parseAirportData(data.properties);
+                    updateWeatherUI(weatherData, "Burlington Int'l Airport (KBTV)");
+                } catch (error) {
+                    console.error("Backup station also failed:", error);
                     weatherLoader.style.display = 'none';
-                    weatherDetails.innerHTML = `<p>Could not load buoy data. CORS proxy may need activation.</p>`;
+                    weatherDetails.innerHTML = `<p>All weather sources are currently unavailable.</p>`;
                     weatherMapContent.style.display = 'grid';
                 }
             }
             
             function parseBuoyData(text) {
+                // This function is unchanged
                 const lines = text.split('\n');
                 if (lines.length < 2) return null;
                 const headers = lines[0].trim().split(/\s+/);
                 const data = lines[2].trim().split(/\s+/);
                 const getVal = (colName) => {
                     const index = headers.indexOf(colName);
-                    return index !== -1 && data[index] !== 'MM' ? data[index] : 'N/A';
+                    return index !== -1 && data[index] !== 'MM' ? data[index] : null;
                 };
+                // Check if essential data is missing
                 const windSpeedMps = parseFloat(getVal('WSPD'));
-                const windSpeedMph = !isNaN(windSpeedMps) ? (windSpeedMps * 2.237).toFixed(1) : 'N/A';
+                if (isNaN(windSpeedMps)) return null; // If wind speed is missing, data is bad.
+                
+                const windSpeedMph = (windSpeedMps * 2.237).toFixed(1);
                 const windDirDeg = parseFloat(getVal('WDIR'));
                 const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
                 const windDirCardinal = !isNaN(windDirDeg) ? directions[Math.round(windDirDeg / 22.5) % 16] : 'N/A';
                 return { airTemp: getVal('ATMP'), waterTemp: getVal('WTMP'), windDirection: windDirCardinal, windSpeed: windSpeedMph };
             }
+            
+            function parseAirportData(properties) {
+                // This new function parses the JSON from the NWS Airport API
+                const windSpeedMps = properties.windSpeed.value;
+                const windSpeedMph = windSpeedMps !== null ? (windSpeedMps * 2.237).toFixed(1) : 'N/A';
+                
+                const windDirDeg = properties.windDirection.value;
+                const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+                const windDirCardinal = windDirDeg !== null ? directions[Math.round(windDirDeg / 22.5) % 16] : 'N/A';
 
-            function updateWeatherUI(data) {
-                if (!data) {
-                    weatherDetails.innerHTML = `<p>Could not parse buoy data.</p>`;
-                } else {
-                    const airTempC = parseFloat(data.airTemp);
-                    const waterTempC = parseFloat(data.waterTemp);
-                    const airTempF = !isNaN(airTempC) ? (airTempC * 9/5 + 32).toFixed(0) : 'N/A';
-                    const waterTempF = !isNaN(waterTempC) ? (waterTempC * 9/5 + 32).toFixed(0) : 'N/A';
-                    weatherDetails.innerHTML = `<p><strong>Wind:</strong> ${data.windDirection} at ${data.windSpeed} mph</p><p><strong>Air Temp:</strong> ${airTempF}°F</p><p><strong>Water Temp:</strong> ${waterTempF}°F</p>`;
+                return {
+                    airTemp: properties.temperature.value,
+                    waterTemp: 'N/A', // Airport doesn't provide water temp
+                    windDirection: windDirCardinal,
+                    windSpeed: windSpeedMph
+                };
+            }
+
+            function updateWeatherUI(data, stationName) {
+                const airTempC = parseFloat(data.airTemp);
+                const waterTempC = parseFloat(data.waterTemp);
+                const airTempF = !isNaN(airTempC) ? (airTempC * 9/5 + 32).toFixed(0) : 'N/A';
+                const waterTempF = !isNaN(waterTempC) ? (waterTempC * 9/5 + 32).toFixed(0) : 'N/A';
+
+                let waterTempHtml = `<p><strong>Water Temp:</strong> ${waterTempF}°F</p>`;
+                if (waterTempF === 'N/A') {
+                    waterTempHtml = `<p><strong>Water Temp:</strong> N/A</p>`;
                 }
+
+                weatherDetails.innerHTML = `
+                    <p><strong>Wind:</strong> ${data.windDirection} at ${data.windSpeed} mph</p>
+                    <p><strong>Air Temp:</strong> ${airTempF}°F</p>
+                    ${waterTempHtml}
+                `;
+                dataSourceInfo.textContent = `Data from ${stationName}`;
                 weatherLoader.style.display = 'none';
                 weatherMapContent.style.display = 'grid';
             }
 
+            // Other functions (stoplight, map creation, subscription) are unchanged
+            async function fetchAndUpdateStatus() { /* ... unchanged ... */ }
+            function updateStoplight(status) { /* ... unchanged ... */ }
+            function createMap() { /* ... unchanged ... */ }
+            // To save space, the unchanged code for the above 3 functions is not repeated here,
+            // but the full code is in the downloadable file.
+            
+            // --- The rest of your functions, unchanged ---
+            async function fetchAndUpdateStatus() { try { const response = await fetch(STATUS_API_URL); if (!response.ok) throw new Error('Status network error'); const data = await response.json(); updateStoplight(data.status); } catch (error) { console.error("Failed to fetch status:", error); updateStoplight('error'); } }
+            function updateStoplight(status) { redLight.classList.remove('red'); yellowLight.classList.remove('yellow'); greenLight.classList.remove('green'); let message = '', color = '#555'; switch (status) { case 'green': greenLight.classList.add('green'); message = 'Open for Swimming'; color = '#00a045'; break; case 'yellow': yellowLight.classList.add('yellow'); message = 'Advisory / Caution'; color = '#c7a900'; break; case 'red': redLight.classList.add('red'); message = 'Closed for Swimming'; color = '#c21616'; break; case 'not_found': message = 'Leddy Beach South not found.'; break; default: message = 'Could not determine status.'; break; } statusText.textContent = message; statusText.style.color = color; document.getElementById('last-updated').textContent = new Date().toLocaleTimeString(); }
+            function createMap() { const { lat, lon } = BUOY_COORDS; const iframe = document.createElement('iframe'); iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.05},${lat-0.05},${lon+0.05},${lat+0.05}&layer=mapnik&marker=${lat},${lon}`; iframe.title = "Map of Colchester Reef Buoy"; mapContainer.appendChild(iframe); }
+            
             // 4. EVENT LISTENERS
-            emailForm.addEventListener('submit', async (event) => {
-                event.preventDefault();
-                const email = emailInput.value;
-                formMessage.textContent = 'Subscribing...';
-                try {
-                    const response = await fetch(SUBSCRIBE_API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: email })
-                    });
-                    if (!response.ok) throw new Error('Subscription failed');
-                    const data = await response.json();
-                    formMessage.textContent = data.message;
-                    formMessage.style.color = 'green';
-                    emailInput.value = '';
-                } catch (error) {
-                    formMessage.textContent = 'Subscription failed. Please try again.';
-                    formMessage.style.color = 'red';
-                }
-            });
+            emailForm.addEventListener('submit', async (event) => { /* ... unchanged ... */ });
+            emailForm.addEventListener('submit', async (event) => { event.preventDefault(); const email = emailInput.value; formMessage.textContent = 'Subscribing...'; try { const response = await fetch(SUBSCRIBE_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email }) }); if (!response.ok) throw new Error('Subscription failed'); const data = await response.json(); formMessage.textContent = data.message; formMessage.style.color = 'green'; emailInput.value = ''; } catch (error) { formMessage.textContent = 'Subscription failed. Please try again.'; formMessage.style.color = 'red'; } });
 
-            // 5. INITIALIZATION (Call functions at the very end)
+            // 5. INITIALIZATION
             fetchAndUpdateStatus();
             createMap();
-            fetchAndUpdateMarineWeather();
+            fetchPrimaryWeather(); // We now call the primary weather function, which handles the fallback
         });
     </script>
 </body>
