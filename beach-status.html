@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lakewood Beach Status</title>
-    <!-- We need to include a special library to read PDFs in the browser -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <title>Leddy Beach Status</title>
     <style>
         body { background-color: #f0f0f0; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: #333; }
-        .container { text-align: center; background-color: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 90%; }
+        .container { text-align: center; background-color: white; padding: 20px 40px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 90%; }
         h1 { margin-top: 0; }
         .stoplight { background-color: #222; width: 120px; height: 340px; border-radius: 20px; display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 20px 0; margin: 20px auto; border: 5px solid #111; }
         .light { width: 90px; height: 90px; border-radius: 50%; background-color: #444; transition: all 0.3s ease; }
@@ -17,128 +15,111 @@
         .light.green { background-color: #00ff6a; box-shadow: 0 0 25px #00ff6a; }
         #status-text { font-size: 1.5em; font-weight: bold; margin-top: 20px; min-height: 1.5em; }
         .timestamp { font-size: 0.8em; color: #888; }
-        .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid #3498db; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* New Form Styles */
+        .subscribe-form { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
+        .subscribe-form input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 200px; }
+        .subscribe-form button { padding: 10px 15px; border: none; background-color: #007bff; color: white; border-radius: 5px; cursor: pointer; }
+        .subscribe-form button:hover { background-color: #0056b3; }
+        #form-message { margin-top: 10px; font-size: 0.9em; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Lakewood Beach Status</h1>
+        <h1>Leddy Beach South Status</h1>
         <div class="stoplight">
             <div id="red-light" class="light"></div>
             <div id="yellow-light" class="light"></div>
             <div id="green-light" class="light"></div>
         </div>
-        <div id="loader" class="loader"></div>
-        <p id="status-text"></p>
+        <p id="status-text">Checking status...</p>
         <p class="timestamp">Last updated: <span id="last-updated"></span></p>
+
+        <!-- New Subscription Form -->
+        <div class="subscribe-form">
+            <p>Get email alerts for status changes:</p>
+            <form id="email-form">
+                <input type="email" id="email-input" placeholder="Enter your email" required>
+                <button type="submit">Subscribe</button>
+            </form>
+            <p id="form-message"></p>
+        </div>
     </div>
 
     <script>
-        // Set the workerSrc for the PDF.js library
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;
+        // --- CONFIGURATION ---
+        const STATUS_API_URL = 'PASTE_YOUR_STATUS_CHECKER_URL_HERE';
+        const SUBSCRIBE_API_URL = 'PASTE_YOUR_SUBSCRIBE_HANDLER_URL_HERE';
+        // --- END CONFIGURATION ---
 
         document.addEventListener('DOMContentLoaded', () => {
-            const BEACH_REPORT_URL = 'https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx';
-            // We use a public CORS proxy to get around browser security rules.
-            const PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
-            const TARGET_BEACH = "Leddy Beach South";
-
-            const redLight = document.getElementById('red-light');
-            const yellowLight = document.getElementById('yellow-light');
-            const greenLight = document.getElementById('green-light');
             const statusText = document.getElementById('status-text');
-            const loader = document.getElementById('loader');
 
-            async function fetchAndParsePdf() {
+            // Fetch the status when the page loads
+            async function fetchAndUpdateStatus() {
                 try {
-                    statusText.textContent = 'Fetching report...';
-                    const response = await fetch(PROXY_URL + BEACH_REPORT_URL);
-                    if (!response.ok) throw new Error('Network response was not ok');
-
-                    const pdfData = await response.arrayBuffer();
-                    const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
-                    const page = await pdf.getPage(1);
-                    const textContent = await page.getTextContent();
-                    
-                    statusText.textContent = 'Parsing status...';
-                    const status = findStatusInPdfText(textContent.items);
-                    updateStoplight(status);
-
+                    const response = await fetch(STATUS_API_URL);
+                    if (!response.ok) throw new Error('Network error');
+                    const data = await response.json();
+                    updateStoplight(data.status);
                 } catch (error) {
-                    console.error("Failed to fetch or parse PDF:", error);
-                    // This is a common issue with the public proxy. Add a user-friendly message.
-                    if (error.message.includes('403')) {
-                         statusText.innerHTML = 'Error: Proxy access needed. Please <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">click here to activate the temporary proxy</a>, then refresh this page.';
-                         loader.style.display = 'none';
-                    } else {
-                        updateStoplight('error');
-                    }
+                    updateStoplight('error');
                 }
-            }
-            
-            function findStatusInPdfText(pdfItems) {
-                // Find the item for "Leddy Beach South"
-                const beachItem = pdfItems.find(item => item.str.includes(TARGET_BEACH));
-                if (!beachItem) return 'not_found';
-
-                // Get the vertical position (y-coordinate) of our target beach
-                const beachY = beachItem.transform[5];
-
-                // Now, look for the 'Status' text items that are on the same line (similar y-coordinate)
-                const possibleStatuses = ['Open', 'Advisory', 'Closed'];
-                for (const item of pdfItems) {
-                    const itemY = item.transform[5];
-                    const isSameLine = Math.abs(itemY - beachY) < 5; // Allow for small vertical deviation
-
-                    if (isSameLine && possibleStatuses.some(s => item.str.includes(s))) {
-                        const statusStr = item.str.toLowerCase();
-                        if (statusStr.includes("open")) return "green";
-                        if (statusStr.includes("advisory")) return "yellow";
-                        if (statusStr.includes("closed")) return "red";
-                    }
-                }
-                return 'unknown';
             }
 
             function updateStoplight(status) {
-                loader.style.display = 'none';
-                redLight.classList.remove('red');
-                yellowLight.classList.remove('yellow');
-                greenLight.classList.remove('green');
-
-                let message = '';
-                let color = '#555';
-
+                // (This function is the same as before, no changes needed)
+                document.getElementById('red-light').classList.remove('red');
+                document.getElementById('yellow-light').classList.remove('yellow');
+                document.getElementById('green-light').classList.remove('green');
+                let message = '', color = '#555';
                 switch (status) {
                     case 'green':
-                        greenLight.classList.add('green');
-                        message = 'Open for Swimming';
-                        color = '#00a045';
-                        break;
+                        document.getElementById('green-light').classList.add('green');
+                        message = 'Open for Swimming'; color = '#00a045'; break;
                     case 'yellow':
-                        yellowLight.classList.add('yellow');
-                        message = 'Advisory / Caution';
-                        color = '#c7a900';
-                        break;
+                        document.getElementById('yellow-light').classList.add('yellow');
+                        message = 'Advisory / Caution'; color = '#c7a900'; break;
                     case 'red':
-                        redLight.classList.add('red');
-                        message = 'Closed for Swimming';
-                        color = '#c21616';
-                        break;
+                        document.getElementById('red-light').classList.add('red');
+                        message = 'Closed for Swimming'; color = '#c21616'; break;
                     case 'not_found':
-                        message = 'Leddy Beach South not found in report.';
-                        break;
+                        message = 'Leddy Beach South not found.'; break;
                     default:
-                        message = 'Could not determine status.';
-                        break;
+                        message = 'Could not determine status.'; break;
                 }
-                statusText.textContent = message;
-                statusText.style.color = color;
+                statusText.textContent = message; statusText.style.color = color;
                 document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
             }
 
-            fetchAndParsePdf();
+            // --- NEW: Handle the email form submission ---
+            const emailForm = document.getElementById('email-form');
+            const emailInput = document.getElementById('email-input');
+            const formMessage = document.getElementById('form-message');
+
+            emailForm.addEventListener('submit', async (event) => {
+                event.preventDefault(); // Stop the form from reloading the page
+                const email = emailInput.value;
+                formMessage.textContent = 'Subscribing...';
+                formMessage.style.color = '#555';
+
+                try {
+                    const response = await fetch(SUBSCRIBE_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: email })
+                    });
+                    if (!response.ok) throw new Error('Subscription failed');
+                    const data = await response.json();
+                    formMessage.textContent = data.message;
+                    formMessage.style.color = 'green';
+                    emailInput.value = ''; // Clear the input field on success
+                } catch (error) {
+                    formMessage.textContent = 'Subscription failed. Please try again.';
+                    formMessage.style.color = 'red';
+                }
+            });
+
+            fetchAndUpdateStatus();
         });
     </script>
 </body>
