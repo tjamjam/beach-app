@@ -62,26 +62,28 @@
     </div>
 
     <script>
-        // --- FINAL CONFIGURATION ---
-        const STATUS_API_URL = 'https://eo6zftgq4yj13zb.m.pipedream.net';
-        const SUBSCRIBE_API_URL = 'https://eofuxbkxc94zvam.m.pipedream.net';
-        const PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
-        const MARINE_WEATHER_URL = 'https://www.ndbc.noaa.gov/data/realtime2/BTVL1.txt';
-        const BUOY_COORDS = { lat: 44.522, lon: -73.337 };
-        // --- END CONFIGURATION ---
-
         document.addEventListener('DOMContentLoaded', () => {
-            // --- Call all startup functions ---
-            fetchAndUpdateStatus();
-            createMap();
-            fetchAndUpdateMarineWeather();
+            // 1. CONFIGURATION
+            const STATUS_API_URL = 'https://eo6zftgq4yj13zb.m.pipedream.net';
+            const SUBSCRIBE_API_URL = 'https://eofuxbkxc94zvam.m.pipedream.net';
+            const PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
+            const MARINE_WEATHER_URL = 'https://www.ndbc.noaa.gov/data/realtime2/BTVL1.txt';
+            const BUOY_COORDS = { lat: 44.522, lon: -73.337 };
 
-            // --- STOPLIGHT LOGIC ---
+            // 2. DOM ELEMENTS (Define all variables first)
             const redLight = document.getElementById('red-light');
             const yellowLight = document.getElementById('yellow-light');
             const greenLight = document.getElementById('green-light');
             const statusText = document.getElementById('status-text');
+            const weatherLoader = document.getElementById('weather-loader');
+            const weatherMapContent = document.getElementById('weather-map-content');
+            const mapContainer = document.getElementById('map-container');
+            const weatherDetails = document.getElementById('weather-details');
+            const emailForm = document.getElementById('email-form');
+            const emailInput = document.getElementById('email-input');
+            const formMessage = document.getElementById('form-message');
 
+            // 3. LOGIC FUNCTIONS (Define all functions next)
             async function fetchAndUpdateStatus() {
                 try {
                     const response = await fetch(STATUS_API_URL);
@@ -100,30 +102,16 @@
                 greenLight.classList.remove('green');
                 let message = '', color = '#555';
                 switch (status) {
-                    case 'green':
-                        greenLight.classList.add('green');
-                        message = 'Open for Swimming'; color = '#00a045'; break;
-                    case 'yellow':
-                        yellowLight.classList.add('yellow');
-                        message = 'Advisory / Caution'; color = '#c7a900'; break;
-                    case 'red':
-                        redLight.classList.add('red');
-                        message = 'Closed for Swimming'; color = '#c21616'; break;
-                    case 'not_found':
-                        message = 'Leddy Beach South not found.'; break;
-                    default:
-                        message = 'Could not determine status.'; break;
+                    case 'green': greenLight.classList.add('green'); message = 'Open for Swimming'; color = '#00a045'; break;
+                    case 'yellow': yellowLight.classList.add('yellow'); message = 'Advisory / Caution'; color = '#c7a900'; break;
+                    case 'red': redLight.classList.add('red'); message = 'Closed for Swimming'; color = '#c21616'; break;
+                    case 'not_found': message = 'Leddy Beach South not found.'; break;
+                    default: message = 'Could not determine status.'; break;
                 }
                 statusText.textContent = message; statusText.style.color = color;
                 document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
             }
-
-            // --- MARINE WEATHER & MAP LOGIC ---
-            const weatherLoader = document.getElementById('weather-loader');
-            const weatherMapContent = document.getElementById('weather-map-content');
-            const mapContainer = document.getElementById('map-container');
-            const weatherDetails = document.getElementById('weather-details');
-
+            
             function createMap() {
                 const { lat, lon } = BUOY_COORDS;
                 const iframe = document.createElement('iframe');
@@ -137,7 +125,6 @@
                     const response = await fetch(PROXY_URL + MARINE_WEATHER_URL);
                     if (!response.ok) throw new Error('Buoy data network error');
                     const textData = await response.text();
-                    
                     const weatherData = parseBuoyData(textData);
                     updateWeatherUI(weatherData);
                 } catch (error) {
@@ -173,21 +160,13 @@
                     const waterTempC = parseFloat(data.waterTemp);
                     const airTempF = !isNaN(airTempC) ? (airTempC * 9/5 + 32).toFixed(0) : 'N/A';
                     const waterTempF = !isNaN(waterTempC) ? (waterTempC * 9/5 + 32).toFixed(0) : 'N/A';
-                    weatherDetails.innerHTML = `
-                        <p><strong>Wind:</strong> ${data.windDirection} at ${data.windSpeed} mph</p>
-                        <p><strong>Air Temp:</strong> ${airTempF}°F</p>
-                        <p><strong>Water Temp:</strong> ${waterTempF}°F</p>
-                    `;
+                    weatherDetails.innerHTML = `<p><strong>Wind:</strong> ${data.windDirection} at ${data.windSpeed} mph</p><p><strong>Air Temp:</strong> ${airTempF}°F</p><p><strong>Water Temp:</strong> ${waterTempF}°F</p>`;
                 }
                 weatherLoader.style.display = 'none';
                 weatherMapContent.style.display = 'grid';
             }
 
-            // --- EMAIL SUBSCRIPTION LOGIC ---
-            const emailForm = document.getElementById('email-form');
-            const emailInput = document.getElementById('email-input');
-            const formMessage = document.getElementById('form-message');
-
+            // 4. EVENT LISTENERS
             emailForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 const email = emailInput.value;
@@ -208,6 +187,11 @@
                     formMessage.style.color = 'red';
                 }
             });
+
+            // 5. INITIALIZATION (Call functions at the very end)
+            fetchAndUpdateStatus();
+            createMap();
+            fetchAndUpdateMarineWeather();
         });
     </script>
 </body>
