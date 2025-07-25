@@ -4,7 +4,7 @@ import io
 import os
 import json
 
-# --- CONFIGURATION ---
+# All configuration is unchanged
 NTFY_TOPIC = "lakewood-beach-water-quality-report"
 CLOUDFLARE_WORKER_URL = "https://beach-api.terrencefradet.workers.dev"
 CF_API_TOKEN = os.environ.get("CF_API_TOKEN")
@@ -12,8 +12,9 @@ PDF_TARGET_BEACH = "Leddy Beach South"
 DISPLAY_BEACH_NAME = "Lakewood Beach"
 PDF_URL = "https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx"
 STATUS_FILE = "current_status.txt"
-JSON_OUTPUT_FILE = "status.json" # New file to store all data for the website
+JSON_OUTPUT_FILE = "status.json"
 
+# This function is unchanged
 def get_subscribers():
     if not CF_API_TOKEN:
         print("Error: CF_API_TOKEN secret is not set.")
@@ -32,8 +33,8 @@ def get_subscribers():
         print(f"Failed to fetch subscribers from Cloudflare: {e}")
         return []
 
+# This function is now more robust
 def get_current_status_and_details():
-    """Fetches and parses the PDF to get status, date, and notes."""
     try:
         response = requests.get(PDF_URL, timeout=20)
         response.raise_for_status()
@@ -42,26 +43,36 @@ def get_current_status_and_details():
             table = page.extract_table()
             if not table: return {"status": "error", "date": "N/A", "note": "Could not parse PDF table."}
             
-            for row in table:
+            # Find the header row to get correct column indices
+            header = table[0]
+            try:
+                date_col = header.index('Sample Date')
+                status_col = header.index('Status')
+                note_col = header.index('Note')
+            except ValueError:
+                # Fallback if headers are not as expected
+                date_col, status_col, note_col = 1, 3, 4
+
+            for row in table[1:]: # Start from the first data row
                 if row and row[0] and PDF_TARGET_BEACH in row[0]:
-                    status_text = row[3].strip().lower() if len(row) > 3 and row[3] else "unknown"
+                    status_text = row[status_col].strip().lower() if len(row) > status_col and row[status_col] else "unknown"
                     color = "unknown"
                     if "open" in status_text: color = "green"
                     elif "advisory" in status_text: color = "yellow"
                     elif "closed" in status_text: color = "red"
                     
-                    date_updated = row[1].strip() if len(row) > 1 and row[1] else "N/A"
-                    note = row[4].strip() if len(row) > 4 and row[4] else ""
+                    date_updated = row[date_col].strip() if len(row) > date_col and row[date_col] else "N/A"
+                    note = row[note_col].strip() if len(row) > note_col and row[note_col] else ""
                     
                     return {"status": color, "date": date_updated, "note": note}
             
-            # If the loop finishes without finding the beach
             return {"status": "not_found", "date": "N/A", "note": f"{PDF_TARGET_BEACH} not found in report."}
             
     except Exception as e:
         print(f"Error fetching or parsing PDF: {e}")
         return {"status": "error", "date": "N/A", "note": "Failed to fetch or process the PDF."}
 
+# The rest of the script is unchanged
 def send_notifications(message, email_list):
     print(f"Sending notifications for message: {message}")
     requests.post(f"https://ntfy.sh/{NTFY_TOPIC}", data=message.encode('utf-8'), headers={"Title": "Beach Status Change!"})
@@ -80,12 +91,10 @@ def main():
         old_status = "unknown"
     print(f"Last known status: {old_status.upper()}")
 
-    # Get all the new details
     new_data = get_current_status_and_details()
     new_status = new_data["status"]
     print(f"Newly fetched status: {new_status.upper()}")
 
-    # Save all details to the JSON file for the website
     with open(JSON_OUTPUT_FILE, 'w') as f:
         json.dump(new_data, f)
     print(f"Updated {JSON_OUTPUT_FILE} with new data.")
@@ -102,7 +111,6 @@ def main():
         else:
             print("No subscribers found. Skipping notification.")
         
-        # Update the simple status file for the next run's comparison
         with open(STATUS_FILE, 'w') as f:
             f.write(new_status)
     else:
