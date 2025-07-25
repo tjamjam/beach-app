@@ -23,15 +23,13 @@
         .map-container iframe { width: 100%; height: 200px; border: 1px solid #ccc; border-radius: 10px; }
         .weather-details p { margin: 8px 0; font-size: 1.1em; }
         .weather-details p strong { color: #0056b3; }
-        #data-source-info { text-align: center; font-size: 0.8em; color: #666; font-style: italic; }
-        /* --- NEW STYLES --- */
         .station-info-grid { display: grid; grid-template-columns: 80px 1fr; gap: 15px; align-items: center; text-align: left; margin-top: 10px; }
-        #station-photo { width: 80px; height: 60px; border-radius: 8px; object-fit: cover; }
-        .suggestion-section { margin-top: 15px; }
-        .suggestion-icons { display: flex; justify-content: center; gap: 20px; margin-top: 10px; height: 40px; }
-        .suggestion-icons span { display: none; /* Hidden by default */ }
+        #station-photo { width: 80px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid #ddd; }
+        #data-source-info { font-size: 0.9em; color: #666; }
+        .suggestion-section { margin-top: 15px; text-align: center; }
+        .suggestion-icons { display: flex; justify-content: center; gap: 20px; margin-top: 10px; height: 40px; align-items: center; }
+        .suggestion-icons span { display: none; }
         .suggestion-icons svg { width: 36px; height: 36px; color: #0056b3; }
-        /* --- END NEW STYLES --- */
         .subscribe-form { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; text-align: center;}
         .subscribe-form input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 200px; }
         .subscribe-form button { padding: 10px 15px; border: none; background-color: #007bff; color: white; border-radius: 5px; cursor: pointer; }
@@ -41,16 +39,28 @@
 <body>
     <div class="container">
         <h1>Lakewood Beach Status</h1>
-        <!-- Sections remain in this order -->
-        <div class="stoplight">...</div>
-        <p id="status-text">...</p>
-        <p class="timestamp">...</p>
-        <div class="subscribe-form">...</div>
+        <div class="stoplight">
+            <div id="red-light" class="light"></div>
+            <div id="yellow-light" class="light"></div>
+            <div id="green-light" class="light"></div>
+        </div>
+        <p id="status-text">Checking status...</p>
+        <p class="timestamp">Last updated: <span id="last-updated"></span></p>
+        
+        <div class="subscribe-form">
+            <p>Get email alerts for status changes:</p>
+            <form id="email-form">
+                <input type="email" id="email-input" placeholder="Enter your email" required>
+                <button type="submit">Subscribe</button>
+            </form>
+            <p id="form-message"></p>
+        </div>
+
         <div class="divider"></div>
         <div class="weather-map-section">
             <h2 style="text-align: center;">Lake Champlain Conditions</h2>
             <div id="weather-loader" class="loader"></div>
-            <div id="weather-map-content" style="display: none;">
+            <div id="weather-content" style="display: none;">
                 <div class="weather-map-grid">
                     <div class="map-container" id="map-container"></div>
                     <div class="weather-details" id="weather-details"></div>
@@ -78,135 +88,88 @@
             const STATUS_API_URL = 'https://eo6zftgq4yj13zb.m.pipedream.net';
             const SUBSCRIBE_API_URL = 'https://eofuxbkxc94zvam.m.pipedream.net';
             const PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
-            
-            // --- NEW: Detailed Station and Icon Config ---
             const STATIONS = {
-                primary: {
-                    url: 'https://www.ndbc.noaa.gov/data/realtime2/BTVL1.txt',
-                    infoUrl: 'https://www.ndbc.noaa.gov/station_page.php?station=btvl1',
-                    photoUrl: 'https://www.ndbc.noaa.gov/images/stations/btvl1.jpg',
-                    name: 'NDBC Station BTVL1 (Colchester Reef)'
-                },
-                backup: {
-                    url: 'https://api.weather.gov/stations/KBTV/observations/latest',
-                    infoUrl: 'https://www.weather.gov/station/KBTV',
-                    photoUrl: '', // Will use a generic SVG icon
-                    name: "Burlington Int'l Airport (KBTV)"
-                }
+                primary: { url: 'https://www.ndbc.noaa.gov/data/realtime2/BTVL1.txt', infoUrl: 'https://www.ndbc.noaa.gov/station_page.php?station=btvl1', photoUrl: 'https://www.ndbc.noaa.gov/images/stations/btvl1.jpg', name: 'NDBC Station BTVL1 (Colchester Reef)', coords: { lat: 44.522, lon: -73.337 } },
+                backup: { url: 'https://api.weather.gov/stations/KBTV/observations/latest', infoUrl: 'https://www.weather.gov/station/KBTV', photoUrl: '', name: "Burlington Int'l Airport (KBTV)", coords: { lat: 44.472, lon: -73.153 } }
             };
             const ICONS = {
-                tshirt: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a2 2 0 0 0 2-2v-3h-4v3a2 2 0 0 0 2 2z"></path><path d="M12 16V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v11"></path><path d="M12 5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v11"></path></svg>`,
-                jacket: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16L18 22a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.32a4 4 0 0 0-3.36-2H8.68a4 4 0 0 0-3.36 2H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2l2-6"></path><path d="M12 4v16"></path></svg>`,
-                paddleboard: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13.35A2.5 2.5 0 0 1 4.5 11h14a2.5 2.5 0 0 1 2.5 2.35L20.5 20a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4.5 20Z"></path><path d="M12 11V4"></path><path d="M9 7h6"></path></svg>`,
-                umbrella: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2.3-1.22-4.38-3-5.63"></path><path d="M12 22a7 7 0 0 1-7-7c0-2.3 1.22-4.38 3-5.63"></path><path d="M12 22V8"></path><path d="M12 2a5.91 5.91 0 0 1 4.2 1.8"></path></svg>`,
-                airport: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="M20 12h2"></path><path d="m19.07 4.93-1.41 1.41"></path><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"></path><path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"></path></svg>`
+                tshirt: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a2 2 0 0 0 2-2v-3h-4v3a2 2 0 0 0 2 2zM12 16V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v11M12 5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v11"></path></svg>`,
+                jacket: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16L18 22a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.32a4 4 0 0 0-3.36-2H8.68a4 4 0 0 0-3.36 2H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2l2-6M12 4v16"></path></svg>`,
+                paddleboard: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13.35A2.5 2.5 0 0 1 4.5 11h14a2.5 2.5 0 0 1 2.5 2.35L20.5 20a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4.5 20ZM12 11V4M9 7h6"></path></svg>`,
+                umbrella: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2.3-1.22-4.38-3-5.63M12 22a7 7 0 0 1-7-7c0-2.3 1.22-4.38 3-5.63M12 22V8M12 2a5.91 5.91 0 0 1 4.2 1.8"></path></svg>`,
+                airport: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2m-7.07 1.07 1.41 1.41M22 12h-2m-2.43-7.07-1.41 1.41M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-4a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path></svg>`
             };
             const LAKEWOOD_BEACH = { lat: 44.500056, lon: -73.248890 };
             const PENINSULA_WEST = { lat: 44.497102, lon: -73.273952 };
             const PENINSULA_EAST = { lat: 44.488317, lon: -73.249118 };
-            const AIRPORT_COORDS = { lat: 44.472, lon: -73.153 };
             
-            // 2. DOM ELEMENTS
-            const allDomElements = {
-                // ... all your getElementById calls
-            };
-            
-            // 3. LOGIC FUNCTIONS
-            async function fetchPrimaryWeather() {
-                try {
-                    const response = await fetch(PROXY_URL + STATIONS.primary.url);
-                    if (!response.ok) throw new Error('Buoy network error');
-                    const textData = await response.text();
-                    const weatherData = parseBuoyData(textData);
-                    if (!weatherData) throw new Error('Failed to parse buoy data');
-                    updateWeatherUI(weatherData, STATIONS.primary);
-                    createMap(LAKEWOOD_BEACH, "Lakewood Beach Location");
-                } catch (error) {
-                    console.warn("Primary station failed:", error);
-                    document.getElementById('data-source-info').textContent = 'Primary station offline. Using backup...';
-                    fetchBackupWeather();
-                }
-            }
+            const dom = {};
+            ['red-light', 'yellow-light', 'green-light', 'status-text', 'weather-loader', 'weather-content', 'map-container', 'weather-details', 'data-source-info', 'station-photo', 'icon-tshirt', 'icon-jacket', 'icon-paddleboard', 'icon-umbrella', 'email-form', 'email-input', 'form-message', 'last-updated'].forEach(id => dom[id] = document.getElementById(id));
 
-            async function fetchBackupWeather() {
-                try {
-                    const response = await fetch(STATIONS.backup.url);
-                    if (!response.ok) throw new Error('Backup network error');
-                    const data = await response.json();
-                    const weatherData = parseAirportData(data.properties);
-                    updateWeatherUI(weatherData, STATIONS.backup);
-                    createMap(AIRPORT_COORDS, "Burlington Int'l Airport");
-                } catch (error) {
-                    // ... error handling
-                }
-            }
-            
+            async function fetchPrimaryWeather() { /* ... unchanged ... */ } // Functions are below
+            async function fetchAndUpdateStatus() { /* ... unchanged ... */ }
+
             function updateWeatherUI(data, station) {
                 const airTempF = !isNaN(data.airTemp) ? (data.airTemp * 9/5 + 32).toFixed(0) : 'N/A';
                 const waterTempF = !isNaN(data.waterTemp) ? (data.waterTemp * 9/5 + 32).toFixed(0) : 'N/A';
                 const waveEstimate = getWaveEstimate(data.windSpeed, data.numericWindDirection);
-                
-                document.getElementById('weather-details').innerHTML = `<p><strong>Wind:</strong> ${data.windDirection} at ${data.windSpeed} mph</p><p><strong>Air Temp:</strong> ${airTempF}°F</p>${(waterTempF !== 'N/A' ? `<p><strong>Water Temp:</strong> ${waterTempF}°F</p>` : '')}<p><strong>Waves:</strong> ${waveEstimate}</p>`;
+                dom['weather-details'].innerHTML = `<p><strong>Wind:</strong> ${data.windDirection} at ${data.windSpeed} mph</p><p><strong>Air Temp:</strong> ${airTempF}°F</p>${(waterTempF !== 'N/A' ? `<p><strong>Water Temp:</strong> ${waterTempF}°F</p>` : '')}<p><strong>Waves:</strong> ${waveEstimate}</p>`;
                 
                 const dataSourceLink = document.createElement('a');
                 dataSourceLink.href = station.infoUrl;
                 dataSourceLink.target = '_blank';
                 dataSourceLink.textContent = `Data from ${station.name}`;
-                document.getElementById('data-source-info').innerHTML = '';
-                document.getElementById('data-source-info').appendChild(dataSourceLink);
+                dom['data-source-info'].innerHTML = '';
+                dom['data-source-info'].appendChild(dataSourceLink);
 
-                document.getElementById('station-photo').src = station.photoUrl || 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(ICONS.airport);
-                document.getElementById('station-photo').alt = station.name;
-
+                dom['station-photo'].src = station.photoUrl || 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(ICONS.airport);
                 updateSuggestionIcons(airTempF, waveEstimate, data.conditions);
                 
-                document.getElementById('weather-loader').style.display = 'none';
-                document.getElementById('weather-map-content').style.display = 'block';
+                dom['weather-loader'].style.display = 'none';
+                dom['weather-content'].style.display = 'block';
             }
-            
+
             function updateSuggestionIcons(temp, waveEstimate, conditions) {
-                // Hide all icons first
-                Object.keys(ICONS).forEach(key => {
-                    const el = document.getElementById(`icon-${key.toLowerCase()}`);
-                    if (el) el.style.display = 'none';
-                });
-
-                // Clothing based on temp
+                ['tshirt', 'jacket', 'paddleboard', 'umbrella'].forEach(icon => dom[`icon-${icon}`].style.display = 'none');
                 if (temp !== 'N/A') {
-                    if (temp >= 75) document.getElementById('icon-tshirt').style.display = 'inline-block';
-                    else document.getElementById('icon-jacket').style.display = 'inline-block';
+                    if (temp >= 75) { dom['icon-tshirt'].innerHTML = ICONS.tshirt; dom['icon-tshirt'].style.display = 'inline-block'; }
+                    else { dom['icon-jacket'].innerHTML = ICONS.jacket; dom['icon-jacket'].style.display = 'inline-block'; }
                 }
-
-                // Activity based on waves
                 if (waveEstimate.includes('Calm') || waveEstimate.includes('Light Chop')) {
-                    document.getElementById('icon-paddleboard').style.display = 'inline-block';
+                    dom['icon-paddleboard'].innerHTML = ICONS.paddleboard;
+                    dom['icon-paddleboard'].style.display = 'inline-block';
                 }
-                
-                // Precipitation (only available from airport data)
                 const lowerConditions = (conditions || "").toLowerCase();
                 if (lowerConditions.includes('rain') || lowerConditions.includes('shower')) {
-                    document.getElementById('icon-umbrella').style.display = 'inline-block';
+                    dom['icon-umbrella'].innerHTML = ICONS.umbrella;
+                    dom['icon-umbrella'].style.display = 'inline-block';
                 }
             }
             
-            // All other functions from before, simplified for brevity here
-            function getWaveEstimate(windSpeed, windDirection) { /* ... same logic ... */ }
-            function parseBuoyData(text) { /* ... same logic ... */ }
-            function parseAirportData(properties) { const cond = properties.textDescription; /* ... rest of logic ... */ return { /*...,*/ conditions: cond }; }
+            function createMap(coords, title) {
+                dom['map-container'].innerHTML = ''; // Clear previous map
+                const { lat, lon } = coords;
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.05},${lat-0.025},${lon+0.05},${lat+0.025}&layer=mapnik&marker=${lat},${lon}`;
+                iframe.title = title;
+                dom['map-container'].appendChild(iframe);
+            }
+
+            async function fetchPrimaryWeather() { try { const response = await fetch(PROXY_URL + STATIONS.primary.url); if (!response.ok) throw new Error('Buoy data network error'); const textData = await response.text(); const weatherData = parseBuoyData(textData); if (!weatherData) throw new Error('Failed to parse buoy data'); updateWeatherUI(weatherData, STATIONS.primary); } catch (error) { console.warn("Primary station (Buoy) failed:", error); dom['data-source-info'].textContent = 'Primary station offline. Using backup...'; fetchBackupWeather(); } }
+            async function fetchBackupWeather() { try { const response = await fetch(STATIONS.backup.url); if (!response.ok) throw new Error('Backup station network error'); const data = await response.json(); const weatherData = parseAirportData(data.properties); updateWeatherUI(weatherData, STATIONS.backup); createMap(STATIONS.backup.coords, STATIONS.backup.name); } catch (error) { console.error("Backup station also failed:", error); dom['weather-loader'].style.display = 'none'; dom['weather-details'].innerHTML = `<p>All weather sources are currently unavailable.</p>`; dom['weather-content'].style.display = 'block'; } }
+            function parseBuoyData(text) { const lines = text.split('\n'); if (lines.length < 2) return null; const headers = lines[0].trim().split(/\s+/); const data = lines[2].trim().split(/\s+/); const getVal = (colName) => { const index = headers.indexOf(colName); return index !== -1 && data[index] !== 'MM' ? data[index] : null; }; const windSpeedMps = parseFloat(getVal('WSPD')); if (isNaN(windSpeedMps)) return null; const windSpeedMph = (windSpeedMps * 2.237).toFixed(1); const windDirDeg = parseFloat(getVal('WDIR')); const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']; const windDirCardinal = !isNaN(windDirDeg) ? directions[Math.round(windDirDeg / 22.5) % 16] : 'N/A'; return { airTemp: getVal('ATMP'), waterTemp: getVal('WTMP'), windDirection: windDirCardinal, windSpeed: windSpeedMph, numericWindDirection: windDirDeg, conditions: "N/A" }; }
+            function parseAirportData(properties) { const windSpeedMps = properties.windSpeed.value; const windSpeedMph = windSpeedMps !== null ? (windSpeedMps * 2.237).toFixed(1) : 'N/A'; const windDirDeg = properties.windDirection.value; const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']; const windDirCardinal = windDirDeg !== null ? directions[Math.round(windDirDeg / 22.5) % 16] : 'N/A'; return { airTemp: properties.temperature.value, waterTemp: 'N/A', windDirection: windDirCardinal, windSpeed: windSpeedMph, numericWindDirection: windDirDeg, conditions: properties.textDescription }; }
+            async function fetchAndUpdateStatus() { try { const response = await fetch(STATUS_API_URL); if (!response.ok) throw new Error('Status network error'); const data = await response.json(); updateStoplight(data.status); } catch (error) { console.error("Failed to fetch status:", error); updateStoplight('error'); } }
+            function updateStoplight(status) { dom['red-light'].classList.remove('red'); dom['yellow-light'].classList.remove('yellow'); dom['green-light'].classList.remove('green'); let message = '', color = '#555'; switch (status) { case 'green': dom['green-light'].classList.add('green'); message = 'Open for Swimming'; color = '#00a045'; break; case 'yellow': dom['yellow-light'].classList.add('yellow'); message = 'Advisory / Caution'; color = '#c7a900'; break; case 'red': dom['red-light'].classList.add('red'); message = 'Closed for Swimming'; color = '#c21616'; break; default: message = 'Could not determine status.'; break; } dom['status-text'].textContent = message; dom['status-text'].style.color = color; dom['last-updated'].textContent = new Date().toLocaleTimeString(); }
+            function getBearing(start, end) { const r = (d) => d * Math.PI / 180; const sLat = r(start.lat), sLon = r(start.lon), eLat = r(end.lat), eLon = r(end.lon), dLon = eLon - sLon; const y = Math.sin(dLon) * Math.cos(eLat); const x = Math.cos(sLat) * Math.sin(eLat) - Math.sin(sLat) * Math.cos(eLat) * Math.cos(dLon); return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360; }
+            function getWaveEstimate(windSpeed, windDirection) { if (isNaN(windSpeed) || isNaN(windDirection)) return 'N/A'; const bearingToWest = getBearing(LAKEWOOD_BEACH, PENINSULA_WEST); const bearingToEast = getBearing(LAKEWOOD_BEACH, PENINSULA_EAST); const isSheltered = windDirection >= bearingToEast && windDirection <= bearingToWest; if (isSheltered) return "Calm (Sheltered)"; if (windSpeed < 5) return "Calm (< 0.5 ft)"; if (windSpeed < 12) return "Light Chop (0.5 - 1.5 ft)"; if (windSpeed < 20) return "Moderate Waves (1.5 - 3 ft)"; return "Rough (3+ ft)"; }
             
-            // Re-pasting full, correct versions of all functions for finality
-            const getFullCode = () => {
-                const domElements = {};
-                const allIds = ['red-light', 'yellow-light', 'green-light', 'status-text', 'weather-loader', 'weather-map-content', 'map-container', 'weather-details', 'data-source-info', 'station-photo', 'icon-tshirt', 'icon-jacket', 'icon-paddleboard', 'icon-umbrella', 'email-form', 'email-input', 'form-message'];
-                allIds.forEach(id => domElements[id] = document.getElementById(id));
-                Object.keys(domElements).forEach(key => window[key] = domElements[key]); // Make them available globally inside this script
-                
-                // Now paste the full functions here to avoid scope issues. This is a bit of a hack but ensures correctness.
-                // ... The full script is too long to paste again, the downloadable version will be correct.
-            };
-            
-            // The logic from the model is being inserted here directly.
-            // ... [The model's complete JavaScript logic] ...
+            dom['email-form'].addEventListener('submit', async (event) => { event.preventDefault(); const email = dom['email-input'].value; dom['form-message'].textContent = 'Subscribing...'; try { const response = await fetch(SUBSCRIBE_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email }) }); if (!response.ok) throw new Error('Subscription failed'); const data = await response.json(); dom['form-message'].textContent = data.message; dom['form-message'].style.color = 'green'; dom['email-input'].value = ''; } catch (error) { dom['form-message'].textContent = 'Subscription failed. Please try again.'; dom['form-message'].style.color = 'red'; } });
+
+            // INITIALIZATION
+            fetchAndUpdateStatus();
+            createMap(LAKEWOOD_BEACH, "Map of Lakewood Beach");
+            fetchPrimaryWeather();
         });
     </script>
 </body>
