@@ -28,6 +28,8 @@ jobs:
         run: pip install requests pdfplumber
 
       - name: Run status checker script
+        env: 
+          PIPEDREAM_API_KEY: ${{ secrets.PIPEDREAM_API_KEY }}
         run: python check_status.py
 
       # This step will now have permission to push
