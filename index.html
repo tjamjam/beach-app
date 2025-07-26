@@ -90,9 +90,11 @@
                 </div>
                 <p id="data-source-info"></p>
                 
-                <button id="test-api" style="margin: 10px; padding: 5px 10px;">
-    Test Weather API
-</button>
+                // Add this to your HTML where you want the refresh button to appear
+                <button id="refresh-weather" style="margin: 10px; padding: 5px 10px;">
+                    Refresh Weather
+                </button>
+                
                 <div class="suggestion-section">
                     <p><strong>Suggestions:</strong></p>
                     <div id="suggestion-container"></div>
@@ -137,6 +139,17 @@
                     console.log('Test completed successfully!');
                 }
             });
+
+            dom['refresh-weather'] = document.getElementById('refresh-weather');
+                dom['refresh-weather'].addEventListener('click', () => {
+                    dom['weather-loader'].style.display = 'block';
+                    dom['weather-content'].style.display = 'none';
+                    fetchWeatherData();
+                });
+                
+                // Auto-refresh every 5 minutes
+                setInterval(fetchWeatherData, 300000);
+                
             
             // Add this function and test it in the console
             async function testWeatherAPI() {
@@ -293,11 +306,21 @@
             
                 const waveHeight = estimateWaveHeight(weatherData.windSpeed, weatherData.windDirection);
                 
+                // Format the timestamp
+                const observationTime = new Date(weatherData.timestamp);
+                const timeString = observationTime.toLocaleString('en-US', {
+                    timeZone: 'America/New_York',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: true
+                });
+                
                 dom['weather-details'].innerHTML = `
                     <p><strong>Wind:</strong> ${windDisplay}</p>
                     <p><strong>Air Temp:</strong> ${weatherData.temperature}°F</p>
                     <p><strong>Waves:</strong> ${waveHeight}</p>
                     <p><strong>Conditions:</strong> ${weatherData.conditions}</p>
+                    <p><strong>Last Updated:</strong> ${timeString}</p>
                     <p class="weather-link" style="margin-top: 10px; font-size: 0.9em;">
                         <a href="https://www.weather.gov/wrh/timeseries?site=KBTV" 
                            target="_blank" 
@@ -312,6 +335,7 @@
                 dom['weather-loader'].style.display = 'none';
                 dom['weather-content'].style.display = 'block';
             }
+
             
             function estimateWaveHeight(windSpeed, windDirection) {
                 const speed = parseFloat(windSpeed);
