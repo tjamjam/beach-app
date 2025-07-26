@@ -122,6 +122,19 @@
             const dom = {};
             ['red-light', 'yellow-light', 'green-light', 'status-text', 'weather-loader', 'weather-content', 'map-container', 'weather-details', 'data-source-info', 'suggestion-container', 'email-form', 'email-input', 'form-message', 'last-checked', 'official-update', 'status-note', 'hourly-forecast-grid'].forEach(id => dom[id] = document.getElementById(id));
 
+            // Add this function and test it in the console
+            async function testWeatherAPI() {
+                try {
+                    const response = await fetch('https://api.weather.gov/stations/KBTV/observations/latest');
+                    const data = await response.json();
+                    console.log('Direct API Response:', data);
+                    return data;
+                } catch (error) {
+                    console.error('Direct API Test Failed:', error);
+                }
+            }
+
+            
             // Utility Functions
             function getBearing(start, end) {
                 const r = (d) => d * Math.PI / 180;
