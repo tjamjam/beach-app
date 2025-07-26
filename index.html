@@ -259,13 +259,13 @@
 
                 // 2. Cold Weather Suggestion (Jacket)
                 // Only suggests a jacket if it's actually cool.
-                if (!isNaN(temp) && temp < 68) {
+                if (!isNaN(temp) && temp < 63) {
                     suggestions.push({ name: 'Bring a Jacket', icon: 'fa-solid fa-layer-group' });
                 }
 
                 // 3. Windy Weather Suggestion (Kite)
                 // Good range for kite flying: not too calm, not too stormy.
-                if (!isNaN(speed) && speed >= 12 && speed <= 35) {
+                if (!isNaN(speed) && speed >= 3 && speed <= 35) {
                     suggestions.push({ name: 'Good Day for a Kite!', icon: 'fas fa-kite' });
                 }
 
