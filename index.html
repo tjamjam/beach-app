@@ -264,6 +264,7 @@
                 const conditions = weatherData.conditions.toLowerCase();
                 const hour = new Date().getHours(); // Get current hour (0-23)
                 const isDayTime = hour >= 6 && hour < 19; // Approx. 6 AM to 7 PM
+                const waveHeight = estimateWaveHeight(weatherData.windSpeed, weatherData.windDirection);
 
                 // 1. Hot Weather Suggestions (Water & Beach Day)
                 if (!isNaN(temp) && temp >= 78) {
@@ -283,7 +284,13 @@
                     suggestions.push({ name: 'Good Day for a Kite!', icon: 'fa-solid fa-paper-plane' });
                 }
 
-                // 4. Sunglasses Suggestion (More often during the day)
+                // 4. Calm Water Suggestion (Paddleboarding)
+                // Checks if the wave forecast string includes "Calm".
+                if (waveHeight.toLowerCase().includes('calm')) {
+                    suggestions.push({ name: 'Good for Paddleboarding', icon: 'fa-solid fa-water' });
+                }
+
+                // 5. Sunglasses Suggestion (More often during the day)
                 // Suggests sunglasses during the day unless it's very gloomy.
                 const isGloomy = conditions.includes('rain') || conditions.includes('overcast') || conditions.includes('fog') || conditions.includes('drizzle');
                 if (isDayTime && !isGloomy) {
