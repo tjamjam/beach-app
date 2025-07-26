@@ -252,7 +252,7 @@
                 const isDayTime = hour >= 6 && hour < 19; // Approx. 6 AM to 7 PM
 
                 // 1. Hot Weather Suggestions (Water & Beach Day)
-                if (!isNaN(temp) && temp >= 80) {
+                if (!isNaN(temp) && temp >= 78) {
                     suggestions.push({ name: 'Stay Hydrated', icon: 'fa-solid fa-droplet' });
                     suggestions.push({ name: 'Great Beach Day!', icon: 'fa-solid fa-umbrella-beach' });
                 }
@@ -265,7 +265,7 @@
 
                 // 3. Windy Weather Suggestion (Kite)
                 // Good range for kite flying: not too calm, not too stormy.
-                if (!isNaN(speed) && speed >= 2 && speed <= 35) {
+                if (!isNaN(speed) && speed >= 12 && speed <= 35) {
                     suggestions.push({ name: 'Good Day for a Kite!', icon: 'fa-solid fa-paper-plane' });
                 }
 
