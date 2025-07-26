@@ -36,28 +36,59 @@ def get_current_status_and_details():
         with pdfplumber.open(io.BytesIO(response.content)) as pdf:
             page = pdf.pages[0]
             table = page.extract_table()
-            if not table: return {"status": "error", "date": "N/A", "note": "Could not parse PDF table."}
-            header = table[0]
-            try:
-                date_col = header.index('Sample Date')
-                status_col = header.index('Status')
-                note_col = header.index('Note')
-            except ValueError:
-                date_col, status_col, note_col = 1, 3, 4
-            for row in table[1:]:
-                if row and row[0] and PDF_TARGET_BEACH in row[0]:
-                    status_text = row[status_col].strip().lower() if len(row) > status_col and row[status_col] else "unknown"
+            
+            if not table: 
+                return {"status": "error", "date": "N/A", "note": "Could not parse PDF table."}
+            
+            # Find the target beach row
+            for row in table:
+                if row and PDF_TARGET_BEACH in str(row[0]):
+                    # Based on the screenshot format:
+                    # Column 0: Beach Name
+                    # Column 1: Status (circle indicator)
+                    # Column 2: Last Updated
+                    # Column 3: Note
+                    
+                    status_text = str(row[1]).strip() if len(row) > 1 and row[1] else "unknown"
+                    date_updated = str(row[2]).strip() if len(row) > 2 and row[2] else "N/A"
+                    note = str(row[3]).strip() if len(row) > 3 and row[3] else ""
+                    
+                    # Determine status color based on the note and status indicator
                     color = "unknown"
-                    if "open" in status_text: color = "green"
-                    elif "advisory" in status_text: color = "yellow"
-                    elif "closed" in status_text: color = "red"
-                    date_updated = row[date_col].strip() if len(row) > date_col and row[date_col] else "N/A"
-                    note = row[note_col].strip() if len(row) > note_col and row[note_col] else ""
-                    return {"status": color, "date": date_updated, "note": note}
-            return {"status": "not_found", "date": "N/A", "note": f"{PDF_TARGET_BEACH} not found in report."}
+                    if "Alert" in note or "Category 2" in note:
+                        color = "yellow"
+                    elif "Open" in note:
+                        color = "green"
+                    elif "Closed" in note:
+                        color = "red"
+                    
+                    # Add debug logging
+                    print(f"Raw row data: {row}")
+                    print(f"Parsed status: {status_text}")
+                    print(f"Parsed date: {date_updated}")
+                    print(f"Parsed note: {note}")
+                    print(f"Determined color: {color}")
+                    
+                    return {
+                        "status": color,
+                        "date": date_updated,
+                        "note": note,
+                        "beach_name": PDF_TARGET_BEACH
+                    }
+            
+            return {
+                "status": "not_found", 
+                "date": "N/A", 
+                "note": f"{PDF_TARGET_BEACH} not found in report."
+            }
+            
     except Exception as e:
         print(f"Error fetching or parsing PDF: {e}")
-        return {"status": "error", "date": "N/A", "note": "Failed to fetch or process the PDF."}
+        return {
+            "status": "error", 
+            "date": "N/A", 
+            "note": f"Failed to fetch or process the PDF: {str(e)}"
+        }
 
 def send_notifications(message, email_list):
     print(f"Sending notifications for message: {message}")
