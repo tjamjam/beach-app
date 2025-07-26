@@ -81,27 +81,18 @@
 
         <div class="divider"></div>
         
-       <div class="weather-map-section">
+        <div class="weather-map-section">
             <h2 style="text-align: center;">Current Conditions</h2>
-            <!-- Add the refresh button here -->
             <button id="refresh-weather" style="margin: 10px; padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
                 🔄 Refresh Weather
             </button>
-           
             <div id="weather-loader" class="loader"></div>
             <div id="weather-content" style="display: none;">
-                
                 <div class="weather-map-grid">
                     <div class="map-container" id="map-container"></div>
                     <div class="weather-details" id="weather-details"></div>
                 </div>
                 <p id="data-source-info"></p>
-                
-                // Add this to your HTML where you want the refresh button to appear
-                <button id="refresh-weather" style="margin: 10px; padding: 5px 10px;">
-                    Refresh Weather
-                </button>
-                
                 <div class="suggestion-section">
                     <p><strong>Suggestions:</strong></p>
                     <div id="suggestion-container"></div>
@@ -114,106 +105,34 @@
         </div>
     </div>
 
-    <script>
+        <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Configuration remains the same as your original code
+            // Configuration
             const BASE_API_URL = 'https://beach-api.terrencefradet.workers.dev';
             const SUBSCRIBE_API_URL = BASE_API_URL + '/subscribe';
             const MARINE_WEATHER_API_URL = BASE_API_URL + '/weather';
-            const BACKUP_WEATHER_URL = 'https://api.weather.gov/stations/KBTV/observations/latest';
             const HOURLY_FORECAST_URL = 'https://api.weather.gov/gridpoints/BTV/61,77/forecast/hourly';
             const STATUS_JSON_URL = 'https://raw.githubusercontent.com/tjamjam/beach-app/main/status.json';
-            const STATIONS = {
-                primary: { infoUrl: 'https://www.ndbc.noaa.gov/station_page.php?station=BTVL1', name: 'NDBC Station BTVL1 (Colchester Reef)', coords: { lat: 44.522, lon: -73.337 } },
-                backup: { infoUrl: 'https://www.weather.gov/wrh/timeseries?site=KBTV', name: "Burlington Int'l Airport (KBTV)", coords: { lat: 44.472, lon: -73.153 } }
-            };
             const LAKEWOOD_BEACH = { lat: 44.500056, lon: -73.248890 };
-            const PENINSULA_WEST = { lat: 44.497102, lon: -73.273952 };
-            const PENINSULA_EAST = { lat: 44.488317, lon: -73.249118 };
 
-            // Get DOM elements
+            // DOM elements
             const dom = {};
             [
-                'red-light', 
-                'yellow-light', 
-                'green-light', 
-                'status-text', 
-                'weather-loader', 
-                'weather-content', 
-                'map-container', 
-                'weather-details', 
-                'data-source-info', 
-                'suggestion-container', 
-                'email-form', 
-                'email-input', 
-                'form-message', 
-                'last-checked', 
-                'official-update', 
-                'status-note', 
-                'hourly-forecast-grid',
-                'refresh-weather'  // Add this line
+                'red-light', 'yellow-light', 'green-light', 
+                'status-text', 'weather-loader', 'weather-content', 
+                'map-container', 'weather-details', 'data-source-info', 
+                'suggestion-container', 'email-form', 'email-input', 
+                'form-message', 'last-checked', 'official-update', 
+                'status-note', 'hourly-forecast-grid', 'refresh-weather'
             ].forEach(id => dom[id] = document.getElementById(id));
-            
-            // Add the refresh weather functionality
-            if (dom['refresh-weather']) {
-                dom['refresh-weather'].addEventListener('click', () => {
-                    dom['weather-loader'].style.display = 'block';
-                    dom['weather-content'].style.display = 'none';
-                    fetchWeatherData();
-                });
-            }
-            
-            // Auto-refresh every 5 minutes
-            setInterval(fetchWeatherData, 300000);
 
-
-            // Add this with your other DOM elements
-            dom['test-api'] = document.getElementById('test-api');
-            
-            // Add this to your initialization section
-            dom['test-api'].addEventListener('click', async () => {
-                console.clear(); // Clear previous console logs
-                const results = await testWeatherAPI();
-                if (results) {
-                    console.log('Test completed successfully!');
-                }
+            // Weather refresh button
+            dom['refresh-weather'].addEventListener('click', () => {
+                dom['weather-loader'].style.display = 'block';
+                dom['weather-content'].style.display = 'none';
+                fetchWeatherData();
             });
 
-            dom['refresh-weather'] = document.getElementById('refresh-weather');
-                dom['refresh-weather'].addEventListener('click', () => {
-                    dom['weather-loader'].style.display = 'block';
-                    dom['weather-content'].style.display = 'none';
-                    fetchWeatherData();
-                });
-                
-                // Auto-refresh every 5 minutes
-                setInterval(fetchWeatherData, 300000);
-                
-            
-            // Add this function and test it in the console
-            async function testWeatherAPI() {
-                try {
-                    const response = await fetch('https://api.weather.gov/stations/KBTV/observations/latest');
-                    const data = await response.json();
-                    console.log('Direct API Response:', data);
-                    return data;
-                } catch (error) {
-                    console.error('Direct API Test Failed:', error);
-                }
-            }
-
-            
-            // Utility Functions
-            function getBearing(start, end) {
-                const r = (d) => d * Math.PI / 180;
-                const sLat = r(start.lat), sLon = r(start.lon),
-                      eLat = r(end.lat), eLon = r(end.lon),
-                      dLon = eLon - sLon;
-                const y = Math.sin(dLon) * Math.cos(eLat);
-                const x = Math.cos(sLat) * Math.sin(eLat) - Math.sin(sLat) * Math.cos(eLat) * Math.cos(dLon);
-                return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
-            }
-            
             // Status Functions
             async function fetchAndUpdateStatus() {
                 try {
@@ -226,7 +145,7 @@
                     updateStoplight({ status: 'error', date: 'N/A', note: 'Could not fetch status data.' });
                 }
             }
-            
+
             function updateStoplight(data) {
                 const { status, date, note } = data;
                 dom['red-light'].classList.remove('red');
@@ -252,7 +171,6 @@
                         break;
                     default:
                         message = 'Could not determine status.';
-                        break;
                 }
                 
                 dom['status-text'].textContent = message;
@@ -265,7 +183,116 @@
                     dom['status-note'].style.display = 'block';
                 }
             }
-            
+
+            // Weather Functions
+            async function fetchWeatherData() {
+                try {
+                    const response = await fetch(MARINE_WEATHER_API_URL);
+                    if (!response.ok) throw new Error(`Weather API returned ${response.status}`);
+                    
+                    const data = await response.json();
+                    // Handle both direct weather data and properties format
+                    const weatherData = data.properties ? parseWeatherData(data.properties) : parseWeatherData(data);
+                    updateWeatherUI(weatherData);
+                } catch (error) {
+                    console.error('Weather fetch failed:', error);
+                    displayWeatherError();
+                }
+            }
+
+            function parseWeatherData(data) {
+                // Direct access to values, assuming they're already in correct format
+                return {
+                    temperature: data.temperature || 'N/A',
+                    windSpeed: data.windSpeed || '0',
+                    windDirection: data.windDirection || 'N/A',
+                    conditions: data.conditions || 'Clear'
+                };
+            }
+
+            function updateWeatherUI(weatherData) {
+                const windDisplay = weatherData.windDirection === 'Calm' 
+                    ? 'Calm' 
+                    : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
+
+                const waveHeight = estimateWaveHeight(weatherData.windSpeed);
+                
+                dom['weather-details'].innerHTML = `
+                    <p><strong>Wind:</strong> ${windDisplay}</p>
+                    <p><strong>Air Temp:</strong> ${weatherData.temperature}°F</p>
+                    <p><strong>Waves:</strong> ${waveHeight}</p>
+                    <p><strong>Conditions:</strong> ${weatherData.conditions}</p>
+                    <p class="weather-link" style="margin-top: 10px; font-size: 0.9em;">
+                        <a href="https://www.weather.gov/wrh/timeseries?site=KBTV" 
+                           target="_blank" 
+                           style="color: #007bff; text-decoration: none;">
+                            View Weather Data Source
+                        </a>
+                    </p>
+                `;
+
+                updateSuggestions(weatherData);
+                
+                dom['weather-loader'].style.display = 'none';
+                dom['weather-content'].style.display = 'block';
+            }
+
+            function estimateWaveHeight(windSpeed) {
+                const speed = parseFloat(windSpeed);
+                if (isNaN(speed) || speed === 0) return "Calm (< 0.5 ft)";
+                if (speed < 5) return "Calm (< 0.5 ft)";
+                if (speed < 10) return "Light Chop (0.5 - 1 ft)";
+                if (speed < 15) return "Moderate (1 - 2 ft)";
+                return "Choppy (2+ ft)";
+            }
+
+            function updateSuggestions(weatherData) {
+                const temp = parseFloat(weatherData.temperature);
+                const suggestions = [];
+
+                if (!isNaN(temp)) {
+                    if (temp >= 75) {
+                        suggestions.push({ name: 'T-Shirt & Shorts', icon: 'fa-solid fa-shirt' });
+                    } else if (temp >= 65) {
+                        suggestions.push({ name: 'Light Jacket', icon: 'fa-solid fa-layer-group' });
+                    } else {
+                        suggestions.push({ name: 'Warm Coat', icon: 'fa-solid fa-mitten' });
+                    }
+                }
+
+                if (weatherData.conditions.toLowerCase().includes('clear')) {
+                    suggestions.push({ name: 'Sunglasses', icon: 'fa-solid fa-glasses' });
+                }
+
+                let html = suggestions.length === 0 
+                    ? '<p>No specific suggestions at this time.</p>'
+                    : '<ul class="suggestion-list">' + 
+                      suggestions.map(item => 
+                        `<li class="suggestion-item"><i class="${item.icon}"></i><span>${item.name}</span></li>`
+                      ).join('') + 
+                      '</ul>';
+                
+                dom['suggestion-container'].innerHTML = html;
+            }
+
+            function displayWeatherError() {
+                dom['weather-loader'].style.display = 'none';
+                dom['weather-details'].innerHTML = `
+                    <p style="color: #666;">Weather data temporarily unavailable.</p>
+                    <p style="font-size: 0.9em;">Please check back in a few minutes.</p>
+                `;
+                dom['weather-content'].style.display = 'block';
+            }
+
+            function createMap(coords, title) {
+                const { lat, lon } = coords;
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.05},${lat-0.025},${lon+0.05},${lat+0.025}&layer=mapnik&marker=${lat},${lon}`;
+                iframe.title = title;
+                dom['map-container'].innerHTML = '';
+                dom['map-container'].appendChild(iframe);
+            }
+
             function updateLastChecked() {
                 let seconds = 0;
                 dom['last-checked'].textContent = "just now...";
@@ -279,209 +306,15 @@
                     }
                 }, 1000);
             }
-            
-            // Weather Functions
-            async function fetchWeatherData() {
-                try {
-                    const response = await fetch(MARINE_WEATHER_API_URL);
-                    if (!response.ok) {
-                        throw new Error(`Weather API returned ${response.status}`);
-                    }
-            
-                    const data = await response.json();
-                    console.log('Raw API response:', data); // Debug log
-            
-                    if (!data.properties) {
-                        throw new Error('Invalid weather data format');
-                    }
-            
-                    const weatherData = parseWeatherData(data.properties);
-                    updateWeatherUI(weatherData);
-                } catch (error) {
-                    console.error('Weather fetch failed:', error);
-                    displayWeatherError();
-                }
-            }
-            
-            function parseWeatherData(properties) {
-                console.log('Parsing weather properties:', properties); // Debug log
-            
-                // Get temperature in Fahrenheit
-                const tempC = properties.temperature?.value;
-                const tempF = tempC !== null ? ((tempC * 9/5) + 32).toFixed(0) : 'N/A';
-            
-                // Get wind speed in mph (converting from m/s)
-                const windSpeedMs = properties.windSpeed?.value || 0;
-                const windSpeedMph = (windSpeedMs * 2.237).toFixed(1);
-            
-                // Get wind direction
-                const windDirDeg = properties.windDirection?.value;
-                const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
-                let windDir;
-            
-                if (windSpeedMs === 0) {
-                    windDir = 'Calm';
-                } else if (windDirDeg !== null && windDirDeg !== undefined) {
-                    windDir = directions[Math.round(windDirDeg / 22.5) % 16];
-                } else {
-                    windDir = 'N/A';
-                }
-            
-                const parsedData = {
-                    temperature: tempF,
-                    windSpeed: windSpeedMph,
-                    windDirection: windDir,
-                    conditions: properties.textDescription || 'Clear'
-                };
-            
-                console.log('Parsed weather data:', parsedData); // Debug log
-                return parsedData;
-            }
-            
-            function updateWeatherUI(weatherData) {
-                const windDisplay = weatherData.windDirection === 'Calm' 
-                    ? 'Calm' 
-                    : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
-            
-                const waveHeight = estimateWaveHeight(weatherData.windSpeed, weatherData.windDirection);
-                
-                // Format the timestamp
-                const observationTime = new Date(weatherData.timestamp);
-                const timeString = observationTime.toLocaleString('en-US', {
-                    timeZone: 'America/New_York',
-                    hour: 'numeric',
-                    minute: 'numeric',
-                    hour12: true
-                });
-                
-                dom['weather-details'].innerHTML = `
-                    <p><strong>Wind:</strong> ${windDisplay}</p>
-                    <p><strong>Air Temp:</strong> ${weatherData.temperature}°F</p>
-                    <p><strong>Waves:</strong> ${waveHeight}</p>
-                    <p><strong>Conditions:</strong> ${weatherData.conditions}</p>
-                    <p><strong>Last Updated:</strong> ${timeString}</p>
-                    <p class="weather-link" style="margin-top: 10px; font-size: 0.9em;">
-                        <a href="https://www.weather.gov/wrh/timeseries?site=KBTV" 
-                           target="_blank" 
-                           style="color: #007bff; text-decoration: none;">
-                            View Weather Data Source
-                        </a>
-                    </p>
-                `;
-            
-                updateSuggestions(weatherData);
-                
-                dom['weather-loader'].style.display = 'none';
-                dom['weather-content'].style.display = 'block';
-            }
 
-            
-            function estimateWaveHeight(windSpeed, windDirection) {
-                const speed = parseFloat(windSpeed);
-                if (isNaN(speed) || speed === 0 || windDirection === 'Calm') {
-                    return "Calm (< 0.5 ft)";
-                }
-                
-                if (speed < 5) return "Calm (< 0.5 ft)";
-                if (speed < 10) return "Light Chop (0.5 - 1 ft)";
-                if (speed < 15) return "Moderate (1 - 2 ft)";
-                return "Choppy (2+ ft)";
-            }
-            
-            function updateSuggestions(weatherData) {
-                const temp = parseFloat(weatherData.temperature);
-                const suggestions = [];
-            
-                if (!isNaN(temp)) {
-                    if (temp >= 75) {
-                        suggestions.push({ name: 'T-Shirt & Shorts', icon: 'fa-solid fa-shirt' });
-                    } else if (temp >= 65) {
-                        suggestions.push({ name: 'Light Jacket', icon: 'fa-solid fa-layer-group' });
-                    } else {
-                        suggestions.push({ name: 'Warm Coat', icon: 'fa-solid fa-mitten' });
-                    }
-                }
-            
-                if (weatherData.conditions.toLowerCase().includes('clear')) {
-                    suggestions.push({ name: 'Sunglasses', icon: 'fa-solid fa-glasses' });
-                }
-            
-                if (suggestions.length === 0) {
-                    dom['suggestion-container'].innerHTML = '<p>No specific suggestions at this time.</p>';
-                    return;
-                }
-            
-                let html = '<ul class="suggestion-list">';
-                suggestions.forEach(item => {
-                    html += `<li class="suggestion-item"><i class="${item.icon}"></i><span>${item.name}</span></li>`;
-                });
-                html += '</ul>';
-                dom['suggestion-container'].innerHTML = html;
-            }
-
-            
-            function displayWeatherError() {
-                dom['weather-loader'].style.display = 'none';
-                dom['weather-details'].innerHTML = `
-                    <p style="color: #666;">Weather data temporarily unavailable.</p>
-                    <p style="font-size: 0.9em;">Please check back in a few minutes.</p>
-                `;
-                dom['weather-content'].style.display = 'block';
-            }
-            
-            // Map Functions
-            function createMap(coords, title) {
-                dom['map-container'].innerHTML = '';
-                const { lat, lon } = coords;
-                const iframe = document.createElement('iframe');
-                iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.05},${lat-0.025},${lon+0.05},${lat+0.025}&layer=mapnik&marker=${lat},${lon}`;
-                iframe.title = title;
-                dom['map-container'].appendChild(iframe);
-            }
-            
-            // Hourly Forecast Functions
-            async function fetchAndUpdateHourlyForecast() {
-                try {
-                    const response = await fetch(HOURLY_FORECAST_URL);
-                    if (!response.ok) throw new Error('Hourly forecast network error');
-                    const data = await response.json();
-                    const nextThreeHours = data.properties.periods.slice(1, 4);
-                    updateHourlyForecastUI(nextThreeHours);
-                } catch (error) {
-                    console.error("Failed to fetch hourly forecast:", error);
-                    dom['hourly-forecast-grid'].innerHTML = `<p style="grid-column: 1 / -1;">Forecast unavailable.</p>`;
-                }
-            }
-            
-            function updateHourlyForecastUI(periods) {
-                let html = '';
-                periods.forEach(period => {
-                    const time = new Date(period.startTime);
-                    const formattedTime = time.toLocaleString('en-US', { hour: 'numeric', hour12: true });
-                    const feelsLikeC = period.apparentTemperature?.value;
-                    const feelsLikeF = !isNaN(feelsLikeC) ? (feelsLikeC * 9/5 + 32).toFixed(0) : period.temperature;
-                    const precipChance = period.probabilityOfPrecipitation?.value || 0;
-                    
-                    html += `
-                        <div class="forecast-hour">
-                            <div class="forecast-time">${formattedTime}</div>
-                            <div class="forecast-icon"><img src="${period.icon}" alt="${period.shortForecast}"></div>
-                            <div class="forecast-temp">${period.temperature}°F</div>
-                            <div class="forecast-detail">Feels like ${feelsLikeF}°</div>
-                            <div class="forecast-detail">${period.windSpeed} ${period.windDirection}</div>
-                            <div class="forecast-detail">💧 ${precipChance}%</div>
-                        </div>`;
-                });
-                dom['hourly-forecast-grid'].innerHTML = html;
-            }
-            
-            // Initialize everything
+            // Initialize
             fetchAndUpdateStatus();
             createMap(LAKEWOOD_BEACH, "Map of Lakewood Beach");
             fetchWeatherData();
-            fetchAndUpdateHourlyForecast();
             updateLastChecked();
 
+            // Auto-refresh weather every 5 minutes
+            setInterval(fetchWeatherData, 300000);
         });
     </script>
 </body>
