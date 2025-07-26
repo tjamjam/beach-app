@@ -223,33 +223,63 @@
             }
             
             function parseWeatherData(properties) {
+                console.log('Raw weather properties:', properties); // Debug log
+            
                 // Convert temperature from Celsius to Fahrenheit
                 const tempC = properties.temperature?.value;
                 const tempF = tempC !== null ? ((tempC * 9/5) + 32).toFixed(0) : 'N/A';
             
-                // Convert wind speed from m/s to mph
-                const windSpeedMs = properties.windSpeed?.value || 0;
-                const windSpeedMph = (windSpeedMs * 2.237).toFixed(1);
+                // Get wind speed and convert from m/s to mph
+                const windSpeedMs = properties.windSpeed?.value;
+                // Make sure we're not multiplying by 2.237 twice (NWS might already give mph)
+                const windSpeedMph = windSpeedMs ? (windSpeedMs * 2.237).toFixed(1) : '0';
             
                 // Get wind direction
-                const windDirDeg = properties.windDirection?.value || 0;
+                const windDirDeg = properties.windDirection?.value;
                 const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
-                const windDir = directions[Math.round(windDirDeg / 22.5) % 16];
+                let windDir = 'N/A';
+                
+                if (windDirDeg !== null && windDirDeg !== undefined) {
+                    windDir = directions[Math.round(windDirDeg / 22.5) % 16];
+                } else if (properties.windDirection) {
+                    // If we have a cardinal direction string, use it directly
+                    windDir = properties.windDirection;
+                }
             
-                return {
+                // If wind speed is 0, force direction to be N/A
+                if (parseFloat(windSpeedMph) === 0) {
+                    windDir = 'N/A';
+                }
+            
+                const weatherData = {
                     temperature: tempF,
                     windSpeed: windSpeedMph,
                     windDirection: windDir,
                     conditions: properties.textDescription || 'Clear',
                     timestamp: properties.timestamp
                 };
+            
+                // Debug log the parsed data
+                console.log('Parsed weather data:', weatherData);
+            
+                return weatherData;
             }
+
             
             function updateWeatherUI(weatherData) {
+                const windSpeed = parseFloat(weatherData.windSpeed);
+                let windDisplay;
+                
+                if (windSpeed === 0) {
+                    windDisplay = "Calm";
+                } else {
+                    windDisplay = `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
+                }
+                
                 const waveHeight = estimateWaveHeight(weatherData.windSpeed, weatherData.windDirection);
                 
                 dom['weather-details'].innerHTML = `
-                    <p><strong>Wind:</strong> ${weatherData.windDirection} at ${weatherData.windSpeed} mph</p>
+                    <p><strong>Wind:</strong> ${windDisplay}</p>
                     <p><strong>Air Temp:</strong> ${weatherData.temperature}°F</p>
                     <p><strong>Waves:</strong> ${waveHeight}</p>
                     <p><strong>Conditions:</strong> ${weatherData.conditions}</p>
