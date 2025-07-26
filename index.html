@@ -126,6 +126,41 @@
                 'status-note', 'hourly-forecast-grid', 'refresh-weather'
             ].forEach(id => dom[id] = document.getElementById(id));
 
+            // Add this near your other DOM elements initialization
+            dom['email-form'].addEventListener('submit', async (event) => {
+                event.preventDefault();
+                console.log('Form submitted');
+                
+                const email = dom['email-input'].value;
+                console.log('Attempting to subscribe email:', email);
+                
+                try {
+                    const response = await fetch(SUBSCRIBE_API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email: email })
+                    });
+                    
+                    console.log('Subscribe response status:', response.status);
+                    const data = await response.json();
+                    console.log('Subscribe response data:', data);
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Subscription failed');
+                    }
+                    
+                    dom['form-message'].textContent = 'Successfully subscribed!';
+                    dom['form-message'].style.color = 'green';
+                    dom['email-input'].value = '';
+                } catch (error) {
+                    console.error('Subscription error:', error);
+                    dom['form-message'].textContent = 'Subscription failed. Please try again.';
+                    dom['form-message'].style.color = 'red';
+                }
+            });
+
             // Weather refresh button
             dom['refresh-weather'].addEventListener('click', () => {
                 dom['weather-loader'].style.display = 'block';
