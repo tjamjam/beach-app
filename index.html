@@ -105,52 +105,45 @@
         </div>
     </div>
 
-        <script>
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Configuration
+            // --- SECTION 1: CONFIGURATION ---
             const BASE_API_URL = 'https://beach-api.terrencefradet.workers.dev';
             const SUBSCRIBE_API_URL = BASE_API_URL + '/subscribe';
             const MARINE_WEATHER_API_URL = BASE_API_URL + '/weather';
             const HOURLY_FORECAST_URL = 'https://api.weather.gov/gridpoints/BTV/61,77/forecast/hourly';
             const STATUS_JSON_URL = 'https://raw.githubusercontent.com/tjamjam/beach-app/main/status.json';
             const LAKEWOOD_BEACH = { lat: 44.500056, lon: -73.248890 };
-
-            // DOM elements
+    
+            // --- SECTION 2: DOM ELEMENTS ---
             const dom = {};
             [
-                'red-light', 'yellow-light', 'green-light', 
-                'status-text', 'weather-loader', 'weather-content', 
-                'map-container', 'weather-details', 'data-source-info', 
-                'suggestion-container', 'email-form', 'email-input', 
-                'form-message', 'last-checked', 'official-update', 
-                'status-note', 'hourly-forecast-grid', 'refresh-weather'
+                'red-light', 'yellow-light', 'green-light', 'status-text',
+                'weather-loader', 'weather-content', 'map-container', 'weather-details',
+                'data-source-info', 'suggestion-container', 'email-form', 'email-input',
+                'form-message', 'last-checked', 'official-update', 'status-note',
+                'hourly-forecast-grid', 'refresh-weather'
             ].forEach(id => dom[id] = document.getElementById(id));
-
-            // Add this near your other DOM elements initialization
+    
+            // --- SECTION 3: EVENT LISTENERS ---
+            // Email Subscription Form
             dom['email-form'].addEventListener('submit', async (event) => {
                 event.preventDefault();
                 console.log('Form submitted');
-                
                 const email = dom['email-input'].value;
                 console.log('Attempting to subscribe email:', email);
-                
                 try {
                     const response = await fetch(SUBSCRIBE_API_URL, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email: email })
                     });
-                    
                     console.log('Subscribe response status:', response.status);
                     const data = await response.json();
                     console.log('Subscribe response data:', data);
-                    
                     if (!response.ok) {
                         throw new Error(data.error || 'Subscription failed');
                     }
-                    
                     dom['form-message'].textContent = 'Successfully subscribed!';
                     dom['form-message'].style.color = 'green';
                     dom['email-input'].value = '';
@@ -160,14 +153,16 @@
                     dom['form-message'].style.color = 'red';
                 }
             });
-
-            // Weather refresh button
+    
+            // Weather Refresh Button
             dom['refresh-weather'].addEventListener('click', () => {
                 dom['weather-loader'].style.display = 'block';
                 dom['weather-content'].style.display = 'none';
                 fetchWeatherData();
             });
-
+            
+            // --- SECTION 4: FUNCTIONS ---
+    
             // Status Functions
             async function fetchAndUpdateStatus() {
                 try {
@@ -180,53 +175,35 @@
                     updateStoplight({ status: 'error', date: 'N/A', note: 'Could not fetch status data.' });
                 }
             }
-
+    
             function updateStoplight(data) {
                 const { status, date, note } = data;
                 dom['red-light'].classList.remove('red');
                 dom['yellow-light'].classList.remove('yellow');
                 dom['green-light'].classList.remove('green');
-                
                 let message = '', color = '#555';
                 switch (status) {
-                    case 'green':
-                        dom['green-light'].classList.add('green');
-                        message = 'Open for Swimming';
-                        color = '#00a045';
-                        break;
-                    case 'yellow':
-                        dom['yellow-light'].classList.add('yellow');
-                        message = 'Advisory / Caution';
-                        color = '#c7a900';
-                        break;
-                    case 'red':
-                        dom['red-light'].classList.add('red');
-                        message = 'Closed for Swimming';
-                        color = '#c21616';
-                        break;
-                    default:
-                        message = 'Could not determine status.';
+                    case 'green': dom['green-light'].classList.add('green'); message = 'Open for Swimming'; color = '#00a045'; break;
+                    case 'yellow': dom['yellow-light'].classList.add('yellow'); message = 'Advisory / Caution'; color = '#c7a900'; break;
+                    case 'red': dom['red-light'].classList.add('red'); message = 'Closed for Swimming'; color = '#c21616'; break;
+                    default: message = 'Could not determine status.';
                 }
-                
                 dom['status-text'].textContent = message;
                 dom['status-text'].style.color = color;
                 dom['official-update'].textContent = `Official Update: ${date}`;
                 dom['official-update'].style.display = 'block';
-                
                 if (note) {
                     dom['status-note'].textContent = `Note: ${note}`;
                     dom['status-note'].style.display = 'block';
                 }
             }
-
+    
             // Weather Functions
             async function fetchWeatherData() {
                 try {
                     const response = await fetch(MARINE_WEATHER_API_URL);
                     if (!response.ok) throw new Error(`Weather API returned ${response.status}`);
-                    
                     const data = await response.json();
-                    // Handle both direct weather data and properties format
                     const weatherData = data.properties ? parseWeatherData(data.properties) : parseWeatherData(data);
                     updateWeatherUI(weatherData);
                 } catch (error) {
@@ -234,19 +211,14 @@
                     displayWeatherError();
                 }
             }
-
+    
             function parseWeatherData(data) {
-                // No conversions needed, just return the data as is
                 return data;
             }
             
             function updateWeatherUI(weatherData) {
-                const windDisplay = parseFloat(weatherData.windSpeed) === 0 
-                    ? 'Calm' 
-                    : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
-
+                const windDisplay = parseFloat(weatherData.windSpeed) === 0 ? 'Calm' : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
                 const waveHeight = estimateWaveHeight(weatherData.windSpeed);
-                
                 dom['weather-details'].innerHTML = `
                     <p><strong>Wind:</strong> ${windDisplay}</p>
                     <p><strong>Air Temp:</strong> ${weatherData.temperature}°F</p>
@@ -255,22 +227,17 @@
                     <p><strong>Conditions:</strong> ${weatherData.conditions}</p>
                     <p><strong>Last Updated:</strong> ${weatherData.timestamp}</p>
                     <p class="weather-link" style="margin-top: 10px; font-size: 0.9em;">
-                        <a href="https://www.weather.gov/wrh/timeseries?site=KBTV" 
-                           target="_blank" 
-                           style="color: #007bff; text-decoration: none;">
+                        <a href="https://www.weather.gov/wrh/timeseries?site=KBTV" target="_blank" style="color: #007bff; text-decoration: none;">
                             View Weather Data Source
                         </a>
                     </p>
                 `;
-            
                 createMap(weatherData.station);
                 updateSuggestions(weatherData);
-                
                 dom['weather-loader'].style.display = 'none';
                 dom['weather-content'].style.display = 'block';
             }
-
-
+    
             function estimateWaveHeight(windSpeed) {
                 const speed = parseFloat(windSpeed);
                 if (isNaN(speed) || speed === 0) return "Calm (< 0.5 ft)";
@@ -279,45 +246,29 @@
                 if (speed < 15) return "Moderate (1 - 2 ft)";
                 return "Choppy (2+ ft)";
             }
-
+    
             function updateSuggestions(weatherData) {
                 const temp = parseFloat(weatherData.temperature);
                 const suggestions = [];
-
                 if (!isNaN(temp)) {
-                    if (temp >= 75) {
-                        suggestions.push({ name: 'T-Shirt & Shorts', icon: 'fa-solid fa-shirt' });
-                    } else if (temp >= 65) {
-                        suggestions.push({ name: 'Light Jacket', icon: 'fa-solid fa-layer-group' });
-                    } else {
-                        suggestions.push({ name: 'Warm Coat', icon: 'fa-solid fa-mitten' });
-                    }
+                    if (temp >= 75) suggestions.push({ name: 'T-Shirt & Shorts', icon: 'fa-solid fa-shirt' });
+                    else if (temp >= 65) suggestions.push({ name: 'Light Jacket', icon: 'fa-solid fa-layer-group' });
+                    else suggestions.push({ name: 'Warm Coat', icon: 'fa-solid fa-mitten' });
                 }
-
-                if (weatherData.conditions.toLowerCase().includes('clear')) {
+                if (weatherData.conditions && weatherData.conditions.toLowerCase().includes('clear')) {
                     suggestions.push({ name: 'Sunglasses', icon: 'fa-solid fa-glasses' });
                 }
-
-                let html = suggestions.length === 0 
-                    ? '<p>No specific suggestions at this time.</p>'
-                    : '<ul class="suggestion-list">' + 
-                      suggestions.map(item => 
-                        `<li class="suggestion-item"><i class="${item.icon}"></i><span>${item.name}</span></li>`
-                      ).join('') + 
-                      '</ul>';
-                
+                let html = suggestions.length ? '<ul class="suggestion-list">' + suggestions.map(item => `<li class="suggestion-item"><i class="${item.icon}"></i><span>${item.name}</span></li>`).join('') + '</ul>' : '<p>No specific suggestions at this time.</p>';
                 dom['suggestion-container'].innerHTML = html;
             }
-
+    
             function displayWeatherError() {
                 dom['weather-loader'].style.display = 'none';
-                dom['weather-details'].innerHTML = `
-                    <p style="color: #666;">Weather data temporarily unavailable.</p>
-                    <p style="font-size: 0.9em;">Please check back in a few minutes.</p>
-                `;
+                dom['weather-details'].innerHTML = `<p style="color: #666;">Weather data temporarily unavailable.</p><p style="font-size: 0.9em;">Please check back in a few minutes.</p>`;
                 dom['weather-content'].style.display = 'block';
             }
-
+    
+            // Map, Time, and Hourly Forecast Functions
             function createMap(station) {
                 const { lat, lon } = station.coordinates;
                 const iframe = document.createElement('iframe');
@@ -326,29 +277,50 @@
                 dom['map-container'].innerHTML = '';
                 dom['map-container'].appendChild(iframe);
             }
-
-
+    
             function updateLastChecked() {
                 let seconds = 0;
                 dom['last-checked'].textContent = "just now...";
                 setInterval(() => {
                     seconds++;
-                    if (seconds < 60) {
-                        dom['last-checked'].textContent = `${seconds} second${seconds > 1 ? 's' : ''} ago...`;
-                    } else {
-                        const minutes = Math.floor(seconds / 60);
-                        dom['last-checked'].textContent = `${minutes} minute${minutes > 1 ? 's' : ''} ago...`;
-                    }
+                    dom['last-checked'].textContent = seconds < 60 ? `${seconds}s ago` : `${Math.floor(seconds / 60)}m ago`;
                 }, 1000);
             }
-
-            // Initialize
+    
+            // NOTE: The function definition for the hourly forecast was missing in the file you provided.
+            // I have added it back here to ensure it works correctly.
+            async function fetchAndUpdateHourlyForecast() {
+                try {
+                    const response = await fetch(HOURLY_FORECAST_URL);
+                    if (!response.ok) throw new Error('Hourly forecast network error');
+                    const data = await response.json();
+                    updateHourlyForecastUI(data.properties.periods.slice(1, 4));
+                } catch (error) {
+                    console.error("Failed to fetch hourly forecast:", error);
+                    dom['hourly-forecast-grid'].innerHTML = `<p style="grid-column: 1 / -1;">Forecast unavailable.</p>`;
+                }
+            }
+    
+            function updateHourlyForecastUI(periods) {
+                let html = '';
+                periods.forEach(period => {
+                    html += `
+                        <div class="forecast-hour">
+                            <div class="forecast-time">${new Date(period.startTime).toLocaleString('en-US', { hour: 'numeric', hour12: true })}</div>
+                            <div class="forecast-icon"><img src="${period.icon}" alt="${period.shortForecast}"></div>
+                            <div class="forecast-temp">${period.temperature}°F</div>
+                            <div class="forecast-detail">${period.windSpeed} ${period.windDirection}</div>
+                        </div>`;
+                });
+                dom['hourly-forecast-grid'].innerHTML = html;
+            }
+            
+            // --- SECTION 5: INITIALIZATION ---
             fetchAndUpdateStatus();
-            fetchWeatherData(); // This will handle the map creation
-            updateLastChecked();
+            fetchWeatherData();
             fetchAndUpdateHourlyForecast();
-
-
+            updateLastChecked();
+    
             // Auto-refresh weather every 5 minutes
             setInterval(fetchWeatherData, 300000);
         });
