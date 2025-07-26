@@ -89,6 +89,10 @@
                     <div class="weather-details" id="weather-details"></div>
                 </div>
                 <p id="data-source-info"></p>
+                
+                <button id="test-api" style="margin: 10px; padding: 5px 10px;">
+    Test Weather API
+</button>
                 <div class="suggestion-section">
                     <p><strong>Suggestions:</strong></p>
                     <div id="suggestion-container"></div>
@@ -122,6 +126,18 @@
             const dom = {};
             ['red-light', 'yellow-light', 'green-light', 'status-text', 'weather-loader', 'weather-content', 'map-container', 'weather-details', 'data-source-info', 'suggestion-container', 'email-form', 'email-input', 'form-message', 'last-checked', 'official-update', 'status-note', 'hourly-forecast-grid'].forEach(id => dom[id] = document.getElementById(id));
 
+            // Add this with your other DOM elements
+            dom['test-api'] = document.getElementById('test-api');
+            
+            // Add this to your initialization section
+            dom['test-api'].addEventListener('click', async () => {
+                console.clear(); // Clear previous console logs
+                const results = await testWeatherAPI();
+                if (results) {
+                    console.log('Test completed successfully!');
+                }
+            });
+            
             // Add this function and test it in the console
             async function testWeatherAPI() {
                 try {
