@@ -30,6 +30,7 @@
         .map-container iframe { width: 100%; height: 200px; border: 1px solid #ccc; border-radius: 10px; }
         .weather-details p { margin: 8px 0; font-size: 1.1em; }
         .weather-details p strong { color: #0056b3; }
+        .weather-link a:hover { text-decoration: underline;}
         #data-source-info { font-size: 0.9em; color: #666; margin-top: 15px; text-align: center; }
         .suggestion-section { margin-top: 20px; text-align: center; }
         .suggestion-list { list-style: none; padding: 0; margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; }
@@ -252,6 +253,13 @@
                     <p><strong>Air Temp:</strong> ${weatherData.temperature}°F</p>
                     <p><strong>Waves:</strong> ${waveHeight}</p>
                     <p><strong>Conditions:</strong> ${weatherData.conditions}</p>
+                    <p class="weather-link" style="margin-top: 10px; font-size: 0.9em;">
+                        <a href="https://www.weather.gov/wrh/timeseries?site=KBTV" 
+                           target="_blank" 
+                           style="color: #007bff; text-decoration: none;">
+                            View Weather Data Source
+                        </a>
+                    </p>
                 `;
             
                 updateSuggestions(weatherData);
