@@ -283,17 +283,33 @@
             async function fetchPrimaryWeather() {
                 try {
                     const response = await fetch(MARINE_WEATHER_API_URL);
-                    if (!response.ok) throw new Error('Buoy data network error');
-                    const textData = await response.text();
-                    const weatherData = parseBuoyData(textData);
-                    if (!weatherData) throw new Error('Failed to parse buoy data');
-                    updateWeatherUI(weatherData, STATIONS.primary);
+                    const contentType = response.headers.get('content-type');
+                    
+                    if (!response.ok) {
+                        throw new Error(`Weather API returned ${response.status}`);
+                    }
+            
+                    if (contentType && contentType.includes('application/json')) {
+                        // We got JSON (probably backup data from NWS)
+                        const data = await response.json();
+                        const weatherData = parseAirportData(data.properties);
+                        updateWeatherUI(weatherData, STATIONS.backup);
+                    } else {
+                        // We got text data (primary NDBC source)
+                        const textData = await response.text();
+                        const weatherData = parseBuoyData(textData);
+                        if (!weatherData) {
+                            throw new Error('Failed to parse buoy data');
+                        }
+                        updateWeatherUI(weatherData, STATIONS.primary);
+                    }
                 } catch (error) {
-                    console.warn("Primary station (Buoy) failed:", error);
-                    // Immediately try backup source
+                    console.warn("Primary weather fetch failed:", error);
+                    // Try backup source directly
                     fetchBackupWeather();
                 }
             }
+
 
             
             async function fetchBackupWeather() {
