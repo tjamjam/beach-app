@@ -208,76 +208,60 @@
                     }
             
                     const data = await response.json();
-                    console.log('Weather API response:', data); // Debug log
+                    console.log('Raw API response:', data); // Debug log
             
-                    if (data.properties) {
-                        const weatherData = parseWeatherData(data.properties);
-                        updateWeatherUI(weatherData);
-                    } else {
+                    if (!data.properties) {
                         throw new Error('Invalid weather data format');
                     }
+            
+                    const weatherData = parseWeatherData(data.properties);
+                    updateWeatherUI(weatherData);
                 } catch (error) {
                     console.error('Weather fetch failed:', error);
                     displayWeatherError();
                 }
             }
             
-            function parseWeatherData(data) {
-                console.log('Raw weather data:', data); // Debug log
+            function parseWeatherData(properties) {
+                console.log('Parsing weather properties:', properties); // Debug log
             
-                // Parse temperature (convert from C to F if needed)
-                let tempF;
-                if (data.temperature.unit === 'unit:degC') {
-                    tempF = ((data.temperature.value * 9/5) + 32).toFixed(0);
-                } else {
-                    tempF = data.temperature.value.toFixed(0);
-                }
+                // Get temperature in Fahrenheit
+                const tempC = properties.temperature?.value;
+                const tempF = tempC !== null ? ((tempC * 9/5) + 32).toFixed(0) : 'N/A';
             
-                // Parse wind speed (convert from m/s to mph if needed)
-                let windSpeedMph;
-                if (data.windSpeed.unit === 'unit:m_s-1') {
-                    windSpeedMph = (data.windSpeed.value * 2.237).toFixed(1);
-                } else {
-                    windSpeedMph = data.windSpeed.value.toFixed(1);
-                }
+                // Get wind speed in mph (converting from m/s)
+                const windSpeedMs = properties.windSpeed?.value || 0;
+                const windSpeedMph = (windSpeedMs * 2.237).toFixed(1);
             
-                // Parse wind direction
-                const windDirDeg = data.windDirection.value;
+                // Get wind direction
+                const windDirDeg = properties.windDirection?.value;
                 const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
-                let windDir = 'N/A';
-                
-                if (windDirDeg !== null && windDirDeg !== undefined) {
-                    windDir = directions[Math.round(windDirDeg / 22.5) % 16];
-                }
+                let windDir;
             
-                // If wind speed is 0, set direction to Calm
-                if (parseFloat(windSpeedMph) === 0) {
+                if (windSpeedMs === 0) {
                     windDir = 'Calm';
+                } else if (windDirDeg !== null && windDirDeg !== undefined) {
+                    windDir = directions[Math.round(windDirDeg / 22.5) % 16];
+                } else {
+                    windDir = 'N/A';
                 }
             
-                const weatherData = {
+                const parsedData = {
                     temperature: tempF,
                     windSpeed: windSpeedMph,
                     windDirection: windDir,
-                    conditions: data.textDescription || 'Clear',
-                    timestamp: data.timestamp
+                    conditions: properties.textDescription || 'Clear'
                 };
             
-                console.log('Parsed weather data:', weatherData); // Debug log
-                return weatherData;
+                console.log('Parsed weather data:', parsedData); // Debug log
+                return parsedData;
             }
-
             
             function updateWeatherUI(weatherData) {
-                const windSpeed = parseFloat(weatherData.windSpeed);
-                let windDisplay;
-                
-                if (windSpeed === 0) {
-                    windDisplay = "Calm";
-                } else {
-                    windDisplay = `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
-                }
-                
+                const windDisplay = weatherData.windDirection === 'Calm' 
+                    ? 'Calm' 
+                    : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
+            
                 const waveHeight = estimateWaveHeight(weatherData.windSpeed, weatherData.windDirection);
                 
                 dom['weather-details'].innerHTML = `
@@ -302,7 +286,9 @@
             
             function estimateWaveHeight(windSpeed, windDirection) {
                 const speed = parseFloat(windSpeed);
-                if (isNaN(speed) || speed === 0) return "Calm (< 0.5 ft)";
+                if (isNaN(speed) || speed === 0 || windDirection === 'Calm') {
+                    return "Calm (< 0.5 ft)";
+                }
                 
                 if (speed < 5) return "Calm (< 0.5 ft)";
                 if (speed < 10) return "Light Chop (0.5 - 1 ft)";
@@ -324,15 +310,10 @@
                     }
                 }
             
-                if (weatherData.conditions.toLowerCase().includes('rain')) {
-                    suggestions.push({ name: 'Umbrella', icon: 'fa-solid fa-umbrella' });
-                }
-            
                 if (weatherData.conditions.toLowerCase().includes('clear')) {
                     suggestions.push({ name: 'Sunglasses', icon: 'fa-solid fa-glasses' });
                 }
             
-                // Update the UI with suggestions
                 if (suggestions.length === 0) {
                     dom['suggestion-container'].innerHTML = '<p>No specific suggestions at this time.</p>';
                     return;
@@ -345,6 +326,7 @@
                 html += '</ul>';
                 dom['suggestion-container'].innerHTML = html;
             }
+
             
             function displayWeatherError() {
                 dom['weather-loader'].style.display = 'none';
