@@ -121,6 +121,175 @@
             const dom = {};
             ['red-light', 'yellow-light', 'green-light', 'status-text', 'weather-loader', 'weather-content', 'map-container', 'weather-details', 'data-source-info', 'suggestion-container', 'email-form', 'email-input', 'form-message', 'last-checked', 'official-update', 'status-note', 'hourly-forecast-grid'].forEach(id => dom[id] = document.getElementById(id));
 
+            // Add this block of functions right after your DOM elements section and before the initialization
+
+            // Status functions
+            async function fetchAndUpdateStatus() {
+                try {
+                    const response = await fetch(`${STATUS_JSON_URL}?t=${new Date().getTime()}`);
+                    if (!response.ok) throw new Error('Status JSON network error');
+                    const data = await response.json();
+                    updateStoplight(data);
+                } catch (error) {
+                    console.error("Failed to fetch status:", error);
+                    updateStoplight({ status: 'error', date: 'N/A', note: 'Could not fetch status data.' });
+                }
+            }
+            
+            function updateStoplight(data) {
+                const { status, date, note } = data;
+                dom['red-light'].classList.remove('red');
+                dom['yellow-light'].classList.remove('yellow');
+                dom['green-light'].classList.remove('green');
+                
+                let message = '', color = '#555';
+                switch (status) {
+                    case 'green':
+                        dom['green-light'].classList.add('green');
+                        message = 'Open for Swimming';
+                        color = '#00a045';
+                        break;
+                    case 'yellow':
+                        dom['yellow-light'].classList.add('yellow');
+                        message = 'Advisory / Caution';
+                        color = '#c7a900';
+                        break;
+                    case 'red':
+                        dom['red-light'].classList.add('red');
+                        message = 'Closed for Swimming';
+                        color = '#c21616';
+                        break;
+                    default:
+                        message = 'Could not determine status.';
+                        break;
+                }
+                
+                dom['status-text'].textContent = message;
+                dom['status-text'].style.color = color;
+                dom['official-update'].textContent = `Official Update: ${date}`;
+                dom['official-update'].style.display = 'block';
+                
+                if (note) {
+                    dom['status-note'].textContent = `Note: ${note}`;
+                    dom['status-note'].style.display = 'block';
+                }
+            }
+            
+            function updateLastChecked() {
+                let seconds = 0;
+                dom['last-checked'].textContent = "just now...";
+                setInterval(() => {
+                    seconds++;
+                    if (seconds < 60) {
+                        dom['last-checked'].textContent = `${seconds} second${seconds > 1 ? 's' : ''} ago...`;
+                    } else {
+                        const minutes = Math.floor(seconds / 60);
+                        dom['last-checked'].textContent = `${minutes} minute${minutes > 1 ? 's' : ''} ago...`;
+                    }
+                }, 1000);
+            }
+            
+            // Map and Weather functions
+            function createMap(coords, title) {
+                dom['map-container'].innerHTML = '';
+                const { lat, lon } = coords;
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.05},${lat-0.025},${lon+0.05},${lat+0.025}&layer=mapnik&marker=${lat},${lon}`;
+                iframe.title = title;
+                dom['map-container'].appendChild(iframe);
+            }
+            
+            async function fetchPrimaryWeather() {
+                try {
+                    const response = await fetch(MARINE_WEATHER_API_URL);
+                    if (!response.ok) throw new Error('Buoy data network error');
+                    const textData = await response.text();
+                    const weatherData = parseBuoyData(textData);
+                    if (!weatherData) throw new Error('Failed to parse buoy data');
+                    updateWeatherUI(weatherData, STATIONS.primary);
+                } catch (error) {
+                    console.warn("Primary station (Buoy) failed:", error);
+                    dom['data-source-info'].textContent = 'Primary station offline. Using backup...';
+                    fetchBackupWeather();
+                }
+            }
+            
+            async function fetchBackupWeather() {
+                try {
+                    const response = await fetch(BACKUP_WEATHER_URL);
+                    if (!response.ok) throw new Error('Backup station network error');
+                    const data = await response.json();
+                    const weatherData = parseAirportData(data.properties);
+                    updateWeatherUI(weatherData, STATIONS.backup);
+                    createMap(STATIONS.backup.coords, STATIONS.backup.name);
+                } catch (error) {
+                    console.error("Backup station also failed:", error);
+                    dom['weather-loader'].style.display = 'none';
+                    dom['weather-details'].innerHTML = `<p>All weather sources are currently unavailable.</p>`;
+                    dom['weather-content'].style.display = 'block';
+                }
+            }
+            
+            async function fetchAndUpdateHourlyForecast() {
+                try {
+                    const response = await fetch(HOURLY_FORECAST_URL);
+                    if (!response.ok) throw new Error('Hourly forecast network error');
+                    const data = await response.json();
+                    const nextThreeHours = data.properties.periods.slice(1, 4);
+                    updateHourlyForecastUI(nextThreeHours);
+                } catch (error) {
+                    console.error("Failed to fetch hourly forecast:", error);
+                    dom['hourly-forecast-grid'].innerHTML = `<p style="grid-column: 1 / -1;">Forecast unavailable.</p>`;
+                }
+            }
+            
+            function updateHourlyForecastUI(periods) {
+                let html = '';
+                periods.forEach(period => {
+                    const time = new Date(period.startTime);
+                    const formattedTime = time.toLocaleString('en-US', { hour: 'numeric', hour12: true });
+                    const feelsLikeC = period.apparentTemperature?.value;
+                    const feelsLikeF = !isNaN(feelsLikeC) ? (feelsLikeC * 9/5 + 32).toFixed(0) : period.temperature;
+                    const precipChance = period.probabilityOfPrecipitation?.value || 0;
+                    html += `
+                        <div class="forecast-hour">
+                            <div class="forecast-time">${formattedTime}</div>
+                            <div class="forecast-icon"><img src="${period.icon}" alt="${period.shortForecast}"></div>
+                            <div class="forecast-temp">${period.temperature}°F</div>
+                            <div class="forecast-detail">Feels like ${feelsLikeF}°</div>
+                            <div class="forecast-detail">${period.windSpeed} ${period.windDirection}</div>
+                            <div class="forecast-detail">💧 ${precipChance}%</div>
+                        </div>`;
+                });
+                dom['hourly-forecast-grid'].innerHTML = html;
+            }
+            
+            function updateWeatherUI(data, station) {
+                const airTempF = !isNaN(data.airTemp) ? (data.airTemp * 9/5 + 32).toFixed(0) : 'N/A';
+                const waterTempF = !isNaN(data.waterTemp) ? (data.waterTemp * 9/5 + 32).toFixed(0) : 'N/A';
+                const waveEstimate = getWaveEstimate(data.windSpeed, data.numericWindDirection);
+                
+                dom['weather-details'].innerHTML = `
+                    <p><strong>Wind:</strong> ${data.windDirection} at ${data.windSpeed} mph</p>
+                    <p><strong>Air Temp:</strong> ${airTempF}°F</p>
+                    ${waterTempF !== 'N/A' ? `<p><strong>Water Temp:</strong> ${waterTempF}°F</p>` : ''}
+                    <p><strong>Waves:</strong> ${waveEstimate}</p>`;
+                
+                const dataSourceLink = document.createElement('a');
+                dataSourceLink.href = station.infoUrl;
+                dataSourceLink.target = '_blank';
+                dataSourceLink.textContent = `Data from ${station.name}`;
+                dom['data-source-info'].innerHTML = '';
+                dom['data-source-info'].appendChild(dataSourceLink);
+                
+                const suggestionList = getSuggestionList(airTempF, waveEstimate, data.conditions);
+                updateSuggestionUI(suggestionList);
+                
+                dom['weather-loader'].style.display = 'none';
+                dom['weather-content'].style.display = 'block';
+            }
+
+            
             // Your existing functions remain the same, except for these modified ones:
             function parseAirportData(properties) {
                 const windSpeedMps = properties.windSpeed?.value;
