@@ -201,38 +201,12 @@
             }
 
             function parseWeatherData(data) {
-                // Log the full data to see the station information
-                console.log('Full weather data:', data);
-            
-                // Get station information if available
-                const station = data.station || {
-                    geometry: {
-                        coordinates: [-73.153, 44.469] // Default KBTV coordinates as fallback
-                    },
-                    properties: {
-                        name: "Burlington International Airport (KBTV)"
-                    }
-                };
-            
-                // Extract coordinates and station name
-                const [lon, lat] = station.geometry?.coordinates || [-73.153, 44.469];
-                const stationName = station.properties?.name || "Burlington International Airport (KBTV)";
-            
-                return {
-                    temperature: data.temperature || 'N/A',
-                    windSpeed: data.windSpeed || '0',
-                    windDirection: data.windDirection || 'N/A',
-                    conditions: data.conditions || 'Clear',
-                    station: {
-                        name: stationName,
-                        coordinates: { lat, lon }
-                    }
-                };
+                // No conversions needed, just return the data as is
+                return data;
             }
-
-
+            
             function updateWeatherUI(weatherData) {
-                const windDisplay = weatherData.windDirection === 'Calm' 
+                const windDisplay = weatherData.windSpeed === '0' 
                     ? 'Calm' 
                     : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
             
@@ -243,6 +217,7 @@
                     <p><strong>Air Temp:</strong> ${weatherData.temperature}°F</p>
                     <p><strong>Waves:</strong> ${waveHeight}</p>
                     <p><strong>Conditions:</strong> ${weatherData.conditions}</p>
+                    <p><strong>Last Updated:</strong> ${weatherData.timestamp}</p>
                     <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
                         Data from ${weatherData.station.name}
                     </p>
@@ -255,14 +230,13 @@
                     </p>
                 `;
             
-                // Update map to show weather station location
                 createMap(weatherData.station);
-            
                 updateSuggestions(weatherData);
                 
                 dom['weather-loader'].style.display = 'none';
                 dom['weather-content'].style.display = 'block';
             }
+
 
             function estimateWaveHeight(windSpeed) {
                 const speed = parseFloat(windSpeed);
