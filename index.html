@@ -80,10 +80,17 @@
         </div>
 
         <div class="divider"></div>
-        <div class="weather-map-section">
+        
+       <div class="weather-map-section">
             <h2 style="text-align: center;">Current Conditions</h2>
+            <!-- Add the refresh button here -->
+            <button id="refresh-weather" style="margin: 10px; padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                🔄 Refresh Weather
+            </button>
+           
             <div id="weather-loader" class="loader"></div>
             <div id="weather-content" style="display: none;">
+                
                 <div class="weather-map-grid">
                     <div class="map-container" id="map-container"></div>
                     <div class="weather-details" id="weather-details"></div>
@@ -126,7 +133,39 @@
 
             // Get DOM elements
             const dom = {};
-            ['red-light', 'yellow-light', 'green-light', 'status-text', 'weather-loader', 'weather-content', 'map-container', 'weather-details', 'data-source-info', 'suggestion-container', 'email-form', 'email-input', 'form-message', 'last-checked', 'official-update', 'status-note', 'hourly-forecast-grid'].forEach(id => dom[id] = document.getElementById(id));
+            [
+                'red-light', 
+                'yellow-light', 
+                'green-light', 
+                'status-text', 
+                'weather-loader', 
+                'weather-content', 
+                'map-container', 
+                'weather-details', 
+                'data-source-info', 
+                'suggestion-container', 
+                'email-form', 
+                'email-input', 
+                'form-message', 
+                'last-checked', 
+                'official-update', 
+                'status-note', 
+                'hourly-forecast-grid',
+                'refresh-weather'  // Add this line
+            ].forEach(id => dom[id] = document.getElementById(id));
+            
+            // Add the refresh weather functionality
+            if (dom['refresh-weather']) {
+                dom['refresh-weather'].addEventListener('click', () => {
+                    dom['weather-loader'].style.display = 'block';
+                    dom['weather-content'].style.display = 'none';
+                    fetchWeatherData();
+                });
+            }
+            
+            // Auto-refresh every 5 minutes
+            setInterval(fetchWeatherData, 300000);
+
 
             // Add this with your other DOM elements
             dom['test-api'] = document.getElementById('test-api');
