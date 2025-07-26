@@ -290,10 +290,11 @@
                     updateWeatherUI(weatherData, STATIONS.primary);
                 } catch (error) {
                     console.warn("Primary station (Buoy) failed:", error);
-                    dom['data-source-info'].textContent = 'Primary station offline. Using backup...';
+                    // Immediately try backup source
                     fetchBackupWeather();
                 }
             }
+
             
             async function fetchBackupWeather() {
                 try {
@@ -375,45 +376,64 @@
             
             // Your existing functions remain the same, except for these modified ones:
             function parseAirportData(properties) {
-                const windSpeedMps = properties.windSpeed?.value;
-                const windSpeedMph = typeof windSpeedMps === 'number' 
-                    ? (windSpeedMps * 2.237).toFixed(1) 
-                    : 'N/A';
+                // Wind speed conversion (convert m/s to mph)
+                const windSpeedMps = properties.windSpeed?.value || 0;
+                const windSpeedMph = (windSpeedMps * 2.237).toFixed(1);
                 
+                // Wind direction
                 const windDirDeg = properties.windDirection?.value;
                 const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
                 const windDirCardinal = typeof windDirDeg === 'number' 
-                    ? directions[Math.round(windDirDeg / 22.5) % 16] 
-                    : 'N/A';
+                    ? directions[Math.round((windDirDeg || 0) / 22.5) % 16] 
+                    : 'N';
                 
+                // Temperature conversion (celsius to fahrenheit)
                 const tempC = properties.temperature?.value;
+                const tempF = tempC !== null ? (tempC * 9/5 + 32).toFixed(0) : 'N/A';
                 
+                // Log the raw data for debugging
+                console.log('Raw weather properties:', properties);
+                console.log('Parsed values:', {
+                    windSpeed: windSpeedMph,
+                    windDir: windDirCardinal,
+                    temp: tempF
+                });
+            
                 return {
                     airTemp: tempC,
                     waterTemp: 'N/A',
                     windDirection: windDirCardinal,
                     windSpeed: windSpeedMph,
-                    numericWindDirection: windDirDeg,
-                    conditions: properties.textDescription
+                    numericWindDirection: windDirDeg || 0,
+                    conditions: properties.textDescription || 'Clear'
                 };
             }
+
 
             function getWaveEstimate(windSpeed, windDirection) {
                 if (isNaN(parseFloat(windSpeed)) || isNaN(parseFloat(windDirection))) 
                     return 'N/A';
                 
+                // Convert string to number if needed
+                windSpeed = parseFloat(windSpeed);
+                
                 const bearingToWest = getBearing(LAKEWOOD_BEACH, PENINSULA_WEST);
                 const bearingToEast = getBearing(LAKEWOOD_BEACH, PENINSULA_EAST);
                 const isSheltered = windDirection >= bearingToEast && windDirection <= bearingToWest;
                 
+                // If wind speed is 0, waves are calm
+                if (windSpeed === 0) return "Calm (< 0.5 ft)";
+                
                 if (isSheltered) return "Calm (Sheltered)";
                 
-                // More conservative wave height estimates
-                if (windSpeed < 8) return "Calm (< 0.5 ft)";
-                if (windSpeed < 15) return "Light Chop (0.5 - 1 ft)";
-                if (windSpeed < 25) return "Moderate (1 - 2 ft)";
-                return "Rough (2+ ft)";
+                // More realistic wave height estimates
+                if (windSpeed < 5) return "Calm (< 0.5 ft)";
+                if (windSpeed < 10) return "Light Chop (0.5 - 1 ft)";
+                if (windSpeed < 15) return "Moderate (1 - 2 ft)";
+                if (windSpeed < 20) return "Choppy (2 - 3 ft)";
+                return "Rough (3+ ft)";
             }
+
 
             // Initialize everything
             fetchAndUpdateStatus();
