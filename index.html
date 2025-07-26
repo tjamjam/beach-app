@@ -201,20 +201,41 @@
             }
 
             function parseWeatherData(data) {
-                // Direct access to values, assuming they're already in correct format
+                // Log the full data to see the station information
+                console.log('Full weather data:', data);
+            
+                // Get station information if available
+                const station = data.station || {
+                    geometry: {
+                        coordinates: [-73.153, 44.469] // Default KBTV coordinates as fallback
+                    },
+                    properties: {
+                        name: "Burlington International Airport (KBTV)"
+                    }
+                };
+            
+                // Extract coordinates and station name
+                const [lon, lat] = station.geometry?.coordinates || [-73.153, 44.469];
+                const stationName = station.properties?.name || "Burlington International Airport (KBTV)";
+            
                 return {
                     temperature: data.temperature || 'N/A',
                     windSpeed: data.windSpeed || '0',
                     windDirection: data.windDirection || 'N/A',
-                    conditions: data.conditions || 'Clear'
+                    conditions: data.conditions || 'Clear',
+                    station: {
+                        name: stationName,
+                        coordinates: { lat, lon }
+                    }
                 };
             }
+
 
             function updateWeatherUI(weatherData) {
                 const windDisplay = weatherData.windDirection === 'Calm' 
                     ? 'Calm' 
                     : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
-
+            
                 const waveHeight = estimateWaveHeight(weatherData.windSpeed);
                 
                 dom['weather-details'].innerHTML = `
@@ -222,7 +243,10 @@
                     <p><strong>Air Temp:</strong> ${weatherData.temperature}°F</p>
                     <p><strong>Waves:</strong> ${waveHeight}</p>
                     <p><strong>Conditions:</strong> ${weatherData.conditions}</p>
-                    <p class="weather-link" style="margin-top: 10px; font-size: 0.9em;">
+                    <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                        Data from ${weatherData.station.name}
+                    </p>
+                    <p class="weather-link" style="margin-top: 5px; font-size: 0.9em;">
                         <a href="https://www.weather.gov/wrh/timeseries?site=KBTV" 
                            target="_blank" 
                            style="color: #007bff; text-decoration: none;">
@@ -230,7 +254,10 @@
                         </a>
                     </p>
                 `;
-
+            
+                // Update map to show weather station location
+                createMap(weatherData.station);
+            
                 updateSuggestions(weatherData);
                 
                 dom['weather-loader'].style.display = 'none';
@@ -284,14 +311,15 @@
                 dom['weather-content'].style.display = 'block';
             }
 
-            function createMap(coords, title) {
-                const { lat, lon } = coords;
+            function createMap(station) {
+                const { lat, lon } = station.coordinates;
                 const iframe = document.createElement('iframe');
-                iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.05},${lat-0.025},${lon+0.05},${lat+0.025}&layer=mapnik&marker=${lat},${lon}`;
-                iframe.title = title;
+                iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.02},${lat-0.01},${lon+0.02},${lat+0.01}&layer=mapnik&marker=${lat},${lon}`;
+                iframe.title = `Weather Station: ${station.name}`;
                 dom['map-container'].innerHTML = '';
                 dom['map-container'].appendChild(iframe);
             }
+
 
             function updateLastChecked() {
                 let seconds = 0;
@@ -309,9 +337,9 @@
 
             // Initialize
             fetchAndUpdateStatus();
-            createMap(LAKEWOOD_BEACH, "Map of Lakewood Beach");
-            fetchWeatherData();
+            fetchWeatherData(); // This will handle the map creation
             updateLastChecked();
+
 
             // Auto-refresh weather every 5 minutes
             setInterval(fetchWeatherData, 300000);
