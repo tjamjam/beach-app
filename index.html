@@ -190,6 +190,87 @@
             }
             
             // Map and Weather functions
+            function getBearing(start, end) {
+                const r = (d) => d * Math.PI / 180;
+                const sLat = r(start.lat), sLon = r(start.lon),
+                      eLat = r(end.lat), eLon = r(end.lon),
+                      dLon = eLon - sLon;
+                const y = Math.sin(dLon) * Math.cos(eLat);
+                const x = Math.cos(sLat) * Math.sin(eLat) - Math.sin(sLat) * Math.cos(eLat) * Math.cos(dLon);
+                return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+            }
+            
+            function parseBuoyData(text) {
+                const lines = text.split('\n');
+                if (lines.length < 2) return null;
+                const headers = lines[0].trim().split(/\s+/);
+                const data = lines[2].trim().split(/\s+/);
+                
+                const getVal = (colName) => {
+                    const index = headers.indexOf(colName);
+                    return index !== -1 && data[index] !== 'MM' ? data[index] : null;
+                };
+                
+                const windSpeedMps = parseFloat(getVal('WSPD'));
+                if (isNaN(windSpeedMps)) return null;
+                
+                const windSpeedMph = (windSpeedMps * 2.237).toFixed(1);
+                const windDirDeg = parseFloat(getVal('WDIR'));
+                const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+                const windDirCardinal = !isNaN(windDirDeg) ? directions[Math.round(windDirDeg / 22.5) % 16] : 'N/A';
+                
+                return {
+                    airTemp: getVal('ATMP'),
+                    waterTemp: getVal('WTMP'),
+                    windDirection: windDirCardinal,
+                    windSpeed: windSpeedMph,
+                    numericWindDirection: windDirDeg,
+                    conditions: "N/A"
+                };
+            }
+            
+            function getSuggestionList(temp, waveEstimate, conditions) {
+                const suggestions = [];
+                if (temp !== 'N/A') {
+                    if (temp >= 75) {
+                        suggestions.push({ name: 'T-Shirt & Shorts', icon: 'fa-solid fa-shirt' });
+                    } else if (temp >= 65) {
+                        suggestions.push({ name: 'Light Jacket', icon: 'fa-solid fa-layer-group' });
+                    } else {
+                        suggestions.push({ name: 'Warm Coat', icon: 'fa-solid fa-mitten' });
+                    }
+                }
+                
+                if (waveEstimate.includes('Calm') || waveEstimate.includes('Light Chop')) {
+                    suggestions.push({ name: 'Paddleboard/Kayak', icon: 'fa-solid fa-water' });
+                }
+                
+                if (conditions && conditions.toLowerCase().includes('rain')) {
+                    suggestions.push({ name: 'Umbrella', icon: 'fa-solid fa-umbrella' });
+                }
+                
+                if (conditions && (conditions.toLowerCase().includes('sunny') || conditions.toLowerCase().includes('clear'))) {
+                    suggestions.push({ name: 'Sunglasses', icon: 'fa-solid fa-glasses' });
+                }
+                
+                return suggestions;
+            }
+            
+            function updateSuggestionUI(suggestionList) {
+                if (suggestionList.length === 0) {
+                    dom['suggestion-container'].innerHTML = '<p>No specific suggestions at this time.</p>';
+                    return;
+                }
+                
+                let html = '<ul class="suggestion-list">';
+                suggestionList.forEach(item => {
+                    html += `<li class="suggestion-item"><i class="${item.icon}"></i><span>${item.name}</span></li>`;
+                });
+                html += '</ul>';
+                dom['suggestion-container'].innerHTML = html;
+            }
+
+            
             function createMap(coords, title) {
                 dom['map-container'].innerHTML = '';
                 const { lat, lon } = coords;
@@ -220,15 +301,17 @@
                     if (!response.ok) throw new Error('Backup station network error');
                     const data = await response.json();
                     const weatherData = parseAirportData(data.properties);
+                    if (!weatherData) throw new Error('Failed to parse backup weather data');
                     updateWeatherUI(weatherData, STATIONS.backup);
                     createMap(STATIONS.backup.coords, STATIONS.backup.name);
                 } catch (error) {
                     console.error("Backup station also failed:", error);
                     dom['weather-loader'].style.display = 'none';
-                    dom['weather-details'].innerHTML = `<p>All weather sources are currently unavailable.</p>`;
+                    dom['weather-details'].innerHTML = `<p>Weather data temporarily unavailable. Please check back later.</p>`;
                     dom['weather-content'].style.display = 'block';
                 }
             }
+
             
             async function fetchAndUpdateHourlyForecast() {
                 try {
