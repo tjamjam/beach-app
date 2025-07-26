@@ -83,9 +83,6 @@
         
         <div class="weather-map-section">
             <h2 style="text-align: center;">Current Conditions</h2>
-<!--             <button id="refresh-weather" style="margin: 10px; padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                🔄 Refresh Weather
-            </button> -->
             <div id="weather-loader" class="loader"></div>
             <div id="weather-content" style="display: none;">
                 <div class="weather-map-grid">
@@ -152,13 +149,6 @@
                     dom['form-message'].textContent = 'Subscription failed. Please try again.';
                     dom['form-message'].style.color = 'red';
                 }
-            });
-    
-            // Weather Refresh Button
-            dom['refresh-weather'].addEventListener('click', () => {
-                dom['weather-loader'].style.display = 'block';
-                dom['weather-content'].style.display = 'none';
-                fetchWeatherData();
             });
             
             // --- SECTION 4: FUNCTIONS ---
