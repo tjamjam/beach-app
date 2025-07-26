@@ -241,22 +241,20 @@
             }
             
             function updateWeatherUI(weatherData) {
-                const windDisplay = weatherData.windSpeed === '0' 
+                const windDisplay = parseFloat(weatherData.windSpeed) === 0 
                     ? 'Calm' 
                     : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
-            
+
                 const waveHeight = estimateWaveHeight(weatherData.windSpeed);
                 
                 dom['weather-details'].innerHTML = `
                     <p><strong>Wind:</strong> ${windDisplay}</p>
                     <p><strong>Air Temp:</strong> ${weatherData.temperature}°F</p>
+                    <p><strong>Humidity:</strong> ${weatherData.humidity}%</p> 
                     <p><strong>Waves:</strong> ${waveHeight}</p>
                     <p><strong>Conditions:</strong> ${weatherData.conditions}</p>
                     <p><strong>Last Updated:</strong> ${weatherData.timestamp}</p>
-                    <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
-                        Data from ${weatherData.station.name}
-                    </p>
-                    <p class="weather-link" style="margin-top: 5px; font-size: 0.9em;">
+                    <p class="weather-link" style="margin-top: 10px; font-size: 0.9em;">
                         <a href="https://www.weather.gov/wrh/timeseries?site=KBTV" 
                            target="_blank" 
                            style="color: #007bff; text-decoration: none;">
