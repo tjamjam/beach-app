@@ -13,6 +13,27 @@ PDF_URL = "https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx
 STATUS_FILE = "current_status.txt"
 JSON_OUTPUT_FILE = "status.json"
 
+def determine_status_from_indicator(status_text):
+    """Helper function to determine status from the indicator"""
+    status_text = str(status_text).lower()
+    if "🟢" in status_text or "⚫" in status_text:
+        return "green"
+    elif "🟡" in status_text:
+        return "yellow"
+    elif "🔴" in status_text:
+        return "red"
+    return "unknown"
+
+def validate_status(status, note):
+    """Double-check status based on both indicator and note"""
+    if "Alert" in note or "Category 2" in note:
+        return "yellow"
+    elif "Open" in note and status == "green":
+        return "green"
+    elif "Closed" in note:
+        return "red"
+    return status
+
 def get_subscribers():
     if not CF_API_TOKEN:
         print("Error: CF_API_TOKEN secret is not set."); return []
@@ -49,28 +70,22 @@ def get_current_status_and_details():
                     # Column 2: Last Updated
                     # Column 3: Note
                     
-                    status_text = str(row[1]).strip() if len(row) > 1 and row[1] else "unknown"
+                    initial_status = determine_status_from_indicator(row[1])
                     date_updated = str(row[2]).strip() if len(row) > 2 and row[2] else "N/A"
                     note = str(row[3]).strip() if len(row) > 3 and row[3] else ""
                     
-                    # Determine status color based on the note and status indicator
-                    color = "unknown"
-                    if "Alert" in note or "Category 2" in note:
-                        color = "yellow"
-                    elif "Open" in note:
-                        color = "green"
-                    elif "Closed" in note:
-                        color = "red"
+                    # Validate and finalize status
+                    final_status = validate_status(initial_status, note)
                     
                     # Add debug logging
                     print(f"Raw row data: {row}")
-                    print(f"Parsed status: {status_text}")
+                    print(f"Initial status: {initial_status}")
                     print(f"Parsed date: {date_updated}")
                     print(f"Parsed note: {note}")
-                    print(f"Determined color: {color}")
+                    print(f"Final status: {final_status}")
                     
                     return {
-                        "status": color,
+                        "status": final_status,
                         "date": date_updated,
                         "note": note,
                         "beach_name": PDF_TARGET_BEACH
@@ -98,6 +113,13 @@ def send_notifications(message, email_list):
             requests.post(f"https://ntfy.sh/{NTFY_TOPIC}", data=message.encode('utf-8'), headers={"Title": "Beach Status Change!", "Email": email})
         except Exception as e:
             print(f"Failed to send email to {email}: {e}")
+
+def test_pdf_parsing():
+    """Test function to verify parsing"""
+    result = get_current_status_and_details()
+    print("Test Results:")
+    print(json.dumps(result, indent=2))
+    return result
 
 def main():
     print("--- Starting Beach Status Check ---")
@@ -130,4 +152,5 @@ def main():
     print("--- Check Complete ---")
 
 if __name__ == "__main__":
-    main()
+    test_pdf_parsing()  # Run test first
+    main()             # Then run main program
