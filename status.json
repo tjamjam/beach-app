@@ -1,1 +1,1 @@
-{"status": "error", "date": "N/A", "note": "Failed to fetch or process the PDF: HTTPSConnectionPool(host='anrweb.vt.gov', port=443): Max retries exceeded with url: /FPR/SwimWater/CityOfBurlingtonPublicReport.aspx (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x7fdb8becead0>, 'Connection to anrweb.vt.gov timed out. (connect timeout=20)'))"}
+{"status": "yellow", "date": "Jul 25 2025 4:45PM", "note": "Alert Category 2 BGA level", "beach_name": "Leddy Beach South"}
