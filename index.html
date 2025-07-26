@@ -222,46 +222,48 @@
                 }
             }
             
-            function parseWeatherData(properties) {
-                console.log('Raw weather properties:', properties); // Debug log
+            function parseWeatherData(data) {
+                console.log('Raw weather data:', data); // Debug log
             
-                // Convert temperature from Celsius to Fahrenheit
-                const tempC = properties.temperature?.value;
-                const tempF = tempC !== null ? ((tempC * 9/5) + 32).toFixed(0) : 'N/A';
+                // Parse temperature (convert from C to F if needed)
+                let tempF;
+                if (data.temperature.unit === 'unit:degC') {
+                    tempF = ((data.temperature.value * 9/5) + 32).toFixed(0);
+                } else {
+                    tempF = data.temperature.value.toFixed(0);
+                }
             
-                // Get wind speed and convert from m/s to mph
-                const windSpeedMs = properties.windSpeed?.value;
-                // Make sure we're not multiplying by 2.237 twice (NWS might already give mph)
-                const windSpeedMph = windSpeedMs ? (windSpeedMs * 2.237).toFixed(1) : '0';
+                // Parse wind speed (convert from m/s to mph if needed)
+                let windSpeedMph;
+                if (data.windSpeed.unit === 'unit:m_s-1') {
+                    windSpeedMph = (data.windSpeed.value * 2.237).toFixed(1);
+                } else {
+                    windSpeedMph = data.windSpeed.value.toFixed(1);
+                }
             
-                // Get wind direction
-                const windDirDeg = properties.windDirection?.value;
+                // Parse wind direction
+                const windDirDeg = data.windDirection.value;
                 const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
                 let windDir = 'N/A';
                 
                 if (windDirDeg !== null && windDirDeg !== undefined) {
                     windDir = directions[Math.round(windDirDeg / 22.5) % 16];
-                } else if (properties.windDirection) {
-                    // If we have a cardinal direction string, use it directly
-                    windDir = properties.windDirection;
                 }
             
-                // If wind speed is 0, force direction to be N/A
+                // If wind speed is 0, set direction to Calm
                 if (parseFloat(windSpeedMph) === 0) {
-                    windDir = 'N/A';
+                    windDir = 'Calm';
                 }
             
                 const weatherData = {
                     temperature: tempF,
                     windSpeed: windSpeedMph,
                     windDirection: windDir,
-                    conditions: properties.textDescription || 'Clear',
-                    timestamp: properties.timestamp
+                    conditions: data.textDescription || 'Clear',
+                    timestamp: data.timestamp
                 };
             
-                // Debug log the parsed data
-                console.log('Parsed weather data:', weatherData);
-            
+                console.log('Parsed weather data:', weatherData); // Debug log
                 return weatherData;
             }
 
