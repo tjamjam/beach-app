@@ -35,7 +35,13 @@
         .suggestion-section { margin-top: 20px; text-align: center; }
         .suggestion-list { list-style: none; padding: 0; margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; }
         .suggestion-item { display: flex; align-items: center; background-color: #f9f9f9; padding: 8px; border-radius: 8px; }
-        .suggestion-item i { font-size: 24px; color: #007bff; margin-right: 12px; width: 30px; text-align: center; }
+        .suggestion-item i {
+            font-size: 36px; /* Increased from 24px */
+            color: #007bff;
+            margin-right: 15px; /* Added a little more space */
+            width: 40px;        /* Increased width for better alignment */
+            text-align: center;
+        }
         .suggestion-item span { font-size: 1.1em; }
         .subscribe-form { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; text-align: center;}
         .subscribe-form input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 200px; }
@@ -238,19 +244,48 @@
             }
     
             function updateSuggestions(weatherData) {
-                const temp = parseFloat(weatherData.temperature);
                 const suggestions = [];
-                if (!isNaN(temp)) {
-                    if (temp >= 75) suggestions.push({ name: 'T-Shirt & Shorts', icon: 'fa-solid fa-shirt' });
-                    else if (temp >= 65) suggestions.push({ name: 'Light Jacket', icon: 'fa-solid fa-layer-group' });
-                    else suggestions.push({ name: 'Warm Coat', icon: 'fa-solid fa-mitten' });
+                const temp = parseFloat(weatherData.temperature);
+                const speed = parseFloat(weatherData.windSpeed);
+                const conditions = weatherData.conditions.toLowerCase();
+                const hour = new Date().getHours(); // Get current hour (0-23)
+                const isDayTime = hour >= 6 && hour < 19; // Approx. 6 AM to 7 PM
+
+                // 1. Hot Weather Suggestions (Water & Beach Day)
+                if (!isNaN(temp) && temp >= 80) {
+                    suggestions.push({ name: 'Stay Hydrated', icon: 'fa-solid fa-droplet' });
+                    suggestions.push({ name: 'Great Beach Day!', icon: 'fa-solid fa-umbrella-beach' });
                 }
-                if (weatherData.conditions && weatherData.conditions.toLowerCase().includes('clear')) {
+
+                // 2. Cold Weather Suggestion (Jacket)
+                // Only suggests a jacket if it's actually cool.
+                if (!isNaN(temp) && temp < 68) {
+                    suggestions.push({ name: 'Bring a Jacket', icon: 'fa-solid fa-layer-group' });
+                }
+
+                // 3. Windy Weather Suggestion (Kite)
+                // Good range for kite flying: not too calm, not too stormy.
+                if (!isNaN(speed) && speed >= 8 && speed <= 25) {
+                    suggestions.push({ name: 'Good Day for a Kite!', icon: 'fa-solid fa-kite' });
+                }
+
+                // 4. Sunglasses Suggestion (More often during the day)
+                // Suggests sunglasses during the day unless it's very gloomy.
+                const isGloomy = conditions.includes('rain') || conditions.includes('overcast') || conditions.includes('fog') || conditions.includes('drizzle');
+                if (isDayTime && !isGloomy) {
                     suggestions.push({ name: 'Sunglasses', icon: 'fa-solid fa-glasses' });
                 }
-                let html = suggestions.length ? '<ul class="suggestion-list">' + suggestions.map(item => `<li class="suggestion-item"><i class="${item.icon}"></i><span>${item.name}</span></li>`).join('') + '</ul>' : '<p>No specific suggestions at this time.</p>';
-                dom['suggestion-container'].innerHTML = html;
+
+                // Build and display the final list of suggestions
+                let html = suggestions.length > 0
+                    ? '<ul class="suggestion-list">' + suggestions.map(item => `<li class="suggestion-item"><i class="${item.icon}"></i><span>${item.name}</span></li>`).join('') + '</ul>'
+                    : '<p>No specific suggestions at this time.</p>';
+                
+                if (dom['suggestion-container']) {
+                    dom['suggestion-container'].innerHTML = html;
+                }
             }
+
     
             function displayWeatherError() {
                 dom['weather-loader'].style.display = 'none';
