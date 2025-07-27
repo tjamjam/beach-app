@@ -95,6 +95,20 @@
         .aqi-moderate { background-color: #ff7e00; }
         .aqi-poor { background-color: #ff0000; }
         .aqi-very-poor { background-color: #8f3f97; }
+        #aqi-details {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        #aqi-advice {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1em;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -155,7 +169,10 @@
         <div class="air-quality-section">
             <h2 style="text-align: center;">Air Quality</h2>
             <div id="aqi-loader" class="loader"></div>
-            <div id="aqi-content" style="display: none;"></div>
+            <div id="aqi-content" style="display: none;">
+                <p id="aqi-details"></p>
+                <p id="aqi-advice"></p>
+            </div>
         </div>
     </div>
 
@@ -487,30 +504,58 @@
             
             function updateAirQualityUI(data) {
                 if (!data || data.error) {
-                    dom['aqi-content'].innerHTML = `<p>Air quality data unavailable.</p>`;
-                    dom['aqi-loader'].style.display = 'none';
-                    dom['aqi-content'].style.display = 'block';
+                    if(dom['aqi-content']) dom['aqi-content'].innerHTML = `<p>Air quality data unavailable.</p>`;
+                    if(dom['aqi-loader']) dom['aqi-loader'].style.display = 'none';
                     return;
                 }
-            
-                const aqiClassMap = {
-                    "Good": "aqi-good",
-                    "Fair": "aqi-fair",
-                    "Moderate": "aqi-moderate",
-                    "Poor": "aqi-poor",
-                    "Very Poor": "aqi-very-poor"
+        
+                // --- Data Maps for Text, Colors, and Advice ---
+                const aqiInfoMap = {
+                    1: { text: "Good", className: "aqi-good" },
+                    2: { text: "Fair", className: "aqi-fair" },
+                    3: { text: "Moderate", className: "aqi-moderate" },
+                    4: { text: "Poor", className: "aqi-poor" },
+                    5: { text: "Very Poor", className: "aqi-very-poor" }
                 };
-                const aqiClass = aqiClassMap[data.text] || "";
-            
+        
+                const adviceMap = {
+                    3: { text: "Sensitive groups should consider limiting strenuous outdoor activity.", bgColor: '#fffbe6', textColor: '#8a6d3b' },
+                    4: { text: "Everyone should consider limiting strenuous outdoor activity. Sensitive groups should avoid it.", bgColor: '#f2dede', textColor: '#a94442' },
+                    5: { text: "Everyone should avoid strenuous outdoor activity.", bgColor: '#e6d3e7', textColor: '#5d3b60' }
+                };
+        
+                const aqiInfo = aqiInfoMap[data.aqi] || { text: "Unknown", className: "" };
+                const advice = adviceMap[data.aqi]; // Will be undefined if AQI is 1 or 2
+                const pm2_5 = data.pollutants?.pm2_5 || 0;
+        
+                // --- Build the HTML ---
+                let adviceHTML = '';
+                if (advice) {
+                    // If there's advice for the current AQI level, create the styled box.
+                    adviceHTML = `
+                        <p id="aqi-advice" style="display: block; background-color: ${advice.bgColor}; color: ${advice.textColor};">
+                            ${advice.text}
+                        </p>
+                    `;
+                }
+        
+                // The complete new innerHTML for the aqi-content container
                 dom['aqi-content'].innerHTML = `
-                    <div class="aqi-display ${aqiClass}">
+                    <div class="aqi-display ${aqiInfo.className}">
                         <div class="aqi-circle">${data.aqi}</div>
-                        <div class="aqi-text">${data.text}</div>
+                        <div class="aqi-text">${aqiInfo.text}</div>
                     </div>
+                    <p id="aqi-details">
+                        Fine Particles (PM2.5): <strong>${pm2_5.toFixed(2)}</strong> µg/m³
+                    </p>
+                    ${adviceHTML}
                 `;
+                
+                // --- Show the content ---
                 dom['aqi-loader'].style.display = 'none';
                 dom['aqi-content'].style.display = 'block';
             }
+
 
             
             // --- SECTION 5: INITIALIZATION ---
