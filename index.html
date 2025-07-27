@@ -75,10 +75,10 @@
             <div id="green-light" class="light"></div>
         </div>
         <p id="status-text">Checking status...</p>
+        <p id="status-advice"></p>
         <div id="status-details">
             <p id="official-update"></p>
-            <p id="status-note"></p>
-            <p id="status-advice"></p> 
+            <p id="status-note"></p> 
             <p class="pdf-link">
                 <a href="https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx" target="_blank">
                     View Official Report (PDF)
@@ -205,7 +205,7 @@
                     
                     case 'yellow':
                         dom['yellow-light'].classList.add('yellow');
-                        message = 'Advisory / Caution';
+                        message = 'Proceed with Caution';
                         color = '#c7a900';
                         if (dom['status-advice']) {
                             dom['status-advice'].textContent = "Be cautious, especially if you're sensitive or have pets/small children.";
