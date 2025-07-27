@@ -63,6 +63,38 @@
             font-size: 1.1em;
             line-height: 1.4;
         }
+        .air-quality-section {
+            text-align: center;
+        }
+        .aqi-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .aqi-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: white;
+        }
+        .aqi-text {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        /* AQI Color Classes */
+        .aqi-good { background-color: #00e400; color: #333; }
+        .aqi-fair { background-color: #ffff00; color: #333; }
+        .aqi-moderate { background-color: #ff7e00; }
+        .aqi-poor { background-color: #ff0000; }
+        .aqi-very-poor { background-color: #8f3f97; }
     </style>
 </head>
 <body>
@@ -117,6 +149,14 @@
                 </div>
             </div>
         </div>
+
+        <div class="divider"></div>
+
+        <div class="air-quality-section">
+            <h2 style="text-align: center;">Air Quality</h2>
+            <div id="aqi-loader" class="loader"></div>
+            <div id="aqi-content" style="display: none;"></div>
+        </div>
     </div>
 
     <script>
@@ -125,6 +165,7 @@
             const BASE_API_URL = 'https://beach-api.terrencefradet.workers.dev';
             const SUBSCRIBE_API_URL = BASE_API_URL + '/subscribe';
             const MARINE_WEATHER_API_URL = BASE_API_URL + '/weather';
+            const AIR_QUALITY_API_URL = BASE_API_URL + '/air-quality';
             const HOURLY_FORECAST_URL = 'https://api.weather.gov/gridpoints/BTV/61,77/forecast/hourly';
             const STATUS_JSON_URL = 'https://raw.githubusercontent.com/tjamjam/beach-app/main/status.json';
             const LAKEWOOD_BEACH = { lat: 44.500056, lon: -73.248890 };
@@ -136,7 +177,7 @@
                 'weather-loader', 'weather-content', 'map-container', 'weather-details',
                 'data-source-info', 'suggestion-container', 'email-form', 'email-input',
                 'form-message', 'last-checked', 'official-update', 'status-note',
-                'hourly-forecast-grid', 'refresh-weather', 'status-advice'
+                'hourly-forecast-grid', 'refresh-weather', 'status-advice', 'aqi-loader', 'aqi-content'
             ].forEach(id => dom[id] = document.getElementById(id));
     
             // --- SECTION 3: EVENT LISTENERS ---
@@ -415,8 +456,6 @@
                     if(dom['hourly-forecast-grid']) dom['hourly-forecast-grid'].innerHTML = `<p style="grid-column: 1 / -1;">Forecast unavailable.</p>`;
                 }
             }
-
-
     
             function updateHourlyForecastUI(periods) {
                 let html = '';
@@ -431,11 +470,54 @@
                 });
                 dom['hourly-forecast-grid'].innerHTML = html;
             }
+
+            // Add these new functions inside your script tag
+            async function fetchAirQuality() {
+                try {
+                    const response = await fetch(AIR_QUALITY_API_URL);
+                    if (!response.ok) throw new Error('Air Quality API fetch failed');
+                    const aqiData = await response.json();
+                    updateAirQualityUI(aqiData);
+                } catch (error) {
+                    console.error("Failed to fetch Air Quality:", error);
+                    if(dom['aqi-content']) dom['aqi-content'].innerHTML = `<p>Air quality data unavailable.</p>`;
+                    if(dom['aqi-loader']) dom['aqi-loader'].style.display = 'none';
+                }
+            }
+            
+            function updateAirQualityUI(data) {
+                if (!data || data.error) {
+                    dom['aqi-content'].innerHTML = `<p>Air quality data unavailable.</p>`;
+                    dom['aqi-loader'].style.display = 'none';
+                    dom['aqi-content'].style.display = 'block';
+                    return;
+                }
+            
+                const aqiClassMap = {
+                    "Good": "aqi-good",
+                    "Fair": "aqi-fair",
+                    "Moderate": "aqi-moderate",
+                    "Poor": "aqi-poor",
+                    "Very Poor": "aqi-very-poor"
+                };
+                const aqiClass = aqiClassMap[data.text] || "";
+            
+                dom['aqi-content'].innerHTML = `
+                    <div class="aqi-display ${aqiClass}">
+                        <div class="aqi-circle">${data.aqi}</div>
+                        <div class="aqi-text">${data.text}</div>
+                    </div>
+                `;
+                dom['aqi-loader'].style.display = 'none';
+                dom['aqi-content'].style.display = 'block';
+            }
+
             
             // --- SECTION 5: INITIALIZATION ---
             fetchAndUpdateStatus();
             fetchWeatherData();
             fetchAndUpdateHourlyForecast();
+            fetchAirQuality();
             updateLastChecked();
     
             // Auto-refresh weather every 5 minutes
