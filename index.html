@@ -508,7 +508,6 @@
                     return;
                 }
         
-                // --- Data Maps for Text, Colors, and Advice ---
                 const aqiInfoMap = {
                     1: { text: "Good", className: "aqi-good" },
                     2: { text: "Fair", className: "aqi-fair" },
@@ -524,36 +523,37 @@
                 };
         
                 const aqiInfo = aqiInfoMap[data.aqi] || { text: "Unknown", className: "" };
-                const advice = adviceMap[data.aqi]; // Will be undefined if AQI is 1 or 2
-                const pm2_5 = data.pollutants?.pm2_5 || 0;
+                const advice = adviceMap[data.aqi];
+                const pm2_5 = data.pollutants?.pm2_5 || 0; // Use .toFixed(2) only when displaying.
         
-                // --- Build the HTML ---
                 let adviceHTML = '';
                 if (advice) {
-                    // If there's advice for the current AQI level, create the styled box.
                     adviceHTML = `
                         <p id="aqi-advice" style="display: block; background-color: ${advice.bgColor}; color: ${advice.textColor};">
                             ${advice.text}
                         </p>
                     `;
                 }
-        
-                // The complete new innerHTML for the aqi-content container
+                
+                // --- Display the numerical AQI (1-5) directly ---
                 dom['aqi-content'].innerHTML = `
                     <div class="aqi-display ${aqiInfo.className}">
-                        <div class="aqi-circle">${data.aqi}</div>
+                        <div class="aqi-circle">AQI ${data.aqi}</div> <!-- Changed here -->
                         <div class="aqi-text">${aqiInfo.text}</div>
                     </div>
                     <p id="aqi-details">
-                        Fine Particles (PM2.5): <strong>${pm2_5.toFixed(2)}</strong> µg/m³
+                        Fine Particles (PM2.5): <strong>${pm2_5.toFixed(2)}</strong> µg/m³<br>
+                        <!-- Add other major pollutants for more detail (optional, but helpful for debugging) -->
+                        Ozone (O3): <strong>${(data.pollutants?.o3 || 0).toFixed(2)}</strong> µg/m³<br>
+                        Carbon Monoxide (CO): <strong>${(data.pollutants?.co || 0).toFixed(2)}</strong> µg/m³
                     </p>
                     ${adviceHTML}
                 `;
                 
-                // --- Show the content ---
                 dom['aqi-loader'].style.display = 'none';
                 dom['aqi-content'].style.display = 'block';
             }
+
 
 
             
