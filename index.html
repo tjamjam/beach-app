@@ -508,13 +508,12 @@
                     return;
                 }
         
-                // The worker now sends the final className, text, and advice.
                 const aqiClass = data.className || "";
+                // Safely access the PM2.5 value, default to 0 if not present
                 const pm2_5 = data.pollutants?.pm2_5 || 0;
                 
                 let adviceHTML = '';
                 if (data.advice) {
-                    // Create the styled advice box.
                     adviceHTML = `
                         <p id="aqi-advice" style="display: block; background-color: #f8f9fa; border: 1px solid #dee2e6; color: #343a40; padding: 10px; border-radius: 8px; margin-top: 15px;">
                             <strong>Advice:</strong> ${data.advice}
@@ -522,6 +521,7 @@
                     `;
                 }
         
+                // --- UPDATED HTML STRUCTURE ---
                 dom['aqi-content'].innerHTML = `
                     <div class="aqi-display ${aqiClass}">
                         <div class="aqi-circle">${data.aqi}</div>
@@ -530,14 +530,20 @@
                     <p id="aqi-details">
                         Fine Particles (PM2.5): <strong>${pm2_5.toFixed(2)}</strong> µg/m³
                     </p>
+                    
+                    <!-- NEW: Link to the AirNow.gov source -->
+                    <p class="data-source-link" style="margin-top: 10px; font-size: 0.9em;">
+                        <a href="https://www.airnow.gov/?city=Burlington&state=VT&country=USA" target="_blank" style="color: #007bff; text-decoration: none;">
+                            View Source on AirNow.gov
+                        </a>
+                    </p>
+        
                     ${adviceHTML}
                 `;
                 
                 dom['aqi-loader'].style.display = 'none';
                 dom['aqi-content'].style.display = 'block';
             }
-
-
 
             
             // --- SECTION 5: INITIALIZATION ---
