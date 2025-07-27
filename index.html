@@ -508,44 +508,27 @@
                     return;
                 }
         
-                const aqiInfoMap = {
-                    1: { text: "Good", className: "aqi-good" },
-                    2: { text: "Fair", className: "aqi-fair" },
-                    3: { text: "Moderate", className: "aqi-moderate" },
-                    4: { text: "Poor", className: "aqi-poor" },
-                    5: { text: "Very Poor", className: "aqi-very-poor" }
-                };
-        
-                const adviceMap = {
-                    3: { text: "Sensitive groups should consider limiting strenuous outdoor activity.", bgColor: '#fffbe6', textColor: '#8a6d3b' },
-                    4: { text: "Everyone should consider limiting strenuous outdoor activity. Sensitive groups should avoid it.", bgColor: '#f2dede', textColor: '#a94442' },
-                    5: { text: "Everyone should avoid strenuous outdoor activity.", bgColor: '#e6d3e7', textColor: '#5d3b60' }
-                };
-        
-                const aqiInfo = aqiInfoMap[data.aqi] || { text: "Unknown", className: "" };
-                const advice = adviceMap[data.aqi];
-                const pm2_5 = data.pollutants?.pm2_5 || 0; // Use .toFixed(2) only when displaying.
-        
+                // The worker now sends the final className, text, and advice.
+                const aqiClass = data.className || "";
+                const pm2_5 = data.pollutants?.pm2_5 || 0;
+                
                 let adviceHTML = '';
-                if (advice) {
+                if (data.advice) {
+                    // Create the styled advice box.
                     adviceHTML = `
-                        <p id="aqi-advice" style="display: block; background-color: ${advice.bgColor}; color: ${advice.textColor};">
-                            ${advice.text}
+                        <p id="aqi-advice" style="display: block; background-color: #f8f9fa; border: 1px solid #dee2e6; color: #343a40; padding: 10px; border-radius: 8px; margin-top: 15px;">
+                            <strong>Advice:</strong> ${data.advice}
                         </p>
                     `;
                 }
-                
-                // --- Display the numerical AQI (1-5) directly ---
+        
                 dom['aqi-content'].innerHTML = `
-                    <div class="aqi-display ${aqiInfo.className}">
-                        <div class="aqi-circle">${data.aqi}</div> <!-- Changed here -->
-                        <div class="aqi-text">${aqiInfo.text}</div>
+                    <div class="aqi-display ${aqiClass}">
+                        <div class="aqi-circle">${data.aqi}</div>
+                        <div class="aqi-text">${data.text}</div>
                     </div>
                     <p id="aqi-details">
-                        Fine Particles (PM2.5): <strong>${pm2_5.toFixed(2)}</strong> µg/m³<br>
-                        <!-- Add other major pollutants for more detail (optional, but helpful for debugging) -->
-                        Ozone (O3): <strong>${(data.pollutants?.o3 || 0).toFixed(2)}</strong> µg/m³<br>
-                        Carbon Monoxide (CO): <strong>${(data.pollutants?.co || 0).toFixed(2)}</strong> µg/m³
+                        Fine Particles (PM2.5): <strong>${pm2_5.toFixed(2)}</strong> µg/m³
                     </p>
                     ${adviceHTML}
                 `;
