@@ -538,7 +538,7 @@
                 // --- Display the numerical AQI (1-5) directly ---
                 dom['aqi-content'].innerHTML = `
                     <div class="aqi-display ${aqiInfo.className}">
-                        <div class="aqi-circle">AQI ${data.aqi}</div> <!-- Changed here -->
+                        <div class="aqi-circle">${data.aqi}</div> <!-- Changed here -->
                         <div class="aqi-text">${aqiInfo.text}</div>
                     </div>
                     <p id="aqi-details">
