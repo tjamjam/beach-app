@@ -509,11 +509,10 @@
                 }
         
                 const aqiClass = data.className || "";
-                // Safely access the PM2.5 value, default to 0 if not present
-                const pm2_5 = data.pollutants?.pm2_5 || 0;
                 
                 let adviceHTML = '';
                 if (data.advice) {
+                    // Create the styled advice box. This part remains the same.
                     adviceHTML = `
                         <p id="aqi-advice" style="display: block; background-color: #f8f9fa; border: 1px solid #dee2e6; color: #343a40; padding: 10px; border-radius: 8px; margin-top: 15px;">
                             <strong>Advice:</strong> ${data.advice}
@@ -527,23 +526,22 @@
                         <div class="aqi-circle">${data.aqi}</div>
                         <div class="aqi-text">${data.text}</div>
                     </div>
-                    <p id="aqi-details">
-                        Fine Particles (PM2.5): <strong>${pm2_5.toFixed(2)}</strong> µg/m³
-                    </p>
+        
+                    <!-- The advice now comes directly after the display -->
+                    ${adviceHTML}
                     
-                    <!-- NEW: Link to the AirNow.gov source -->
+                    <!-- The link to the source is now at the bottom -->
                     <p class="data-source-link" style="margin-top: 10px; font-size: 0.9em;">
                         <a href="https://www.airnow.gov/?city=Burlington&state=VT&country=USA" target="_blank" style="color: #007bff; text-decoration: none;">
                             View Source on AirNow.gov
                         </a>
                     </p>
-        
-                    ${adviceHTML}
                 `;
                 
                 dom['aqi-loader'].style.display = 'none';
                 dom['aqi-content'].style.display = 'block';
             }
+
 
             
             // --- SECTION 5: INITIALIZATION ---
