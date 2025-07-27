@@ -54,6 +54,15 @@
         .forecast-icon img { width: 50px; height: 50px; border-radius: 4px;}
         .forecast-temp { font-size: 1.4em; }
         .forecast-detail { color: #666; }
+        #status-advice {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1em;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -69,6 +78,7 @@
         <div id="status-details">
             <p id="official-update"></p>
             <p id="status-note"></p>
+            <p id="status-advice"></p> 
             <p class="pdf-link">
                 <a href="https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx" target="_blank">
                     View Official Report (PDF)
@@ -127,7 +137,7 @@
                 'weather-loader', 'weather-content', 'map-container', 'weather-details',
                 'data-source-info', 'suggestion-container', 'email-form', 'email-input',
                 'form-message', 'last-checked', 'official-update', 'status-note',
-                'hourly-forecast-grid', 'refresh-weather'
+                'hourly-forecast-grid', 'refresh-weather', 'status-advice'
             ].forEach(id => dom[id] = document.getElementById(id));
     
             // --- SECTION 3: EVENT LISTENERS ---
@@ -176,25 +186,64 @@
     
             function updateStoplight(data) {
                 const { status, date, note } = data;
+                if(!dom['red-light']) return; // Safety check
+
+                // --- Reset all elements first ---
                 dom['red-light'].classList.remove('red');
                 dom['yellow-light'].classList.remove('yellow');
                 dom['green-light'].classList.remove('green');
+                if (dom['status-advice']) dom['status-advice'].style.display = 'none';
+
                 let message = '', color = '#555';
+                
                 switch (status) {
-                    case 'green': dom['green-light'].classList.add('green'); message = 'Open for Swimming'; color = '#00a045'; break;
-                    case 'yellow': dom['yellow-light'].classList.add('yellow'); message = 'Advisory / Caution'; color = '#c7a900'; break;
-                    case 'red': dom['red-light'].classList.add('red'); message = 'Closed for Swimming'; color = '#c21616'; break;
-                    default: message = 'Could not determine status.';
+                    case 'green':
+                        dom['green-light'].classList.add('green');
+                        message = 'Open for Swimming';
+                        color = '#00a045';
+                        break;
+                    
+                    case 'yellow':
+                        dom['yellow-light'].classList.add('yellow');
+                        message = 'Advisory / Caution';
+                        color = '#c7a900';
+                        if (dom['status-advice']) {
+                            dom['status-advice'].textContent = "Be cautious, especially if you're sensitive or have pets/small children.";
+                            dom['status-advice'].style.backgroundColor = '#fffbe6'; // Light yellow background
+                            dom['status-advice'].style.color = '#8a6d3b'; // Darker yellow text
+                            dom['status-advice'].style.display = 'block';
+                        }
+                        break;
+
+                    case 'red':
+                        dom['red-light'].classList.add('red');
+                        message = 'Closed for Swimming';
+                        color = '#c21616';
+                        if (dom['status-advice']) {
+                            dom['status-advice'].textContent = "Do NOT enter the water, as it poses a significant health risk to everyone.";
+                            dom['status-advice'].style.backgroundColor = '#f2dede'; // Light red background
+                            dom['status-advice'].style.color = '#a94442'; // Darker red text
+                            dom['status-advice'].style.display = 'block';
+                        }
+                        break;
+                        
+                    default:
+                        message = 'Could not determine status.';
                 }
+
+                // Update the main status text and official notes
                 dom['status-text'].textContent = message;
                 dom['status-text'].style.color = color;
-                dom['official-update'].textContent = `Official Update: ${date}`;
-                dom['official-update'].style.display = 'block';
-                if (note) {
+                if(dom['official-update']) dom['official-update'].textContent = `Official Update: ${date}`;
+                if(dom['official-update']) dom['official-update'].style.display = 'block';
+                if (note && dom['status-note']) {
                     dom['status-note'].textContent = `Note: ${note}`;
                     dom['status-note'].style.display = 'block';
+                } else if (dom['status-note']) {
+                    dom['status-note'].style.display = 'none';
                 }
             }
+
     
             // Weather Functions
             async function fetchWeatherData() {
