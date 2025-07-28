@@ -462,20 +462,20 @@
                     return "Calm (< 0.5 ft)";
                 }
 
-                // The key check: The beach is on the east shore, so only winds with a long fetch over the lake matter.
-                // These are primarily winds from the North (N) and Northwest (NW).
-                if (windDirection !== 'N' && windDirection !== 'NW') {
-                    // Winds from any other direction (S, E, NE, W, etc.) are blocked by land.
+                // The key check: The beach is on the east shore. We check for the three directions with significant open water fetch.
+                const isWaveDirection = (windDirection === 'N' || windDirection === 'NW' || windDirection === 'W');
+
+                if (!isWaveDirection) {
+                    // Winds from any other direction (S, E, NE, SW, etc.) are blocked by land.
                     return "Calm (Sheltered by Land)";
                 }
 
-                // If wind IS from the N or NW, now we check the speed.
+                // If wind IS from a wave-making direction, now we check the speed.
                 if (speed < 10) return "Light Chop (0.5 - 1 ft)";
                 if (speed < 18) return "Moderate Waves (1 - 3 ft)";
                 if (speed < 25) return "Choppy (3 - 5 ft)";
                 return "Rough (5+ ft)";
             }
-
     
             function updateSuggestions(weatherData) {
                 const suggestions = [];
