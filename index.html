@@ -225,7 +225,7 @@
                 </div>
 
                 <p class="weather-link" style="text-align: center; margin-top: 20px; font-size: 0.9em;">
-                    <a href="https://openweathermap.org/city/5221291" 
+                    <a href="https://openweathermap.org/city/5234861" 
                        target="_blank" 
                        style="color: #007bff; text-decoration: none;">
                         View Source on OpenWeatherMap
@@ -421,14 +421,13 @@
             }
 
             function updateWeatherUI(weatherData) {
-                // Get the wave height forecast first
                 const waveHeight = estimateWaveHeight(weatherData.windSpeed, weatherData.windDirection);
 
-                // Populate the separate Wave Forecast section
+                // Populate the Wave Forecast section
                 if (dom['wave-report-main']) dom['wave-report-main'].textContent = waveHeight;
-                if (dom['wave-report-note']) dom['wave-report-note'].innerHTML = `Wave height is estimated based on wind speed. At this location, significant waves primarily form from <strong>North (N)</strong> or <strong>Northwest (NW)</strong> winds.`;
+                if (dom['wave-report-note']) dom['wave-report-note'].innerHTML = `Wave height is estimated based on wind speed and direction. At this location, significant waves primarily form from <strong>North (N)</strong> or <strong>Northwest (NW)</strong> winds due to the long stretch of open water.`;
                 
-                // --- Build the new HTML for the "Current Conditions" section ---
+                // Build the HTML for the "Current Conditions" section
                 const windDisplay = parseFloat(weatherData.windSpeed) === 0 ? 'Calm' : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
 
                 dom['weather-details'].innerHTML = `
@@ -443,15 +442,14 @@
                         <li>Humidity<strong>${weatherData.humidity}%</strong></li>
                     </ul>
                     
+                    <!-- NEW: Note about the data source location -->
                     <p style="text-align:center; font-size: 0.9em; color: #888; margin-top: 20px;">
-                        Last Updated: ${weatherData.timestamp}
+                        Data for New North End (05408). Last Updated: ${weatherData.timestamp}
                     </p>
                 `;
             
-                // These function calls remain the same
                 updateSuggestions(weatherData);
                 
-                // Show the content after it's all built
                 dom['weather-loader'].style.display = 'none';
                 dom['weather-content'].style.display = 'block';
             }
@@ -459,25 +457,25 @@
             function estimateWaveHeight(windSpeed, windDirection) {
                 const speed = parseFloat(windSpeed);
 
-                // First, check for no wind at all.
+                // If there's no wind, it's always calm.
                 if (isNaN(speed) || speed < 1) {
                     return "Calm (< 0.5 ft)";
                 }
 
-                // NEXT, THE MOST IMPORTANT CHECK: Is the wind coming from the right direction?
-                // Based on your info, only 'N' and 'NW' winds create waves.
+                // The key check: The beach is on the east shore, so only winds with a long fetch over the lake matter.
+                // These are primarily winds from the North (N) and Northwest (NW).
                 if (windDirection !== 'N' && windDirection !== 'NW') {
-                    // If wind is from any other direction, the beach is protected.
+                    // Winds from any other direction (S, E, NE, W, etc.) are blocked by land.
                     return "Calm (Sheltered by Land)";
                 }
 
-                // If we get here, the wind IS from the N or NW, so we can calculate wave size.
-                // The thresholds here are a bit higher, since an open fetch creates bigger waves.
+                // If wind IS from the N or NW, now we check the speed.
                 if (speed < 10) return "Light Chop (0.5 - 1 ft)";
                 if (speed < 18) return "Moderate Waves (1 - 3 ft)";
                 if (speed < 25) return "Choppy (3 - 5 ft)";
-                return "Rough (5+ ft)"; // Potentially large waves with this fetch!
+                return "Rough (5+ ft)";
             }
+
     
             function updateSuggestions(weatherData) {
                 const suggestions = [];
