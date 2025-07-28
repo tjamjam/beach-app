@@ -188,6 +188,15 @@
                     <h3>Upcoming Conditions</h3>
                     <div id="hourly-forecast-grid"></div>
                 </div>
+
+                <p class="weather-link" style="text-align: center; margin-top: 20px; font-size: 0.9em;">
+                    <a href="https://openweathermap.org/city/5221291" 
+                       target="_blank" 
+                       style="color: #007bff; text-decoration: none;">
+                        View Source on OpenWeatherMap
+                    </a>
+                </p>
+                
             </div>
         </div>
 
@@ -384,15 +393,6 @@
                     <p><strong>Humidity:</strong> ${weatherData.humidity}%</p> 
                     <p><strong>Conditions:</strong> ${weatherData.conditions}</p>
                     <p><strong>Last Updated:</strong> ${weatherData.timestamp}</p>
-                    
-                    <!-- THIS IS THE CORRECTED LINK -->
-                    <p class="weather-link" style="margin-top: 10px; font-size: 0.9em;">
-                        <a href="https://openweathermap.org/city/5221291" 
-                           target="_blank" 
-                           style="color: #007bff; text-decoration: none;">
-                            View Source on OpenWeatherMap
-                        </a>
-                    </p>
                 `;
             
                 // These function calls remain the same.
