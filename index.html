@@ -26,8 +26,20 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .divider { border-top: 1px solid #eee; margin: 30px 0; }
         .weather-map-section { text-align: left; }
-        .weather-map-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center; }
-        .map-container iframe { width: 100%; height: 200px; border: 1px solid #ccc; border-radius: 10px; }
+        .weather-details p {
+            margin: 12px 0; /* Add a bit more vertical space */
+            font-size: 1.2em; /* Slightly larger text */
+            display: flex;
+            align-items: center;
+            text-align: left;
+        }
+        .weather-details p i {
+            font-size: 1.1em; /* Icon size relative to text */
+            width: 35px;      /* Fixed width for perfect alignment */
+            text-align: center;
+            margin-right: 10px;
+            color: #007bff;   /* Use your theme's blue color */
+        }
         .weather-details p { margin: 8px 0; font-size: 1.1em; }
         .weather-details p strong { color: #0056b3; }
         .weather-link a:hover { text-decoration: underline;}
@@ -166,10 +178,7 @@
             <h2 style="text-align: center;">Current Conditions</h2>
             <div id="weather-loader" class="loader"></div>
             <div id="weather-content" style="display: none;">
-                <div class="weather-map-grid">
-                    <div class="map-container" id="map-container"></div>
-                    <div class="weather-details" id="weather-details"></div>
-                </div>
+                <div class="weather-details" id="weather-details"></div>
                 <p id="data-source-info"></p>
 
                 <div class="wave-report-section">
@@ -226,7 +235,7 @@
             const dom = {};
             [
                 'red-light', 'yellow-light', 'green-light', 'status-text',
-                'weather-loader', 'weather-content', 'map-container', 'weather-details',
+                'weather-loader', 'weather-content', 'weather-details',
                 'data-source-info', 'suggestion-container', 'email-form', 'email-input',
                 'form-message', 'last-checked', 'official-update', 'status-note',
                 'hourly-forecast-grid', 'refresh-weather', 'status-advice', 'aqi-loader', 'aqi-content', 'wave-report-main', 'wave-report-note'
@@ -372,35 +381,40 @@
                 return data;
             }
             
+            // ADD this new helper function above updateWeatherUI
+            function getConditionIcon(conditionText) {
+                const condition = conditionText.toLowerCase();
+                if (condition.includes('clear')) return 'fa-sun';
+                if (condition.includes('clouds')) return 'fa-cloud';
+                if (condition.includes('rain')) return 'fa-cloud-showers-heavy';
+                if (condition.includes('drizzle')) return 'fa-cloud-rain';
+                if (condition.includes('snow')) return 'fa-snowflake';
+                if (condition.includes('thunderstorm')) return 'fa-cloud-bolt';
+                if (condition.includes('mist') || condition.includes('haze') || condition.includes('fog')) return 'fa-smog';
+                return 'fa-water'; // A default icon
+            }
+
+            // REPLACE your existing updateWeatherUI function with this one
             function updateWeatherUI(weatherData) {
-                // This part correctly calculates values from the data received.
                 const windDisplay = parseFloat(weatherData.windSpeed) === 0 ? 'Calm' : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
                 const waveHeight = estimateWaveHeight(weatherData.windSpeed, weatherData.windDirection);
 
-                // This part correctly populates your separate Wave Forecast section.
-                if (dom['wave-report-main']) {
-                    dom['wave-report-main'].textContent = waveHeight;
-                }
-                if (dom['wave-report-note']) {
-                    dom['wave-report-note'].innerHTML = `Wave height is estimated based on wind speed. At this location, significant waves primarily form from <strong>North (N)</strong> or <strong>Northwest (NW)</strong> winds.`;
-                }
+                // Populate the Wave Forecast section
+                if (dom['wave-report-main']) dom['wave-report-main'].textContent = waveHeight;
+                if (dom['wave-report-note']) dom['wave-report-note'].innerHTML = `Wave height is estimated based on wind speed. At this location, significant waves primarily form from <strong>North (N)</strong> or <strong>Northwest (NW)</strong> winds.`;
                 
-                // This block populates the main "Current Conditions" details.
-                // The link inside is the only part that needs to change.
+                // Populate the new icon-based Current Conditions
                 dom['weather-details'].innerHTML = `
-                    <p><strong>Wind:</strong> ${windDisplay}</p>
-                    <p><strong>Air Temp:</strong> ${weatherData.temperature}°F</p>
-                    <p><strong>Humidity:</strong> ${weatherData.humidity}%</p> 
-                    <p><strong>Conditions:</strong> ${weatherData.conditions}</p>
-                    <p><strong>Last Updated:</strong> ${weatherData.timestamp}</p>
+                    <p><i class="fa-solid fa-wind"></i><strong>Wind:</strong><span>${windDisplay}</span></p>
+                    <p><i class="fa-solid fa-temperature-half"></i><strong>Air Temp:</strong><span>${weatherData.temperature}°F</span></p>
+                    <p><i class="fa-solid fa-droplet"></i><strong>Humidity:</strong><span>${weatherData.humidity}%</span></p>
+                    <p><i class="fa-solid ${getConditionIcon(weatherData.conditions)}"></i><strong>Conditions:</strong><span>${weatherData.conditions}</span></p>
+                    <p><i class="fa-solid fa-clock"></i><strong>Last Updated:</strong><span>${weatherData.timestamp}</span></p>
                 `;
             
-                // These function calls remain the same.
-                // createMap will use the new descriptive name from the worker.
-                createMap(weatherData.station);
+                // The call to createMap() is now gone.
                 updateSuggestions(weatherData);
                 
-                // This correctly shows the content after it's loaded.
                 dom['weather-loader'].style.display = 'none';
                 dom['weather-content'].style.display = 'block';
             }
@@ -484,16 +498,6 @@
                 dom['weather-loader'].style.display = 'none';
                 dom['weather-details'].innerHTML = `<p style="color: #666;">Weather data temporarily unavailable.</p><p style="font-size: 0.9em;">Please check back in a few minutes.</p>`;
                 dom['weather-content'].style.display = 'block';
-            }
-    
-            // Map, Time, and Hourly Forecast Functions
-            function createMap(station) {
-                const { lat, lon } = station.coordinates;
-                const iframe = document.createElement('iframe');
-                iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.02},${lat-0.01},${lon+0.02},${lat+0.01}&layer=mapnik&marker=${lat},${lon}`;
-                iframe.title = `Weather Station: ${station.name}`;
-                dom['map-container'].innerHTML = '';
-                dom['map-container'].appendChild(iframe);
             }
     
             function updateLastChecked() {
