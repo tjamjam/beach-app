@@ -223,7 +223,7 @@
                 'weather-loader', 'weather-content', 'map-container', 'weather-details',
                 'data-source-info', 'suggestion-container', 'email-form', 'email-input',
                 'form-message', 'last-checked', 'official-update', 'status-note',
-                'hourly-forecast-grid', 'refresh-weather', 'status-advice', 'aqi-loader', 'aqi-content'
+                'hourly-forecast-grid', 'refresh-weather', 'status-advice', 'aqi-loader', 'aqi-content', 'wave-report-main', 'wave-report-note'
             ].forEach(id => dom[id] = document.getElementById(id));
     
             // --- SECTION 3: EVENT LISTENERS ---
@@ -351,6 +351,18 @@
             
             function updateWeatherUI(weatherData) {
                 const windDisplay = parseFloat(weatherData.windSpeed) === 0 ? 'Calm' : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
+
+                // 1. Calculate the wave height using our existing smart function
+                const waveHeight = estimateWaveHeight(weatherData.windSpeed, weatherData.windDirection);
+
+                // 2. Populate the new Wave Forecast section
+                if (dom['wave-report-main']) {
+                    dom['wave-report-main'].textContent = waveHeight;
+                }
+                if (dom['wave-report-note']) {
+                    dom['wave-report-note'].innerHTML = `Wave height is estimated based on wind speed. At this location, significant waves primarily form from <strong>North (N)</strong> or <strong>Northwest (NW)</strong> winds.`;
+                }
+                
                 const waveHeight = estimateWaveHeight(weatherData.windSpeed, weatherData.windDirection);
                 dom['weather-details'].innerHTML = `
                     <p><strong>Wind:</strong> ${windDisplay}</p>
