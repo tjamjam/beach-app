@@ -213,6 +213,41 @@
             margin: 0 auto; /* Center the text block */
             line-height: 1.4;
         }
+         /* --- Mobile-First Form Styles --- */
+
+        /* 1. Style the form itself for mobile */
+        .subscribe-form form {
+            display: flex;
+            flex-direction: column; /* Stack the input and button vertically */
+            gap: 12px;             /* This adds the space between them! */
+        }
+
+        /* 2. Make sure the input and button have consistent sizing */
+        .subscribe-form input,
+        .subscribe-form button {
+            width: 100%; /* Make them both full-width by default */
+            /* This is a best-practice to ensure padding doesn't break the layout */
+            box-sizing: border-box; 
+        }
+
+        /* 3. Media query to adjust for wider screens (tablets and desktops) */
+        @media (min-width: 480px) {
+            .subscribe-form form {
+                /* Switch back to a horizontal layout */
+                flex-direction: row;
+            }
+
+            .subscribe-form input {
+                /* Allow the input to grow and take up the available space */
+                flex-grow: 1;
+                width: auto; /* Reset width to be flexible */
+            }
+
+            .subscribe-form button {
+                /* The button will only be as wide as its content */
+                width: auto; /* Reset width to be flexible */
+            }
+        }
         @media (min-width: 420px) {
           .suggestion-list {
             /* On wider screens, switch back to two columns */
