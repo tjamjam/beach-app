@@ -337,15 +337,17 @@
                     const data = await response.json();
                     if (data.error) throw new Error(data.details || 'API returned an error');
 
-                    // Pass the 'current' part to the current conditions UI
+                    // Check if the 'current' data exists and pass it to the UI function.
                     if (data.current) {
                         updateWeatherUI(data.current);
+                    } else {
+                        // If there's no 'current' data, something is wrong with the format.
+                        throw new Error('Received weather data in an unexpected format.');
                     }
                     
-                    // Pass the 'hourly' part to the hourly forecast UI
+                    // Check if the 'hourly' data exists and pass it to its UI function.
                     if (data.hourly) {
                         updateHourlyForecastUI(data.hourly);
-                    }
 
                 } catch (error) {
                     console.error('Weather fetch failed:', error);
