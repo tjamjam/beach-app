@@ -25,7 +25,30 @@
             margin: 0;
             color: #333;
         }        
-        .container { text-align: center; background-color: white; padding: 20px 40px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 90%; width: 450px; }
+        .container {
+            /* These properties remain the same */
+            text-align: center;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            
+            /* --- THIS IS THE NEW RESPONSIVE LOGIC --- */
+            
+            /* 1. Set the maximum width for desktop */
+            max-width: 450px; 
+            
+            /* 2. Make it flexible for mobile, leaving 5% on each side */
+            width: 90%;
+            
+            /* 3. Center the container and add vertical breathing room */
+            margin: 20px auto;
+
+            /* 4. Use padding that works well on mobile */
+            padding: 20px 25px;
+
+            /* 5. A best-practice for responsive layouts */
+            box-sizing: border-box; 
+        }
         h1 { margin-top: 0; }
         .stoplight { background-color: #222; width: 120px; height: 340px; border-radius: 20px; display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 20px 0; margin: 20px auto; border: 5px solid #111; }
         .light { width: 90px; height: 90px; border-radius: 50%; background-color: #444; transition: all 0.3s ease; }
@@ -182,6 +205,13 @@
             max-width: 85%; /* Keep the lines from getting too long */
             margin: 0 auto; /* Center the text block */
             line-height: 1.4;
+        }
+        /* This rule applies ONLY to screens 600px wide or larger */
+        @media (min-width: 600px) {
+          .container {
+            /* Restore the more generous horizontal padding for desktop */
+            padding: 30px 40px;
+          }
         }
     </style>
 </head>
