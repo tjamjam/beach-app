@@ -187,7 +187,7 @@
                     <div id="suggestion-container"></div>
                 </div>
                 <div id="hourly-forecast-section">
-                    <h2>Upcoming Conditions</h2>
+                    <h3>Upcoming Conditions</h3>
                     <div id="hourly-forecast-grid"></div>
                 </div>
             </div>
@@ -212,7 +212,6 @@
             const SUBSCRIBE_API_URL = BASE_API_URL + '/subscribe';
             const MARINE_WEATHER_API_URL = BASE_API_URL + '/weather';
             const AIR_QUALITY_API_URL = BASE_API_URL + '/air-quality';
-            const HOURLY_FORECAST_URL = 'https://api.weather.gov/gridpoints/BTV/61,77/forecast/hourly';
             const STATUS_JSON_URL = 'https://raw.githubusercontent.com/tjamjam/beach-app/main/status.json';
             const LAKEWOOD_BEACH = { lat: 44.500056, lon: -73.248890 };
     
@@ -334,11 +333,22 @@
             // Weather Functions
             async function fetchWeatherData() {
                 try {
-                    const response = await fetch(MARINE_WEATHER_API_URL);
+                    const response = await fetch(`${MARINE_WEATHER_API_URL}?t=${new Date().getTime()}`);
                     if (!response.ok) throw new Error(`Weather API returned ${response.status}`);
+                    
                     const data = await response.json();
-                    const weatherData = data.properties ? parseWeatherData(data.properties) : parseWeatherData(data);
-                    updateWeatherUI(weatherData);
+                    if (data.error) throw new Error(data.details || 'API returned an error');
+
+                    // Pass the 'current' part to the current conditions UI
+                    if (data.current) {
+                        updateWeatherUI(data.current);
+                    }
+                    
+                    // Pass the 'hourly' part to the hourly forecast UI
+                    if (data.hourly) {
+                        updateHourlyForecastUI(data.hourly);
+                    }
+
                 } catch (error) {
                     console.error('Weather fetch failed:', error);
                     displayWeatherError();
@@ -481,52 +491,25 @@
                 }, 1000);
             }
     
-            async function fetchAndUpdateHourlyForecast() {
-                try {
-                    // We are adding the `cache: 'no-cache'` option to force a fresh download.
-                    const response = await fetch(HOURLY_FORECAST_URL, { cache: 'no-cache' });
-
-                    if (!response.ok) throw new Error('Hourly forecast network error');
-                    
-                    const data = await response.json();
-                    const allPeriods = data.properties.periods;
-                    const now = new Date();
-                    
-                    // Find the index of the first forecast period that starts now or in the future.
-                    const startIndex = allPeriods.findIndex(period => new Date(period.startTime) >= now);
-
-                    let upcomingPeriods;
-
-                    if (startIndex !== -1) {
-                        // If we found a future start time, slice the next 3 hours from there.
-                        upcomingPeriods = allPeriods.slice(startIndex, startIndex + 3);
-                    } else {
-                        // Fallback: if all data is in the past, show the last 3 available.
-                        console.warn("Hourly forecast data appears to be out of date. Showing last known periods.");
-                        upcomingPeriods = allPeriods.slice(-3);
-                    }
-
-                    updateHourlyForecastUI(upcomingPeriods);
-
-                } catch (error) {
-                    console.error("Failed to fetch hourly forecast:", error);
-                    if(dom['hourly-forecast-grid']) dom['hourly-forecast-grid'].innerHTML = `<p style="grid-column: 1 / -1;">Forecast unavailable.</p>`;
-                }
-            }
-    
             function updateHourlyForecastUI(periods) {
+                if (!periods || periods.length === 0) {
+                    if(dom['hourly-forecast-grid']) dom['hourly-forecast-grid'].innerHTML = `<p style="grid-column: 1 / -1;">Forecast unavailable.</p>`;
+                    return;
+                }
+                
                 let html = '';
                 periods.forEach(period => {
                     html += `
                         <div class="forecast-hour">
-                            <div class="forecast-time">${new Date(period.startTime).toLocaleString('en-US', { hour: 'numeric', hour12: true })}</div>
-                            <div class="forecast-icon"><img src="${period.icon}" alt="${period.shortForecast}"></div>
-                            <div class="forecast-temp">${period.temperature}°F</div>
-                            <div class="forecast-detail">${period.windSpeed} ${period.windDirection}</div>
+                            <div class="forecast-time">${period.time}</div>
+                            <div class="forecast-icon"><img src="${period.icon}" alt="${period.description}"></div>
+                            <div class="forecast-temp">${period.temp}°F</div>
+                            <div class="forecast-detail" style="text-transform: capitalize;">${period.description}</div>
                         </div>`;
                 });
-                dom['hourly-forecast-grid'].innerHTML = html;
+                if(dom['hourly-forecast-grid']) dom['hourly-forecast-grid'].innerHTML = html;
             }
+
 
             // Add these new functions inside your script tag
             async function fetchAirQuality() {
@@ -591,9 +574,7 @@
             fetchAndUpdateHourlyForecast();
             fetchAirQuality();
             updateLastChecked();
-    
-            // Auto-refresh weather every 5 minutes
-            setInterval(fetchWeatherData, 300000);
+
         });
     </script>
 </body>
