@@ -5,8 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lakewood Beach Status & Weather</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.ripples/0.5.3/jquery.ripples.min.js"></script>
     <style>
-        body { background-color: #f0f0f0; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px 0; margin: 0; color: #333; }
+        body {
+            /* This will now have the background image */
+            background-image: url('https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover; /* Make the image cover the entire screen */
+            background-position: center center; /* Center the image */
+
+            /* These existing styles remain */
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px 0;
+            margin: 0;
+            color: #333;
+        }        
         .container { text-align: center; background-color: white; padding: 20px 40px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 90%; width: 450px; }
         h1 { margin-top: 0; }
         .stoplight { background-color: #222; width: 120px; height: 340px; border-radius: 20px; display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 20px 0; margin: 20px auto; border: 5px solid #111; }
@@ -249,6 +266,13 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            
+            $('body').ripples({
+                resolution: 512,
+                dropRadius: 20,
+                perturbance: 0.04,
+            });
+            
             // --- SECTION 1: CONFIGURATION ---
             const BASE_API_URL = 'https://beach-api.terrencefradet.workers.dev';
             const SUBSCRIBE_API_URL = BASE_API_URL + '/subscribe';
