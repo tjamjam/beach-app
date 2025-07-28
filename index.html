@@ -335,6 +335,9 @@
                     if (!response.ok) throw new Error(`Weather API returned ${response.status}`);
                     
                     const data = await response.json();
+
+                    console.log("Data received from worker:", data);
+                    
                     if (data.error) throw new Error(data.details || 'API returned an error');
 
                     // Check if the 'current' data exists and pass it to the UI function.
