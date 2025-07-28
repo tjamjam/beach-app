@@ -363,7 +363,6 @@
                     dom['wave-report-note'].innerHTML = `Wave height is estimated based on wind speed. At this location, significant waves primarily form from <strong>North (N)</strong> or <strong>Northwest (NW)</strong> winds.`;
                 }
                 
-                const waveHeight = estimateWaveHeight(weatherData.windSpeed, weatherData.windDirection);
                 dom['weather-details'].innerHTML = `
                     <p><strong>Wind:</strong> ${windDisplay}</p>
                     <p><strong>Air Temp:</strong> ${weatherData.temperature}°F</p>
