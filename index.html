@@ -112,7 +112,15 @@
         .weather-link a:hover { text-decoration: underline;}
         #data-source-info { font-size: 0.9em; color: #666; margin-top: 15px; text-align: center; }
         .suggestion-section { margin-top: 20px; text-align: center; }
-        .suggestion-list { list-style: none; padding: 0; margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; }
+        .suggestion-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: 1fr; /* Default to a single, full-width column */
+            gap: 10px;
+            text-align: left;
+        }        
         .suggestion-item { display: flex; align-items: center; background-color: #f9f9f9; padding: 8px; border-radius: 8px; }
         .suggestion-item i {
             font-size: 36px; /* Increased from 24px */
@@ -206,7 +214,12 @@
             margin: 0 auto; /* Center the text block */
             line-height: 1.4;
         }
-        /* This rule applies ONLY to screens 600px wide or larger */
+        @media (min-width: 420px) {
+          .suggestion-list {
+            /* On wider screens, switch back to two columns */
+            grid-template-columns: 1fr 1fr;
+          }
+        }
         @media (min-width: 600px) {
           .container {
             /* Restore the more generous horizontal padding for desktop */
