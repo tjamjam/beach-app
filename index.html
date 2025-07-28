@@ -358,12 +358,11 @@
             }
             
             function updateWeatherUI(weatherData) {
+                // This part correctly calculates values from the data received.
                 const windDisplay = parseFloat(weatherData.windSpeed) === 0 ? 'Calm' : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
-
-                // 1. Calculate the wave height using our existing smart function
                 const waveHeight = estimateWaveHeight(weatherData.windSpeed, weatherData.windDirection);
 
-                // 2. Populate the new Wave Forecast section
+                // This part correctly populates your separate Wave Forecast section.
                 if (dom['wave-report-main']) {
                     dom['wave-report-main'].textContent = waveHeight;
                 }
@@ -371,23 +370,35 @@
                     dom['wave-report-note'].innerHTML = `Wave height is estimated based on wind speed. At this location, significant waves primarily form from <strong>North (N)</strong> or <strong>Northwest (NW)</strong> winds.`;
                 }
                 
+                // This block populates the main "Current Conditions" details.
+                // The link inside is the only part that needs to change.
                 dom['weather-details'].innerHTML = `
                     <p><strong>Wind:</strong> ${windDisplay}</p>
                     <p><strong>Air Temp:</strong> ${weatherData.temperature}°F</p>
                     <p><strong>Humidity:</strong> ${weatherData.humidity}%</p> 
                     <p><strong>Conditions:</strong> ${weatherData.conditions}</p>
                     <p><strong>Last Updated:</strong> ${weatherData.timestamp}</p>
+                    
+                    <!-- THIS IS THE CORRECTED LINK -->
                     <p class="weather-link" style="margin-top: 10px; font-size: 0.9em;">
-                        <a href="https://www.weather.gov/wrh/timeseries?site=KBTV" target="_blank" style="color: #007bff; text-decoration: none;">
-                            View Weather Data Source
+                        <a href="https://openweathermap.org/city/5221291" 
+                           target="_blank" 
+                           style="color: #007bff; text-decoration: none;">
+                            View Source on OpenWeatherMap
                         </a>
                     </p>
                 `;
+            
+                // These function calls remain the same.
+                // createMap will use the new descriptive name from the worker.
                 createMap(weatherData.station);
                 updateSuggestions(weatherData);
+                
+                // This correctly shows the content after it's loaded.
                 dom['weather-loader'].style.display = 'none';
                 dom['weather-content'].style.display = 'block';
             }
+
     
             function estimateWaveHeight(windSpeed, windDirection) {
                 const speed = parseFloat(windSpeed);
