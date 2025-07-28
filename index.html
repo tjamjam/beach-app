@@ -425,7 +425,7 @@
 
                 // Populate the Wave Forecast section
                 if (dom['wave-report-main']) dom['wave-report-main'].textContent = waveHeight;
-                if (dom['wave-report-note']) dom['wave-report-note'].innerHTML = `Wave height is estimated based on wind speed and direction. At this location, significant waves primarily form from <strong>North (N)</strong> or <strong>Northwest (NW)</strong> winds due to the long stretch of open water.`;
+                if (dom['wave-report-note']) dom['wave-report-note'].innerHTML = `Wave height is estimated based on wind speed and direction. At this location, significant waves primarily form from <strong>North (N)</strong>, <strong>Northwest (NW)</strong> or <strong>West (W)</strong> winds due to the long stretch of open water.`;
                 
                 // Build the HTML for the "Current Conditions" section
                 const windDisplay = parseFloat(weatherData.windSpeed) === 0 ? 'Calm' : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
