@@ -25,22 +25,48 @@
         .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid #3498db; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .divider { border-top: 1px solid #eee; margin: 30px 0; }
-        .weather-map-section { text-align: left; }
-        .weather-details p {
-            margin: 12px 0; /* Add a bit more vertical space */
-            font-size: 1.2em; /* Slightly larger text */
-            display: flex;
-            align-items: center;
-            text-align: left;
-        }
-        .weather-details p i {
-            font-size: 1.1em; /* Icon size relative to text */
-            width: 35px;      /* Fixed width for perfect alignment */
+        .current-weather-card {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 12px;
             text-align: center;
-            margin-right: 10px;
-            color: #007bff;   /* Use your theme's blue color */
+            margin-bottom: 20px;
         }
-        .weather-details p { margin: 8px 0; font-size: 1.1em; }
+        .current-weather-card .current-icon img {
+            width: 100px;
+            height: 100px;
+        }
+        .current-weather-card .current-temp {
+            font-size: 4em;
+            font-weight: bold;
+            margin: -10px 0;
+            color: #333;
+        }
+        .current-weather-card .current-description {
+            font-size: 1.2em;
+            color: #666;
+            text-transform: capitalize;
+        }
+        .current-details-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Two neat columns */
+            gap: 15px;
+        }
+        .current-details-list li {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        .current-details-list li strong {
+            display: block; /* Puts the value on a new line */
+            font-size: 1.4em;
+            color: #0056b3;
+            margin-top: 5px;
+        }
         .weather-details p strong { color: #0056b3; }
         .weather-link a:hover { text-decoration: underline;}
         #data-source-info { font-size: 0.9em; color: #666; margin-top: 15px; text-align: center; }
@@ -394,31 +420,41 @@
                 return 'fa-water'; // A default icon
             }
 
-            // REPLACE your existing updateWeatherUI function with this one
             function updateWeatherUI(weatherData) {
-                const windDisplay = parseFloat(weatherData.windSpeed) === 0 ? 'Calm' : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
+                // Get the wave height forecast first
                 const waveHeight = estimateWaveHeight(weatherData.windSpeed, weatherData.windDirection);
 
-                // Populate the Wave Forecast section
+                // Populate the separate Wave Forecast section
                 if (dom['wave-report-main']) dom['wave-report-main'].textContent = waveHeight;
                 if (dom['wave-report-note']) dom['wave-report-note'].innerHTML = `Wave height is estimated based on wind speed. At this location, significant waves primarily form from <strong>North (N)</strong> or <strong>Northwest (NW)</strong> winds.`;
                 
-                // Populate the new icon-based Current Conditions
+                // --- Build the new HTML for the "Current Conditions" section ---
+                const windDisplay = parseFloat(weatherData.windSpeed) === 0 ? 'Calm' : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
+
                 dom['weather-details'].innerHTML = `
-                    <p><i class="fa-solid fa-wind"></i><strong>Wind:</strong><span>${windDisplay}</span></p>
-                    <p><i class="fa-solid fa-temperature-half"></i><strong>Air Temp:</strong><span>${weatherData.temperature}°F</span></p>
-                    <p><i class="fa-solid fa-droplet"></i><strong>Humidity:</strong><span>${weatherData.humidity}%</span></p>
-                    <p><i class="fa-solid ${getConditionIcon(weatherData.conditions)}"></i><strong>Conditions:</strong><span>${weatherData.conditions}</span></p>
-                    <p><i class="fa-solid fa-clock"></i><strong>Last Updated:</strong><span>${weatherData.timestamp}</span></p>
+                    <div class="current-weather-card">
+                        <div class="current-icon"><img src="${weatherData.icon}" alt="${weatherData.conditions}"></div>
+                        <div class="current-temp">${weatherData.temperature}°F</div>
+                        <div class="current-description">${weatherData.conditions}</div>
+                    </div>
+                    
+                    <ul class="current-details-list">
+                        <li>Wind<strong>${windDisplay}</strong></li>
+                        <li>Humidity<strong>${weatherData.humidity}%</strong></li>
+                    </ul>
+                    
+                    <p style="text-align:center; font-size: 0.9em; color: #888; margin-top: 20px;">
+                        Last Updated: ${weatherData.timestamp}
+                    </p>
                 `;
             
-                // The call to createMap() is now gone.
+                // These function calls remain the same
                 updateSuggestions(weatherData);
                 
+                // Show the content after it's all built
                 dom['weather-loader'].style.display = 'none';
                 dom['weather-content'].style.display = 'block';
             }
-
     
             function estimateWaveHeight(windSpeed, windDirection) {
                 const speed = parseFloat(windSpeed);
