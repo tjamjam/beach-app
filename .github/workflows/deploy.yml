@@ -1,6 +1,6 @@
 # .github/workflows/deploy.yml
 
-name: Deploy Worker
+name: Deploy Frontend and Backend
 
 on:
   push:
@@ -8,9 +8,10 @@ on:
       - main # This action runs only when you push to the main branch
 
 jobs:
-  deploy:
+  # --- JOB 1: DEPLOY THE BACKEND WORKER ---
+  deploy-backend:
     runs-on: ubuntu-latest
-    name: Deploy
+    name: Deploy Backend to Cloudflare
     steps:
       - uses: actions/checkout@v3
       - name: Publish Worker
@@ -18,3 +19,25 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
+
+  # --- JOB 2: DEPLOY THE FRONTEND TO GITHUB PAGES ---
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    name: Deploy Frontend to GitHub Pages
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18' # A standard version
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # This tells the action to take the contents of your 'frontend' folder...
+          publish_dir: ./frontend
+          # ...and push them to the 'gh-pages' branch.
+          publish_branch: gh-pages
