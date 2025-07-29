@@ -1,1 +1,62 @@
-{"status": "yellow", "date": "Jul 29 2025 11:09AM", "note": "Alert Category 2 BGA level", "beach_name": "Leddy Beach South"}
+[
+  {
+    "beach_name": "North Shore Natural Area",
+    "status": "green",
+    "date": "Jul 29 2025 10:40AM",
+    "note": "Open"
+  },
+  {
+    "beach_name": "Leddy Beach North",
+    "status": "yellow",
+    "date": "Jul 29 2025 11:08AM",
+    "note": "Alert Category 2 BGA level"
+  },
+  {
+    "beach_name": "Leddy Beach South",
+    "status": "yellow",
+    "date": "Jul 29 2025 11:09AM",
+    "note": "Alert Category 2 BGA level"
+  },
+  {
+    "beach_name": "North Beach North",
+    "status": "red",
+    "date": "Jul 29 2025 9:26AM",
+    "note": "Closed Category 3 BGA level"
+  },
+  {
+    "beach_name": "North Beach South",
+    "status": "red",
+    "date": "Jul 29 2025 9:26AM",
+    "note": "Closed Category 3 BGA level"
+  },
+  {
+    "beach_name": "Texaco Beach",
+    "status": "red",
+    "date": "Jul 29 2025 11:27AM",
+    "note": "Closed Category 3 BGA level"
+  },
+  {
+    "beach_name": "Blanchard Beach North",
+    "status": "red",
+    "date": "Jul 29 2025 12:11PM",
+    "note": "Closed Category 3 BGA level"
+  },
+  {
+    "beach_name": "Blanchard Beach South",
+    "status": "red",
+    "date": "Jul 29 2025 12:11PM",
+    "note": "Closed Category 3 BGA level"
+  },
+  {
+    "beach_name": "Oakledge Cove",
+    "status": "red",
+    "date": "Jul 29 2025 10:07AM",
+    "note": "Closed Category 3 BGA level"
+  },
+  {
+    "beach_name": "Blodgett Water Access Point",
+    "status": "red",
+    "date": "Jul 29 2025 12:11PM",
+    "note": "Closed Category 3 BGA level"
+  }
+]
