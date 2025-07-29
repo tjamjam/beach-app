@@ -354,8 +354,8 @@
             // });
             
             // --- SECTION 1: CONFIGURATION ---
-            // const BASE_API_URL = 'https://beach-api.terrencefradet.workers.dev';
-            const BASE_API_URL = 'http://localhost:8787'; 
+            const BASE_API_URL = 'https://beach-api.terrencefradet.workers.dev';
+            // const BASE_API_URL = 'http://localhost:8787'; 
             const SUBSCRIBE_API_URL = BASE_API_URL + '/subscribe';
             const MARINE_WEATHER_API_URL = BASE_API_URL + '/weather';
             const AIR_QUALITY_API_URL = BASE_API_URL + '/air-quality';
@@ -406,15 +406,33 @@
             // Status Functions
             async function fetchAndUpdateStatus() {
                 try {
+                    // This fetches the status.json file, which is now an array of all beaches.
                     const response = await fetch(`${STATUS_JSON_URL}?t=${new Date().getTime()}`);
                     if (!response.ok) throw new Error('Status JSON network error');
-                    const data = await response.json();
-                    updateStoplight(data);
+                    
+                    const allBeaches = await response.json(); // This variable now holds the full list.
+
+                    // --- THIS IS THE CRITICAL FIX ---
+                    // We need to find the specific beach we want to display in the stoplight.
+                    const targetBeachName = "Leddy Beach South"; 
+                    const targetBeachData = allBeaches.find(beach => beach.beach_name === targetBeachName);
+
+                    if (targetBeachData) {
+                        // If we found our target beach, pass ITS data to the display function.
+                        updateStoplight(targetBeachData);
+                    } else {
+                        // If for some reason our target beach isn't in the report, show an error.
+                        throw new Error(`Target beach '${targetBeachName}' not found in the status report.`);
+                    }
+                    // --- END OF FIX ---
+
                 } catch (error) {
-                    console.error("Failed to fetch status:", error);
-                    updateStoplight({ status: 'error', date: 'N/A', note: 'Could not fetch status data.' });
+                    console.error("Failed to fetch or process status:", error);
+                    // This error handler will now catch the "not found" error as well.
+                    updateStoplight({ status: 'error', date: 'N/A', note: 'Could not retrieve beach status.' });
                 }
             }
+
     
             function updateStoplight(data) {
                 const { status, date, note } = data;
