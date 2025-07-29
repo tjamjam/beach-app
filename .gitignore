@@ -1,0 +1,10 @@
+# .gitignore - A list of files for Git to ignore
+
+# Local development secrets
+.dev.vars
+
+# Node.js dependencies
+node_modules
+
+# Wrangler state
+.wrangler

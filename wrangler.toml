@@ -1,0 +1,15 @@
+# wrangler.toml - The instruction manual for your worker
+
+# This is the name of your worker in the Cloudflare dashboard.
+name = "beach-api" 
+
+# This tells Wrangler that your main worker script is index.js inside the backend folder.
+main = "backend/index.js" 
+
+# This sets the modern compatibility settings for your worker.
+compatibility_date = "2023-10-30" 
+
+# This section connects your email subscriber list (KV namespace)
+[[kv_namespaces]]
+binding = "SUBSCRIBERS"
+id = "96ca62f594d44335bf07d60e8a4f5364" # <-- Run 'wrangler kv:namespace list' to find this
