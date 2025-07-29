@@ -15,6 +15,21 @@ PDF_URL = "https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx
 STATUS_FILE = "current_status.txt"
 JSON_OUTPUT_FILE = "status.json"
 
+# This dictionary maps the exact beach name from the PDF to its coordinates.
+BEACH_COORDINATES = {
+    "North Shore Natural Area": {"lat": 44.5222, "lon": -73.2570},
+    "Leddy Beach North": {"lat": 44.5055, "lon": -73.2505},
+    "Leddy Beach South": {"lat": 44.5000, "lon": -73.2488},
+    "North Beach North": {"lat": 44.4925, "lon": -73.2435},
+    "North Beach South": {"lat": 44.4890, "lon": -73.2410},
+    "Texaco Beach": {"lat": 44.4845, "lon": -73.2370},
+    "Blanchard Beach North": {"lat": 44.4790, "lon": -73.2325},
+    "Blanchard Beach South": {"lat": 44.4765, "lon": -73.2300},
+    "Oakledge Cove": {"lat": 44.4550, "lon": -73.2255},
+    "Blodgett Water Access Point": {"lat": 44.4500, "lon": -73.2230}
+}
+
+
 def determine_status_from_indicator(status_text):
     """Helper function to determine status from the indicator"""
     status_text = str(status_text).lower()
@@ -104,7 +119,8 @@ def get_all_beach_statuses():
                         "beach_name": beach_name,
                         "status": final_status,
                         "date": date_updated,
-                        "note": note
+                        "note": note,
+                        "coordinates": BEACH_COORDINATES.get(beach_name)
                     }
                     all_beaches.append(beach_data)
                 except (IndexError, TypeError) as e:

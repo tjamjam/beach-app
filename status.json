@@ -3,60 +3,100 @@
     "beach_name": "North Shore Natural Area",
     "status": "green",
     "date": "Jul 29 2025 10:40AM",
-    "note": "Open"
+    "note": "Open",
+    "coordinates": {
+      "lat": 44.5222,
+      "lon": -73.257
+    }
   },
   {
     "beach_name": "Leddy Beach North",
     "status": "yellow",
     "date": "Jul 29 2025 11:08AM",
-    "note": "Alert Category 2 BGA level"
+    "note": "Alert Category 2 BGA level",
+    "coordinates": {
+      "lat": 44.5055,
+      "lon": -73.2505
+    }
   },
   {
     "beach_name": "Leddy Beach South",
     "status": "yellow",
     "date": "Jul 29 2025 11:09AM",
-    "note": "Alert Category 2 BGA level"
+    "note": "Alert Category 2 BGA level",
+    "coordinates": {
+      "lat": 44.5,
+      "lon": -73.2488
+    }
   },
   {
     "beach_name": "North Beach North",
     "status": "red",
     "date": "Jul 29 2025 9:26AM",
-    "note": "Closed Category 3 BGA level"
+    "note": "Closed Category 3 BGA level",
+    "coordinates": {
+      "lat": 44.4925,
+      "lon": -73.2435
+    }
   },
   {
     "beach_name": "North Beach South",
     "status": "red",
     "date": "Jul 29 2025 9:26AM",
-    "note": "Closed Category 3 BGA level"
+    "note": "Closed Category 3 BGA level",
+    "coordinates": {
+      "lat": 44.489,
+      "lon": -73.241
+    }
   },
   {
     "beach_name": "Texaco Beach",
     "status": "red",
     "date": "Jul 29 2025 11:27AM",
-    "note": "Closed Category 3 BGA level"
+    "note": "Closed Category 3 BGA level",
+    "coordinates": {
+      "lat": 44.4845,
+      "lon": -73.237
+    }
   },
   {
     "beach_name": "Blanchard Beach North",
     "status": "red",
     "date": "Jul 29 2025 12:11PM",
-    "note": "Closed Category 3 BGA level"
+    "note": "Closed Category 3 BGA level",
+    "coordinates": {
+      "lat": 44.479,
+      "lon": -73.2325
+    }
   },
   {
     "beach_name": "Blanchard Beach South",
     "status": "red",
     "date": "Jul 29 2025 12:11PM",
-    "note": "Closed Category 3 BGA level"
+    "note": "Closed Category 3 BGA level",
+    "coordinates": {
+      "lat": 44.4765,
+      "lon": -73.23
+    }
   },
   {
     "beach_name": "Oakledge Cove",
     "status": "red",
     "date": "Jul 29 2025 10:07AM",
-    "note": "Closed Category 3 BGA level"
+    "note": "Closed Category 3 BGA level",
+    "coordinates": {
+      "lat": 44.455,
+      "lon": -73.2255
+    }
   },
   {
     "beach_name": "Blodgett Water Access Point",
     "status": "red",
     "date": "Jul 29 2025 12:11PM",
-    "note": "Closed Category 3 BGA level"
+    "note": "Closed Category 3 BGA level",
+    "coordinates": {
+      "lat": 44.45,
+      "lon": -73.223
+    }
   }
 ]

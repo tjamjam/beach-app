@@ -229,6 +229,18 @@
             /* This is a best-practice to ensure padding doesn't break the layout */
             box-sizing: border-box; 
         }
+        .alternative-beach-intro {
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 5px; /* A little space between the intro and the name */
+        }
+
+        .alternative-beach-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #00a045; /* The 'go' green color */
+            margin-top: 0; /* Remove the default top margin for a tighter look */
+        }
 
         /* 3. Media query to adjust for wider screens (tablets and desktops) */
         @media (min-width: 480px) {
@@ -283,6 +295,10 @@
             </p>
             <p class="timestamp">Last checked: <span id="last-checked"></span></p>
         </div>
+
+        <div class="divider"></div>
+
+        <div id="alternative-beach-info"></div>
         
         <div class="subscribe-form">
             <p>Stay informed: We'll email you as soon as the PDF status updates (checked hourly):</p>
@@ -354,13 +370,35 @@
             // });
             
             // --- SECTION 1: CONFIGURATION ---
-            const BASE_API_URL = 'https://beach-api.terrencefradet.workers.dev';
-            // const BASE_API_URL = 'http://localhost:8787'; 
+                        // --- SECTION 1: CONFIGURATION (with smart environment switching) ---
+            
+            // This is the single switch that controls everything.
+            const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+
+            // Set the base URL for the Cloudflare Worker API
+            const BASE_API_URL = isLocal 
+                ? 'http://localhost:8787' // Use local worker for development
+                : 'https://beach-api.terrencefradet.workers.dev'; // Use live worker for production
+
+            // Set the URL for the status.json data file
+            const STATUS_JSON_URL = isLocal
+                ? '../status.json' // Use local file for development
+                : 'https://raw.githubusercontent.com/tjamjam/beach-app/main/status.json'; // Use live file for production
+
+            // All other API endpoints are built from the base URL and will switch automatically.
             const SUBSCRIBE_API_URL = BASE_API_URL + '/subscribe';
             const MARINE_WEATHER_API_URL = BASE_API_URL + '/weather';
             const AIR_QUALITY_API_URL = BASE_API_URL + '/air-quality';
-            const STATUS_JSON_URL = 'https://raw.githubusercontent.com/tjamjam/beach-app/main/status.json';
+
+            // Static configuration
             const LAKEWOOD_BEACH = { lat: 44.500056, lon: -73.248890 };
+
+            // Log the current environment for easy debugging
+            console.log(`-- App running in ${isLocal ? 'LOCAL' : 'PRODUCTION'} mode --`);
+            console.log(`API endpoints pointing to: ${BASE_API_URL}`);
+            console.log(`Status data sourced from: ${STATUS_JSON_URL}`);
+
+
     
             // --- SECTION 2: DOM ELEMENTS ---
             const dom = {};
@@ -424,7 +462,8 @@
                         // If for some reason our target beach isn't in the report, show an error.
                         throw new Error(`Target beach '${targetBeachName}' not found in the status report.`);
                     }
-                    // --- END OF FIX ---
+                    
+                    displayAlternativeBeach(allBeaches, targetBeachName);
 
                 } catch (error) {
                     console.error("Failed to fetch or process status:", error);
@@ -493,6 +532,49 @@
                     dom['status-note'].style.display = 'none';
                 }
             }
+
+            // --- NEW HELPER FUNCTIONS ---
+            function calculateDistance(coord1, coord2) {
+                // Simple Euclidean distance is fine for these short distances.
+                const dx = coord1.lon - coord2.lon;
+                const dy = coord1.lat - coord2.lat;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+
+                        function displayAlternativeBeach(allBeaches, targetBeachName) {
+                const targetBeach = allBeaches.find(b => b.beach_name === targetBeachName);
+                const adviceContainer = document.getElementById('alternative-beach-info');
+                
+                // If the target beach is open or we can't find its data, hide the suggestion.
+                if (!targetBeach || targetBeach.status === 'green' || !targetBeach.coordinates) {
+                    adviceContainer.innerHTML = ''; // Clear any previous suggestion
+                    return;
+                }
+
+                const openBeaches = allBeaches.filter(b => b.status === 'green' && b.coordinates);
+
+                // --- THIS IS THE LOGIC FOR YOUR FIRST REQUEST ---
+                // If the list of open beaches is empty, display the specific message.
+                if (openBeaches.length === 0) {
+                    adviceContainer.innerHTML = `<p style="font-style: italic; color: #666; margin-top: 15px;">There are no other open beaches at this time.</p>`;
+                    return;
+                }
+
+                // Calculate distances and find the closest
+                openBeaches.forEach(beach => {
+                    beach.distance = calculateDistance(targetBeach.coordinates, beach.coordinates);
+                });
+                openBeaches.sort((a, b) => a.distance - b.distance);
+                const closestBeach = openBeaches[0];
+
+                // --- THIS IS THE LOGIC FOR YOUR SECOND REQUEST ---
+                // Build the new two-paragraph HTML structure using our new CSS classes.
+                adviceContainer.innerHTML = `
+                    <p class="alternative-beach-intro">Instead, the closest open beach is:</p>
+                    <p class="alternative-beach-name">${closestBeach.beach_name}</p>
+                `;
+            }
+
 
     
             // Weather Functions
@@ -580,25 +662,33 @@
             function estimateWaveHeight(windSpeed, windDirection) {
                 const speed = parseFloat(windSpeed);
 
-                // If there's no wind, it's always calm.
+                // This check remains the same.
                 if (isNaN(speed) || speed < 1) {
                     return "Calm (< 0.5 ft)";
                 }
 
-                // The key check: The beach is on the east shore. We check for the three directions with significant open water fetch.
-                const isWaveDirection = (windDirection === 'N' || windDirection === 'NW' || windDirection === 'W');
-
+                // This check also remains the same.
+                const isWaveDirection = (windDirection === 'N' || windDirection === 'NW' || windDirection === 'NNW' || windDirection === 'W');
                 if (!isWaveDirection) {
-                    // Winds from any other direction (S, E, NE, SW, etc.) are blocked by land.
                     return "Calm (Sheltered by Land)";
                 }
 
                 // If wind IS from a wave-making direction, now we check the speed.
+                
+                // --- THIS IS THE NEW LOGIC YOU REQUESTED ---
+                // If the wind is very light (1-4.9 mph), it's still calm.
+                if (speed < 5) {
+                    return "Calm (< 0.5 ft)";
+                }
+                // --- END OF NEW LOGIC ---
+
+                // The rest of the tiers now handle stronger winds.
                 if (speed < 10) return "Light Chop (0.5 - 1 ft)";
                 if (speed < 18) return "Moderate Waves (1 - 3 ft)";
                 if (speed < 25) return "Choppy (3 - 5 ft)";
                 return "Rough (5+ ft)";
             }
+
     
             function updateSuggestions(weatherData) {
                 const suggestions = [];
