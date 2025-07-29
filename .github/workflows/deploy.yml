@@ -24,6 +24,8 @@ jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
     name: Deploy Frontend to GitHub Pages
+    permissions:
+      contents: write # This gives the job permission to write to the repository
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
