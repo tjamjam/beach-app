@@ -2,7 +2,7 @@
   {
     "beach_name": "North Shore Natural Area",
     "status": "green",
-    "date": "Jul 29 2025 10:40AM",
+    "date": "Jul 30 2025 1:23PM",
     "note": "Open",
     "coordinates": {
       "lat": 44.5222,
@@ -12,7 +12,7 @@
   {
     "beach_name": "Leddy Beach North",
     "status": "yellow",
-    "date": "Jul 29 2025 11:08AM",
+    "date": "Jul 30 2025 1:12PM",
     "note": "Alert Category 2 BGA level",
     "coordinates": {
       "lat": 44.5055,
@@ -22,7 +22,7 @@
   {
     "beach_name": "Leddy Beach South",
     "status": "yellow",
-    "date": "Jul 29 2025 11:09AM",
+    "date": "Jul 30 2025 1:12PM",
     "note": "Alert Category 2 BGA level",
     "coordinates": {
       "lat": 44.5,
