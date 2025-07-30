@@ -61,9 +61,9 @@
   },
   {
     "beach_name": "Blanchard Beach North",
-    "status": "red",
-    "date": "Jul 29 2025 12:11PM",
-    "note": "Closed Category 3 BGA level",
+    "status": "green",
+    "date": "Jul 30 2025 12:39PM",
+    "note": "Open",
     "coordinates": {
       "lat": 44.479,
       "lon": -73.2325
@@ -71,9 +71,9 @@
   },
   {
     "beach_name": "Blanchard Beach South",
-    "status": "red",
-    "date": "Jul 29 2025 12:11PM",
-    "note": "Closed Category 3 BGA level",
+    "status": "green",
+    "date": "Jul 30 2025 12:40PM",
+    "note": "Open",
     "coordinates": {
       "lat": 44.4765,
       "lon": -73.23
@@ -82,7 +82,7 @@
   {
     "beach_name": "Oakledge Cove",
     "status": "red",
-    "date": "Jul 29 2025 10:07AM",
+    "date": "Jul 30 2025 12:31PM",
     "note": "Closed Category 3 BGA level",
     "coordinates": {
       "lat": 44.455,
