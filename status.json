@@ -31,9 +31,9 @@
   },
   {
     "beach_name": "North Beach North",
-    "status": "red",
-    "date": "Jul 29 2025 9:26AM",
-    "note": "Closed Category 3 BGA level",
+    "status": "green",
+    "date": "Jul 30 2025 11:31AM",
+    "note": "Open",
     "coordinates": {
       "lat": 44.4925,
       "lon": -73.2435
@@ -41,9 +41,9 @@
   },
   {
     "beach_name": "North Beach South",
-    "status": "red",
-    "date": "Jul 29 2025 9:26AM",
-    "note": "Closed Category 3 BGA level",
+    "status": "green",
+    "date": "Jul 30 2025 11:31AM",
+    "note": "Open",
     "coordinates": {
       "lat": 44.489,
       "lon": -73.241
@@ -51,9 +51,9 @@
   },
   {
     "beach_name": "Texaco Beach",
-    "status": "red",
-    "date": "Jul 29 2025 11:27AM",
-    "note": "Closed Category 3 BGA level",
+    "status": "yellow",
+    "date": "Jul 30 2025 11:45AM",
+    "note": "Alert Category 2 BGA level",
     "coordinates": {
       "lat": 44.4845,
       "lon": -73.237
@@ -92,7 +92,7 @@
   {
     "beach_name": "Blodgett Water Access Point",
     "status": "red",
-    "date": "Jul 29 2025 12:11PM",
+    "date": "Jul 30 2025 12:00PM",
     "note": "Closed Category 3 BGA level",
     "coordinates": {
       "lat": 44.45,
