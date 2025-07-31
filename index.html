@@ -360,6 +360,15 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+
+            // --- UPDATED Mock Data ---
+            const mockPoorAQI = {
+                aqi: 165,
+                text: "Unhealthy",
+                advice: "Some members of the general public may experience health effects...",
+                categoryNumber: 4, // <-- This now uses the official AirNow number for "Unhealthy"
+                pollutants: { pm2_5: 85.5 }
+            };
             
             // $('body').ripples({
             //     resolution: 512,
@@ -541,7 +550,7 @@
                 return Math.sqrt(dx * dx + dy * dy);
             }
 
-                        function displayAlternativeBeach(allBeaches, targetBeachName) {
+            function displayAlternativeBeach(allBeaches, targetBeachName) {
                 const targetBeach = allBeaches.find(b => b.beach_name === targetBeachName);
                 const adviceContainer = document.getElementById('alternative-beach-info');
                 
@@ -778,6 +787,8 @@
 
             // Add these new functions inside your script tag
             async function fetchAirQuality() {
+                // Use our mock data instead of calling the API
+                // updateAirQualityUI(mockPoorAQI);
                 try {
                     const response = await fetch(AIR_QUALITY_API_URL);
                     if (!response.ok) throw new Error('Air Quality API fetch failed');
@@ -796,30 +807,38 @@
                     if(dom['aqi-loader']) dom['aqi-loader'].style.display = 'none';
                     return;
                 }
-        
-                const aqiClass = data.className || "";
+
+                // --- THIS IS THE NEW, ALIGNED LOGIC ---
+                // This map directly translates the AirNow category number to your CSS classes.
+                const aqiClassMap = {
+                    1: "aqi-good",
+                    2: "aqi-fair",
+                    3: "aqi-moderate",
+                    4: "aqi-poor",
+                    5: "aqi-very-poor",
+                    6: "aqi-very-poor" // AirNow uses 6 for Hazardous, we'll map it to our 'very-poor' style.
+                };
+                
+                // Look up the class name using the number from the API.
+                const aqiClass = aqiClassMap[data.categoryNumber] || "";
+
+                const pm2_5 = data.pollutants?.pm2_5 || 0;
                 
                 let adviceHTML = '';
                 if (data.advice) {
-                    // Create the styled advice box. This part remains the same.
                     adviceHTML = `
                         <p id="aqi-advice" style="display: block; background-color: #f8f9fa; border: 1px solid #dee2e6; color: #343a40; padding: 10px; border-radius: 8px; margin-top: 15px;">
                             <strong>Advice:</strong> ${data.advice}
                         </p>
                     `;
                 }
-        
-                // --- UPDATED HTML STRUCTURE ---
+
                 dom['aqi-content'].innerHTML = `
                     <div class="aqi-display ${aqiClass}">
                         <div class="aqi-circle">${data.aqi} AQI</div>
                         <div class="aqi-text">${data.text}</div>
                     </div>
-        
-                    <!-- The advice now comes directly after the display -->
                     ${adviceHTML}
-                    
-                    <!-- The link to the source is now at the bottom -->
                     <p class="data-source-link" style="margin-top: 10px; font-size: 0.9em;">
                         <a href="https://www.airnow.gov/?city=Burlington&state=VT&country=USA" target="_blank" style="color: #007bff; text-decoration: none;">
                             View Source on AirNow.gov
@@ -830,7 +849,6 @@
                 dom['aqi-loader'].style.display = 'none';
                 dom['aqi-content'].style.display = 'block';
             }
-
 
             
             // --- SECTION 5: INITIALIZATION ---
