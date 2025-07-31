@@ -86,31 +86,35 @@ export default {
             }
 
 
-            // --- AIR QUALITY ENDPOINT ---
+            // --- AIR QUALITY ENDPOINT (Aligned with AirNow Category Numbers) ---
             if (path === '/air-quality') {
                 try {
                     const apiKey = env.AIRNOW_API_KEY;
                     if (!apiKey) throw new Error("AirNow API key is not configured.");
-                    
+
                     const zipCode = "05401";
                     const airNowUrl = `https://www.airnowapi.org/aq/observation/zipCode/current/?format=application/json&zipCode=${zipCode}&distance=25&API_KEY=${apiKey}`;
                     
                     const response = await fetch(airNowUrl);
                     if (!response.ok) throw new Error(`AirNow API returned ${response.status}`);
-                    const data = await response.json();
-                    
-                    if (!data || data.length === 0) throw new Error("No data returned from AirNow for the specified location.");
 
-                    const overallAqi = data.reduce((maxAqi, pollutant) => Math.max(maxAqi, pollutant.AQI), 0);
+                    const data = await response.json();
+                    if (!data || data.length === 0) throw new Error("No data returned from AirNow.");
+
+                    const overallAqi = data.reduce((maxAqi, p) => Math.max(maxAqi, p.AQI), 0);
                     const mainPollutantData = data.find(p => p.AQI === overallAqi) || data[0];
                     const category = mainPollutantData.Category;
 
+                    // --- THIS IS THE NEW, SIMPLER FORMAT ---
                     const formattedData = {
                         aqi: overallAqi,
                         text: category.Name,
                         advice: `The current air quality is ${category.Name}.`,
-                        className: `aqi-${category.Name.toLowerCase().replace(/ /g, '-').replace('for-sensitive-groups', 'moderate')}`,
-                        pollutants: { pm2_5: data.find(p => p.ParameterName === "PM2.5")?.Value || 0 }
+                        // We now pass the raw category number directly.
+                        categoryNumber: category.Number, 
+                        pollutants: {
+                            pm2_5: data.find(p => p.ParameterName === "PM2.5")?.Value || 0,
+                        }
                     };
 
                     return new Response(JSON.stringify(formattedData), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -120,6 +124,7 @@ export default {
                     return new Response(JSON.stringify({ error: 'Air Quality data unavailable', details: error.message }), { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
                 }
             }
+
 
             // --- EMAIL SUBSCRIBE ENDPOINT ---
             if (path === '/subscribe' && request.method === 'POST') {
