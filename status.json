@@ -2,7 +2,7 @@
   {
     "beach_name": "North Shore Natural Area",
     "status": "green",
-    "date": "Jul 30 2025 1:23PM",
+    "date": "Jul 31 2025 1:01PM",
     "note": "Open",
     "coordinates": {
       "lat": 44.5222,
@@ -12,7 +12,7 @@
   {
     "beach_name": "Leddy Beach North",
     "status": "yellow",
-    "date": "Jul 30 2025 1:12PM",
+    "date": "Jul 31 2025 12:55PM",
     "note": "Alert Category 2 BGA level",
     "coordinates": {
       "lat": 44.5055,
@@ -22,7 +22,7 @@
   {
     "beach_name": "Leddy Beach South",
     "status": "yellow",
-    "date": "Jul 30 2025 1:12PM",
+    "date": "Jul 31 2025 12:54PM",
     "note": "Alert Category 2 BGA level",
     "coordinates": {
       "lat": 44.5,
@@ -81,9 +81,9 @@
   },
   {
     "beach_name": "Oakledge Cove",
-    "status": "red",
-    "date": "Jul 30 2025 12:31PM",
-    "note": "Closed Category 3 BGA level",
+    "status": "green",
+    "date": "Jul 31 2025 12:27PM",
+    "note": "Open",
     "coordinates": {
       "lat": 44.455,
       "lon": -73.2255
