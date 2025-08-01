@@ -4,7 +4,18 @@ import io
 import os
 import json
 import csv
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timezone
+
+# Try to load environment variables from .env file if it exists
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # dotenv not installed, continue without it
+    pass
 
 NTFY_TOPIC = "lakewood-beach-water-quality-report"
 CLOUDFLARE_WORKER_URL = "https://beach-api.terrencefradet.workers.dev"
@@ -14,6 +25,12 @@ DISPLAY_BEACH_NAME = "Lakewood Beach"
 PDF_URL = "https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx"
 STATUS_FILE = "current_status.txt"
 JSON_OUTPUT_FILE = "status.json"
+
+# Email configuration
+EMAIL_SENDER = os.environ.get("EMAIL_SENDER", "beach-status@yourdomain.com")
+EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
+SMTP_SERVER = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
 
 # This dictionary maps the exact beach name from the PDF to its coordinates.
 BEACH_COORDINATES = {
@@ -67,7 +84,14 @@ def validate_status(initial_status, note):
 
 def get_subscribers():
     if not CF_API_TOKEN:
-        print("Error: CF_API_TOKEN secret is not set."); return []
+        print("Error: CF_API_TOKEN environment variable is not set.")
+        print("To fix this, you need to:")
+        print("1. Get your CF_API_TOKEN from your Cloudflare Worker secrets")
+        print("2. Set it as an environment variable: export CF_API_TOKEN='your_token_here'")
+        print("3. Or create a .env file in the backend directory with: CF_API_TOKEN=your_token_here")
+        print("4. Or run the script with: CF_API_TOKEN=your_token_here python check_status.py")
+        return []
+    
     print("Fetching subscriber list from Cloudflare Worker...")
     try:
         url = f"{CLOUDFLARE_WORKER_URL}/get-subscribers"
@@ -78,8 +102,17 @@ def get_subscribers():
         subscribers = data.get("subscribers", [])
         print(f"Found {len(subscribers)} subscribers.")
         return subscribers
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 401:
+            print(f"Authentication failed: 401 Unauthorized")
+            print("This means the CF_API_TOKEN is either missing, incorrect, or expired.")
+            print("Please check your token and try again.")
+        else:
+            print(f"HTTP Error: {e}")
+        return []
     except Exception as e:
-        print(f"Failed to fetch subscribers from Cloudflare: {e}"); return []
+        print(f"Failed to fetch subscribers from Cloudflare: {e}")
+        return []
 
 def get_all_beach_statuses():
     """
@@ -136,12 +169,41 @@ def get_all_beach_statuses():
 
 def send_notifications(message, email_list):
     print(f"Sending notifications for message: {message}")
-    requests.post(f"https://ntfy.sh/{NTFY_TOPIC}", data=message.encode('utf-8'), headers={"Title": "Beach Status Change!"})
+    
+    # Check if email credentials are configured
+    if not EMAIL_PASSWORD or EMAIL_PASSWORD == "your_email_password":
+        print("Email credentials not configured. Using ntfy.sh as fallback.")
+        # Fallback to ntfy.sh
+        try:
+            requests.post(f"https://ntfy.sh/{NTFY_TOPIC}", 
+                        data=message.encode('utf-8'), 
+                        headers={"Title": "Beach Status Change!"})
+            print("Notification sent via ntfy.sh")
+        except Exception as e:
+            print(f"Failed to send ntfy.sh notification: {e}")
+        return
+    
+    # Send emails to subscribers
     for email in email_list:
         try:
-            requests.post(f"https://ntfy.sh/{NTFY_TOPIC}", data=message.encode('utf-8'), headers={"Title": "Beach Status Change!", "Email": email})
+            # Create a MIME message
+            msg = MIMEMultipart()
+            msg['From'] = EMAIL_SENDER
+            msg['To'] = email
+            msg['Subject'] = "Beach Status Change!"
+            
+            # Attach the message to the MIME message
+            msg.attach(MIMEText(message, 'plain'))
+            
+            # Connect to the SMTP server
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                server.starttls() # Secure the connection
+                server.login(EMAIL_SENDER, EMAIL_PASSWORD)
+                server.send_message(msg)
+            print(f"Email sent to {email}")
         except Exception as e:
             print(f"Failed to send email to {email}: {e}")
+            print("Make sure EMAIL_PASSWORD and EMAIL_SENDER are properly configured.")
 
 def test_pdf_parsing():
     """Test function to verify parsing"""
@@ -230,11 +292,13 @@ def main():
         
         if new_target_status != "error" and new_target_status != old_target_status:
             print("Status for target beach has changed! Sending notifications.")
-            # ... (rest of notification logic is the same) ...
             subscriber_emails = get_subscribers()
             message = f"{DISPLAY_BEACH_NAME} status changed from {old_target_status.upper()} to {new_target_status.upper()}."
             if target_beach_data["note"]: message += f" Note: {target_beach_data['note']}"
-            if subscriber_emails: send_notifications(message, subscriber_emails)
+            if subscriber_emails: 
+                send_notifications(message, subscriber_emails)
+            else:
+                print("No subscribers found to notify.")
         else:
             print("Status for target beach has not changed.")
             
