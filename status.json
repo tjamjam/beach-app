@@ -12,7 +12,7 @@
   {
     "beach_name": "Leddy Beach North",
     "status": "yellow",
-    "date": "Jul 31 2025 12:55PM",
+    "date": "Aug 1 2025 8:40AM",
     "note": "Alert Category 2 BGA level",
     "coordinates": {
       "lat": 44.5055,
@@ -22,7 +22,7 @@
   {
     "beach_name": "Leddy Beach South",
     "status": "yellow",
-    "date": "Jul 31 2025 12:54PM",
+    "date": "Aug 1 2025 8:41AM",
     "note": "Alert Category 2 BGA level",
     "coordinates": {
       "lat": 44.5,
@@ -32,7 +32,7 @@
   {
     "beach_name": "North Beach North",
     "status": "green",
-    "date": "Jul 31 2025 10:23AM",
+    "date": "Aug 1 2025 8:41AM",
     "note": "Open",
     "coordinates": {
       "lat": 44.4925,
@@ -42,7 +42,7 @@
   {
     "beach_name": "North Beach South",
     "status": "green",
-    "date": "Jul 31 2025 10:23AM",
+    "date": "Aug 1 2025 8:42AM",
     "note": "Open",
     "coordinates": {
       "lat": 44.489,
@@ -52,7 +52,7 @@
   {
     "beach_name": "Texaco Beach",
     "status": "green",
-    "date": "Jul 31 2025 11:25AM",
+    "date": "Aug 1 2025 8:42AM",
     "note": "Open",
     "coordinates": {
       "lat": 44.4845,
@@ -61,9 +61,9 @@
   },
   {
     "beach_name": "Blanchard Beach North",
-    "status": "green",
-    "date": "Jul 31 2025 11:50AM",
-    "note": "Open",
+    "status": "red",
+    "date": "Aug 1 2025 9:05AM",
+    "note": "Closed E-Coli levels too high",
     "coordinates": {
       "lat": 44.479,
       "lon": -73.2325
@@ -71,9 +71,9 @@
   },
   {
     "beach_name": "Blanchard Beach South",
-    "status": "green",
-    "date": "Jul 31 2025 11:50AM",
-    "note": "Open",
+    "status": "red",
+    "date": "Aug 1 2025 9:06AM",
+    "note": "Closed E-Coli levels too high",
     "coordinates": {
       "lat": 44.4765,
       "lon": -73.23
@@ -82,7 +82,7 @@
   {
     "beach_name": "Oakledge Cove",
     "status": "green",
-    "date": "Jul 31 2025 12:27PM",
+    "date": "Aug 1 2025 8:48AM",
     "note": "Open",
     "coordinates": {
       "lat": 44.455,
