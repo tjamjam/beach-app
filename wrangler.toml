@@ -8,6 +8,7 @@ main = "backend/index.js"
 
 # This sets the modern compatibility settings for your worker.
 compatibility_date = "2023-10-30" 
+compatibility_flags = ["nodejs_compat"]
 
 # Your Cloudflare account ID
 account_id = "10789c3779055009d673ee26cd131083"
