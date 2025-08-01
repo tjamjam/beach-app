@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           
       - name: Install Wrangler
         run: npm install -g wrangler
@@ -43,7 +43,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18' # A standard version
+          node-version: '20' # Updated to meet Wrangler requirements
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
