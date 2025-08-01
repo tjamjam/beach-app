@@ -13,8 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     name: Deploy Backend to Cloudflare
     steps:
-      - uses: actions/checkout@v3
-      - name: Publish Worker
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
@@ -28,10 +30,10 @@ jobs:
       contents: write # This gives the job permission to write to the repository
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18' # A standard version
 

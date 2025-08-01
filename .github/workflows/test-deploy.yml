@@ -1,0 +1,34 @@
+name: Test Deployment Secrets
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Test CF_API_TOKEN
+        run: |
+          if [ -z "${{ secrets.CF_API_TOKEN }}" ]; then
+            echo "❌ CF_API_TOKEN is not set"
+            exit 1
+          else
+            echo "✅ CF_API_TOKEN is set"
+          fi
+          
+      - name: Test CF_ACCOUNT_ID
+        run: |
+          if [ -z "${{ secrets.CF_ACCOUNT_ID }}" ]; then
+            echo "❌ CF_ACCOUNT_ID is not set"
+            exit 1
+          else
+            echo "✅ CF_ACCOUNT_ID is set: ${{ secrets.CF_ACCOUNT_ID }}"
+          fi
+          
+      - name: Test Wrangler Config
+        run: |
+          echo "Testing wrangler configuration..."
+          npx wrangler whoami 
