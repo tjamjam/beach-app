@@ -25,10 +25,11 @@ jobs:
         run: npm install -g wrangler
         
       - name: Deploy to Cloudflare Workers
-        run: wrangler deploy
+        run: |
+          echo "Deploying to Cloudflare Workers..."
+          wrangler deploy --compatibility-date 2023-10-30
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
   # --- JOB 2: DEPLOY THE FRONTEND TO GITHUB PAGES ---
   deploy-frontend:
