@@ -24,7 +24,7 @@ PDF_TARGET_BEACH = "Leddy Beach South"
 DISPLAY_BEACH_NAME = "Lakewood Beach"
 PDF_URL = "https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx"
 STATUS_FILE = "current_status.txt"
-JSON_OUTPUT_FILE = "status.json"
+JSON_OUTPUT_FILE = "../status.json"
 
 # Email configuration
 EMAIL_SENDER = os.environ.get("EMAIL_SENDER", "beach-status@yourdomain.com")

@@ -2,6 +2,7 @@
 
 # Local development secrets
 .dev.vars
+.env
 
 # Node.js dependencies
 node_modules

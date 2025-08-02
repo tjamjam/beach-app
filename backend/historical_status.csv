@@ -16,3 +16,14 @@ record_timestamp_utc,beach_name,status,last_updated_from_pdf,note
 2025-08-01T20:37:58.820215+00:00,North Beach South,green,Aug 1 2025 12:12PM,Open
 2025-08-01T20:37:58.820260+00:00,Texaco Beach,green,Aug 1 2025 12:12PM,Open
 2025-08-01T20:37:58.820302+00:00,Oakledge Cove,green,Aug 1 2025 8:48AM,Open
+2025-08-02T00:03:17.383654+00:00,North Shore Natural Area,green,Aug 1 2025 2:43PM,Open
+2025-08-02T00:03:17.384553+00:00,Leddy Beach North,green,Aug 1 2025 1:40PM,Open
+2025-08-02T00:03:17.384655+00:00,Leddy Beach South,green,Aug 1 2025 1:41PM,Open
+2025-08-02T00:03:17.384716+00:00,North Beach North,green,Aug 1 2025 12:12PM,Open
+2025-08-02T00:03:17.384780+00:00,North Beach South,green,Aug 1 2025 12:12PM,Open
+2025-08-02T00:03:17.384849+00:00,Texaco Beach,green,Aug 1 2025 12:12PM,Open
+2025-08-02T00:03:17.384904+00:00,Blanchard Beach North,red,Aug 1 2025 9:05AM,Closed E-Coli levels too high
+2025-08-02T00:03:17.384978+00:00,Blanchard Beach South,red,Aug 1 2025 9:06AM,Closed E-Coli levels too high
+2025-08-02T00:03:17.385037+00:00,Oakledge Cove,green,Aug 1 2025 8:48AM,Open
+2025-08-02T00:03:17.385097+00:00,Blodgett Water Access Point,yellow,Jul 31 2025 11:49AM,Alert Category 2 BGA level
+2025-08-02T00:07:29.503045+00:00,Leddy Beach South,green,Aug 1 2025 1:41PM,Open
