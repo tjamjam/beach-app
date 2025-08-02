@@ -170,40 +170,33 @@ def get_all_beach_statuses():
 def send_notifications(message, email_list):
     print(f"Sending notifications for message: {message}")
     
-    # Check if email credentials are configured
-    if not EMAIL_PASSWORD or EMAIL_PASSWORD == "your_email_password":
-        print("Email credentials not configured. Using ntfy.sh as fallback.")
-        # Fallback to ntfy.sh
+    # Send notifications to all subscribers via ntfy.sh
+    print(f"Sending notifications to {len(email_list)} subscribers...")
+    
+    # Send to the topic (for anyone subscribed to the topic)
+    try:
+        requests.post(f"https://ntfy.sh/{NTFY_TOPIC}", 
+                    data=message.encode('utf-8'), 
+                    headers={"Title": "Beach Status Change!"})
+        print("Topic notification sent successfully")
+    except Exception as e:
+        print(f"Failed to send topic notification: {e}")
+    
+    # Send individual emails to each subscriber
+    for email in email_list:
         try:
             requests.post(f"https://ntfy.sh/{NTFY_TOPIC}", 
                         data=message.encode('utf-8'), 
-                        headers={"Title": "Beach Status Change!"})
-            print("Notification sent via ntfy.sh")
-        except Exception as e:
-            print(f"Failed to send ntfy.sh notification: {e}")
-        return
-    
-    # Send emails to subscribers
-    for email in email_list:
-        try:
-            # Create a MIME message
-            msg = MIMEMultipart()
-            msg['From'] = EMAIL_SENDER
-            msg['To'] = email
-            msg['Subject'] = "Beach Status Change!"
-            
-            # Attach the message to the MIME message
-            msg.attach(MIMEText(message, 'plain'))
-            
-            # Connect to the SMTP server
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-                server.starttls() # Secure the connection
-                server.login(EMAIL_SENDER, EMAIL_PASSWORD)
-                server.send_message(msg)
-            print(f"Email sent to {email}")
+                        headers={
+                            "Title": "Beach Status Change!",
+                            "Email": email
+                        })
+            print(f"Email notification sent to {email}")
         except Exception as e:
             print(f"Failed to send email to {email}: {e}")
-            print("Make sure EMAIL_PASSWORD and EMAIL_SENDER are properly configured.")
+    
+    # This section is no longer needed since we're using ntfy.sh for all email sending
+    pass
 
 def test_pdf_parsing():
     """Test function to verify parsing"""
