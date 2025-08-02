@@ -24,13 +24,20 @@ PDF_TARGET_BEACH = "Leddy Beach South"
 DISPLAY_BEACH_NAME = "Lakewood Beach"
 PDF_URL = "https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx"
 STATUS_FILE = "current_status.txt"
-JSON_OUTPUT_FILE = "../status.json"
+
+# Get the project root directory (one level up from backend)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+JSON_OUTPUT_FILE = os.path.join(PROJECT_ROOT, "status.json")
 
 # Email configuration
 EMAIL_SENDER = os.environ.get("EMAIL_SENDER", "beach-status@yourdomain.com")
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
 SMTP_SERVER = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+
+# Test mode configuration
+TEST_MODE = os.environ.get("TEST_MODE", "false").lower() == "true"
+TEST_EMAIL = "terrencefradet@gmail.com"
 
 # This dictionary maps the exact beach name from the PDF to its coordinates.
 BEACH_COORDINATES = {
@@ -170,8 +177,12 @@ def get_all_beach_statuses():
 def send_notifications(message, email_list):
     print(f"Sending notifications for message: {message}")
     
-    # Send notifications to all subscribers
-    print(f"Sending notifications to {len(email_list)} subscribers...")
+    # Test mode: only send to test email
+    if TEST_MODE:
+        print(f"🧪 TEST MODE: Only sending to {TEST_EMAIL}")
+        email_list = [TEST_EMAIL]
+    else:
+        print(f"Sending notifications to {len(email_list)} subscribers...")
     
     # Send to the ntfy.sh topic (for anyone subscribed to the topic)
     try:

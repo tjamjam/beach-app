@@ -307,6 +307,11 @@
                 <button type="submit">Subscribe</button>
             </form>
             <p id="form-message"></p>
+            <!-- <p style="margin-top: 15px; text-align: center;">
+                <a href="overview.html" style="color: #007bff; text-decoration: none; font-size: 0.9em;">
+                    <i class="fas fa-map"></i> View All Beaches Overview
+                </a>
+            </p> -->
         </div>
 
         <div class="divider"></div>
@@ -385,9 +390,8 @@
             const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
 
             // Set the base URL for the Cloudflare Worker API
-            const BASE_API_URL = isLocal 
-                ? 'http://localhost:8787' // Use local worker for development
-                : 'https://beach-api.terrencefradet.workers.dev'; // Use live worker for production
+            // Always use production API since local worker isn't running
+            const BASE_API_URL = 'https://beach-api.terrencefradet.workers.dev';
 
             // Set the URL for the status.json data file
             const STATUS_JSON_URL = isLocal

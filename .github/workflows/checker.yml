@@ -31,7 +31,11 @@ jobs:
         env:
           # This passes the secret to the python script
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-        run: python backend/check_status.py
+          # Test mode to avoid spamming all subscribers
+          TEST_MODE: "true"
+        run: |
+          cd backend
+          python check_status.py
 
 
       # This step will now have permission to push
