@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beach Overview - All Burlington Beaches</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .map-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .map-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .map-header h2 {
+            margin: 0;
+            color: #333;
+        }
+        
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+        
+        .table-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .table-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .table-header h2 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .beach-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .beach-table th,
+        .beach-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .beach-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .beach-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            text-transform: uppercase;
+        }
+        
+        .status-green {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-yellow {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-red {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-unknown {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .beach-name {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .coordinates {
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .note {
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+        
+        .last-updated {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #721c24;
+            background-color: #f8d7da;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .nav-link {
+            display: inline-block;
+            margin-top: 10px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            #map {
+                height: 300px;
+            }
+            
+            .beach-table {
+                font-size: 0.9em;
+            }
+            
+            .beach-table th,
+            .beach-table td {
+                padding: 10px 5px;
+            }
+            
+            .note {
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Beach Overview</h1>
+        <p>All Burlington beaches and their current water quality status</p>
+        <a href="index.html" class="nav-link">← Back to Lakewood Beach Status</a>
+    </div>
+    
+    <div class="container">
+        <div class="map-section">
+            <div class="map-header">
+                <h2>Interactive Map</h2>
+                <p>Click on pins to see beach details</p>
+            </div>
+            <div id="map"></div>
+        </div>
+        
+        <div class="table-section">
+            <div class="table-header">
+                <h2>All Beaches Status</h2>
+                <p>Complete water quality information from official sources</p>
+            </div>
+            <div id="table-content">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Loading beach data...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const STATUS_JSON_URL = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+            ? '../status.json'
+            : 'https://raw.githubusercontent.com/tjamjam/beach-app/main/status.json';
+
+        // Initialize map
+        const map = L.map('map').setView([44.5, -73.24], 12);
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Custom icons for different statuses
+        const statusIcons = {
+            green: L.divIcon({
+                html: '<div style="background-color: #00ff6a; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>',
+                className: 'custom-div-icon',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            }),
+            yellow: L.divIcon({
+                html: '<div style="background-color: #ffdd00; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>',
+                className: 'custom-div-icon',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            }),
+            red: L.divIcon({
+                html: '<div style="background-color: #ff1c1c; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>',
+                className: 'custom-div-icon',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            }),
+            unknown: L.divIcon({
+                html: '<div style="background-color: #666; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>',
+                className: 'custom-div-icon',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        };
+
+        let beaches = [];
+        let markers = [];
+
+        async function fetchBeachData() {
+            try {
+                const response = await fetch(`${STATUS_JSON_URL}?t=${new Date().getTime()}`);
+                if (!response.ok) throw new Error('Failed to fetch beach data');
+                
+                beaches = await response.json();
+                updateMap();
+                updateTable();
+                
+            } catch (error) {
+                console.error('Error fetching beach data:', error);
+                document.getElementById('table-content').innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Failed to load beach data. Please try again later.
+                    </div>
+                `;
+            }
+        }
+
+        function updateMap() {
+            // Clear existing markers
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+
+            // Add markers for each beach
+            beaches.forEach(beach => {
+                if (beach.coordinates) {
+                    const icon = statusIcons[beach.status] || statusIcons.unknown;
+                    const marker = L.marker([beach.coordinates.lat, beach.coordinates.lon], { icon })
+                        .addTo(map)
+                        .bindPopup(`
+                            <div style="text-align: center;">
+                                <h3 style="margin: 0 0 10px 0;">${beach.beach_name}</h3>
+                                <div class="status-badge status-${beach.status}">${beach.status.toUpperCase()}</div>
+                                ${beach.note ? `<p style="margin: 10px 0 0 0; font-size: 0.9em;">${beach.note}</p>` : ''}
+                                <p style="margin: 10px 0 0 0; font-size: 0.8em; color: #666;">Last updated: ${beach.date}</p>
+                            </div>
+                        `);
+                    markers.push(marker);
+                }
+            });
+
+            // Fit map to show all markers
+            if (markers.length > 0) {
+                const group = new L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+        }
+
+        function updateTable() {
+            const tableContent = document.getElementById('table-content');
+            
+            if (!beaches || beaches.length === 0) {
+                tableContent.innerHTML = '<div class="error">No beach data available</div>';
+                return;
+            }
+
+            const tableHTML = `
+                <table class="beach-table">
+                    <thead>
+                        <tr>
+                            <th>Beach Name</th>
+                            <th>Status</th>
+                            <th>Last Updated</th>
+                            <th>Note</th>
+                            <th>Coordinates</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${beaches.map(beach => `
+                            <tr>
+                                <td class="beach-name">${beach.beach_name}</td>
+                                <td>
+                                    <span class="status-badge status-${beach.status}">
+                                        ${beach.status.toUpperCase()}
+                                    </span>
+                                </td>
+                                <td class="last-updated">${beach.date}</td>
+                                <td class="note">${beach.note || 'No additional information'}</td>
+                                <td class="coordinates">
+                                    ${beach.coordinates 
+                                        ? `${beach.coordinates.lat.toFixed(4)}, ${beach.coordinates.lon.toFixed(4)}`
+                                        : 'Not available'
+                                    }
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            tableContent.innerHTML = tableHTML;
+        }
+
+        // Initialize the page
+        fetchBeachData();
+    </script>
+</body>
+</html> 
