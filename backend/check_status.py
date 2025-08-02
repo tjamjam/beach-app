@@ -41,16 +41,16 @@ TEST_EMAIL = "terrencefradet@gmail.com"
 
 # This dictionary maps the exact beach name from the PDF to its coordinates.
 BEACH_COORDINATES = {
-    "North Shore Natural Area": {"lat": 44.5222, "lon": -73.2570},
-    "Leddy Beach North": {"lat": 44.5055, "lon": -73.2505},
-    "Leddy Beach South": {"lat": 44.5000, "lon": -73.2488},
-    "North Beach North": {"lat": 44.4925, "lon": -73.2435},
-    "North Beach South": {"lat": 44.4890, "lon": -73.2410},
-    "Texaco Beach": {"lat": 44.4845, "lon": -73.2370},
-    "Blanchard Beach North": {"lat": 44.4790, "lon": -73.2325},
-    "Blanchard Beach South": {"lat": 44.4765, "lon": -73.2300},
-    "Oakledge Cove": {"lat": 44.4550, "lon": -73.2255},
-    "Blodgett Water Access Point": {"lat": 44.4500, "lon": -73.2230}
+    "North Shore Natural Area": {"lat": 44.5156642, "lon": -73.2691206},
+    "Leddy Beach North": {"lat": 44.502334, "lon": -73.255060},
+    "Leddy Beach South": {"lat": 44.501457, "lon": -73.252218},
+    "North Beach North": {"lat": 44.492299, "lon": -73.241944},
+    "North Beach South": {"lat": 44.491225, "lon": -73.237259},
+    "Texaco Beach": {"lat": 44.488690, "lon": -73.231108},
+    "Blanchard Beach North": {"lat": 44.4571966, "lon": -73.2244185},
+    "Blanchard Beach South": {"lat": 44.456550, "lon": -73.225007},
+    "Oakledge Cove": {"lat": 44.454203, "lon": -73.229385},
+    "Blodgett Water Access Point": {"lat": 44.465701, "lon": -73.219072}
 }
 
 
