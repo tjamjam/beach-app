@@ -32,7 +32,7 @@ jobs:
           # This passes the secret to the python script
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           # Test mode to avoid spamming all subscribers
-          TEST_MODE: "true"
+          TEST_MODE: "false"
           # Email configuration for Gmail SMTP
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
