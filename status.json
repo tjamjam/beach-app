@@ -21,7 +21,7 @@
   },
   {
     "beach_name": "Leddy Beach South",
-    "status": "yellow",
+    "status": "green",
     "date": "Aug 2 2025 11:17AM",
     "note": "Open",
     "coordinates": {
@@ -91,7 +91,7 @@
   },
   {
     "beach_name": "Blodgett Water Access Point",
-    "status": "red",
+    "status": "green",
     "date": "Aug 2 2025 12:54PM",
     "note": "Open",
     "coordinates": {
