@@ -1,0 +1,191 @@
+record_timestamp_utc,beach_name,status,last_updated_from_pdf,note
+2025-07-15T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 15 2025 8:00AM,Open
+2025-07-15T08:00:00.000000+00:00,Leddy Beach North,green,Jul 15 2025 8:00AM,Open
+2025-07-15T08:00:00.000000+00:00,Leddy Beach South,green,Jul 15 2025 8:00AM,Open
+2025-07-15T08:00:00.000000+00:00,North Beach North,green,Jul 15 2025 8:00AM,Open
+2025-07-15T08:00:00.000000+00:00,North Beach South,green,Jul 15 2025 8:00AM,Open
+2025-07-15T08:00:00.000000+00:00,Texaco Beach,green,Jul 15 2025 8:00AM,Open
+2025-07-15T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 15 2025 8:00AM,Open
+2025-07-15T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 15 2025 8:00AM,Open
+2025-07-15T08:00:00.000000+00:00,Oakledge Cove,green,Jul 15 2025 8:00AM,Open
+2025-07-15T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 15 2025 8:00AM,Open
+2025-07-16T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 16 2025 8:00AM,Open
+2025-07-16T08:00:00.000000+00:00,Leddy Beach North,green,Jul 16 2025 8:00AM,Open
+2025-07-16T08:00:00.000000+00:00,Leddy Beach South,yellow,Jul 16 2025 8:00AM,Alert Category 2 BGA level
+2025-07-16T08:00:00.000000+00:00,North Beach North,green,Jul 16 2025 8:00AM,Open
+2025-07-16T08:00:00.000000+00:00,North Beach South,green,Jul 16 2025 8:00AM,Open
+2025-07-16T08:00:00.000000+00:00,Texaco Beach,green,Jul 16 2025 8:00AM,Open
+2025-07-16T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 16 2025 8:00AM,Open
+2025-07-16T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 16 2025 8:00AM,Open
+2025-07-16T08:00:00.000000+00:00,Oakledge Cove,green,Jul 16 2025 8:00AM,Open
+2025-07-16T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 16 2025 8:00AM,Open
+2025-07-17T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 17 2025 8:00AM,Open
+2025-07-17T08:00:00.000000+00:00,Leddy Beach North,green,Jul 17 2025 8:00AM,Open
+2025-07-17T08:00:00.000000+00:00,Leddy Beach South,red,Jul 17 2025 8:00AM,Closed due to high bacteria levels
+2025-07-17T08:00:00.000000+00:00,North Beach North,green,Jul 17 2025 8:00AM,Open
+2025-07-17T08:00:00.000000+00:00,North Beach South,green,Jul 17 2025 8:00AM,Open
+2025-07-17T08:00:00.000000+00:00,Texaco Beach,green,Jul 17 2025 8:00AM,Open
+2025-07-17T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 17 2025 8:00AM,Open
+2025-07-17T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 17 2025 8:00AM,Open
+2025-07-17T08:00:00.000000+00:00,Oakledge Cove,green,Jul 17 2025 8:00AM,Open
+2025-07-17T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 17 2025 8:00AM,Open
+2025-07-18T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 18 2025 8:00AM,Open
+2025-07-18T08:00:00.000000+00:00,Leddy Beach North,green,Jul 18 2025 8:00AM,Open
+2025-07-18T08:00:00.000000+00:00,Leddy Beach South,red,Jul 18 2025 8:00AM,Closed due to high bacteria levels
+2025-07-18T08:00:00.000000+00:00,North Beach North,green,Jul 18 2025 8:00AM,Open
+2025-07-18T08:00:00.000000+00:00,North Beach South,green,Jul 18 2025 8:00AM,Open
+2025-07-18T08:00:00.000000+00:00,Texaco Beach,green,Jul 18 2025 8:00AM,Open
+2025-07-18T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 18 2025 8:00AM,Open
+2025-07-18T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 18 2025 8:00AM,Open
+2025-07-18T08:00:00.000000+00:00,Oakledge Cove,green,Jul 18 2025 8:00AM,Open
+2025-07-18T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 18 2025 8:00AM,Open
+2025-07-19T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 19 2025 8:00AM,Open
+2025-07-19T08:00:00.000000+00:00,Leddy Beach North,green,Jul 19 2025 8:00AM,Open
+2025-07-19T08:00:00.000000+00:00,Leddy Beach South,yellow,Jul 19 2025 8:00AM,Alert Category 2 BGA level
+2025-07-19T08:00:00.000000+00:00,North Beach North,green,Jul 19 2025 8:00AM,Open
+2025-07-19T08:00:00.000000+00:00,North Beach South,green,Jul 19 2025 8:00AM,Open
+2025-07-19T08:00:00.000000+00:00,Texaco Beach,green,Jul 19 2025 8:00AM,Open
+2025-07-19T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 19 2025 8:00AM,Open
+2025-07-19T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 19 2025 8:00AM,Open
+2025-07-19T08:00:00.000000+00:00,Oakledge Cove,green,Jul 19 2025 8:00AM,Open
+2025-07-19T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 19 2025 8:00AM,Open
+2025-07-20T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 20 2025 8:00AM,Open
+2025-07-20T08:00:00.000000+00:00,Leddy Beach North,green,Jul 20 2025 8:00AM,Open
+2025-07-20T08:00:00.000000+00:00,Leddy Beach South,green,Jul 20 2025 8:00AM,Open
+2025-07-20T08:00:00.000000+00:00,North Beach North,green,Jul 20 2025 8:00AM,Open
+2025-07-20T08:00:00.000000+00:00,North Beach South,green,Jul 20 2025 8:00AM,Open
+2025-07-20T08:00:00.000000+00:00,Texaco Beach,green,Jul 20 2025 8:00AM,Open
+2025-07-20T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 20 2025 8:00AM,Open
+2025-07-20T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 20 2025 8:00AM,Open
+2025-07-20T08:00:00.000000+00:00,Oakledge Cove,green,Jul 20 2025 8:00AM,Open
+2025-07-20T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 20 2025 8:00AM,Open
+2025-07-21T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 21 2025 8:00AM,Open
+2025-07-21T08:00:00.000000+00:00,Leddy Beach North,green,Jul 21 2025 8:00AM,Open
+2025-07-21T08:00:00.000000+00:00,Leddy Beach South,green,Jul 21 2025 8:00AM,Open
+2025-07-21T08:00:00.000000+00:00,North Beach North,green,Jul 21 2025 8:00AM,Open
+2025-07-21T08:00:00.000000+00:00,North Beach South,green,Jul 21 2025 8:00AM,Open
+2025-07-21T08:00:00.000000+00:00,Texaco Beach,green,Jul 21 2025 8:00AM,Open
+2025-07-21T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 21 2025 8:00AM,Open
+2025-07-21T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 21 2025 8:00AM,Open
+2025-07-21T08:00:00.000000+00:00,Oakledge Cove,green,Jul 21 2025 8:00AM,Open
+2025-07-21T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 21 2025 8:00AM,Open
+2025-07-22T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 22 2025 8:00AM,Open
+2025-07-22T08:00:00.000000+00:00,Leddy Beach North,green,Jul 22 2025 8:00AM,Open
+2025-07-22T08:00:00.000000+00:00,Leddy Beach South,green,Jul 22 2025 8:00AM,Open
+2025-07-22T08:00:00.000000+00:00,North Beach North,green,Jul 22 2025 8:00AM,Open
+2025-07-22T08:00:00.000000+00:00,North Beach South,green,Jul 22 2025 8:00AM,Open
+2025-07-22T08:00:00.000000+00:00,Texaco Beach,green,Jul 22 2025 8:00AM,Open
+2025-07-22T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 22 2025 8:00AM,Open
+2025-07-22T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 22 2025 8:00AM,Open
+2025-07-22T08:00:00.000000+00:00,Oakledge Cove,green,Jul 22 2025 8:00AM,Open
+2025-07-22T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 22 2025 8:00AM,Open
+2025-07-23T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 23 2025 8:00AM,Open
+2025-07-23T08:00:00.000000+00:00,Leddy Beach North,green,Jul 23 2025 8:00AM,Open
+2025-07-23T08:00:00.000000+00:00,Leddy Beach South,green,Jul 23 2025 8:00AM,Open
+2025-07-23T08:00:00.000000+00:00,North Beach North,green,Jul 23 2025 8:00AM,Open
+2025-07-23T08:00:00.000000+00:00,North Beach South,green,Jul 23 2025 8:00AM,Open
+2025-07-23T08:00:00.000000+00:00,Texaco Beach,green,Jul 23 2025 8:00AM,Open
+2025-07-23T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 23 2025 8:00AM,Open
+2025-07-23T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 23 2025 8:00AM,Open
+2025-07-23T08:00:00.000000+00:00,Oakledge Cove,green,Jul 23 2025 8:00AM,Open
+2025-07-23T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 23 2025 8:00AM,Open
+2025-07-24T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 24 2025 8:00AM,Open
+2025-07-24T08:00:00.000000+00:00,Leddy Beach North,green,Jul 24 2025 8:00AM,Open
+2025-07-24T08:00:00.000000+00:00,Leddy Beach South,green,Jul 24 2025 8:00AM,Open
+2025-07-24T08:00:00.000000+00:00,North Beach North,green,Jul 24 2025 8:00AM,Open
+2025-07-24T08:00:00.000000+00:00,North Beach South,green,Jul 24 2025 8:00AM,Open
+2025-07-24T08:00:00.000000+00:00,Texaco Beach,green,Jul 24 2025 8:00AM,Open
+2025-07-24T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 24 2025 8:00AM,Open
+2025-07-24T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 24 2025 8:00AM,Open
+2025-07-24T08:00:00.000000+00:00,Oakledge Cove,green,Jul 24 2025 8:00AM,Open
+2025-07-24T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 24 2025 8:00AM,Open
+2025-07-25T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 25 2025 8:00AM,Open
+2025-07-25T08:00:00.000000+00:00,Leddy Beach North,green,Jul 25 2025 8:00AM,Open
+2025-07-25T08:00:00.000000+00:00,Leddy Beach South,green,Jul 25 2025 8:00AM,Open
+2025-07-25T08:00:00.000000+00:00,North Beach North,green,Jul 25 2025 8:00AM,Open
+2025-07-25T08:00:00.000000+00:00,North Beach South,green,Jul 25 2025 8:00AM,Open
+2025-07-25T08:00:00.000000+00:00,Texaco Beach,green,Jul 25 2025 8:00AM,Open
+2025-07-25T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 25 2025 8:00AM,Open
+2025-07-25T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 25 2025 8:00AM,Open
+2025-07-25T08:00:00.000000+00:00,Oakledge Cove,green,Jul 25 2025 8:00AM,Open
+2025-07-25T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 25 2025 8:00AM,Open
+2025-07-26T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 26 2025 8:00AM,Open
+2025-07-26T08:00:00.000000+00:00,Leddy Beach North,green,Jul 26 2025 8:00AM,Open
+2025-07-26T08:00:00.000000+00:00,Leddy Beach South,green,Jul 26 2025 8:00AM,Open
+2025-07-26T08:00:00.000000+00:00,North Beach North,green,Jul 26 2025 8:00AM,Open
+2025-07-26T08:00:00.000000+00:00,North Beach South,green,Jul 26 2025 8:00AM,Open
+2025-07-26T08:00:00.000000+00:00,Texaco Beach,green,Jul 26 2025 8:00AM,Open
+2025-07-26T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 26 2025 8:00AM,Open
+2025-07-26T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 26 2025 8:00AM,Open
+2025-07-26T08:00:00.000000+00:00,Oakledge Cove,green,Jul 26 2025 8:00AM,Open
+2025-07-26T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 26 2025 8:00AM,Open
+2025-07-27T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 27 2025 8:00AM,Open
+2025-07-27T08:00:00.000000+00:00,Leddy Beach North,green,Jul 27 2025 8:00AM,Open
+2025-07-27T08:00:00.000000+00:00,Leddy Beach South,green,Jul 27 2025 8:00AM,Open
+2025-07-27T08:00:00.000000+00:00,North Beach North,green,Jul 27 2025 8:00AM,Open
+2025-07-27T08:00:00.000000+00:00,North Beach South,green,Jul 27 2025 8:00AM,Open
+2025-07-27T08:00:00.000000+00:00,Texaco Beach,green,Jul 27 2025 8:00AM,Open
+2025-07-27T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 27 2025 8:00AM,Open
+2025-07-27T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 27 2025 8:00AM,Open
+2025-07-27T08:00:00.000000+00:00,Oakledge Cove,green,Jul 27 2025 8:00AM,Open
+2025-07-27T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 27 2025 8:00AM,Open
+2025-07-28T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 28 2025 8:00AM,Open
+2025-07-28T08:00:00.000000+00:00,Leddy Beach North,green,Jul 28 2025 8:00AM,Open
+2025-07-28T08:00:00.000000+00:00,Leddy Beach South,green,Jul 28 2025 8:00AM,Open
+2025-07-28T08:00:00.000000+00:00,North Beach North,green,Jul 28 2025 8:00AM,Open
+2025-07-28T08:00:00.000000+00:00,North Beach South,green,Jul 28 2025 8:00AM,Open
+2025-07-28T08:00:00.000000+00:00,Texaco Beach,green,Jul 28 2025 8:00AM,Open
+2025-07-28T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 28 2025 8:00AM,Open
+2025-07-28T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 28 2025 8:00AM,Open
+2025-07-28T08:00:00.000000+00:00,Oakledge Cove,green,Jul 28 2025 8:00AM,Open
+2025-07-28T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 28 2025 8:00AM,Open
+2025-07-29T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 29 2025 8:00AM,Open
+2025-07-29T08:00:00.000000+00:00,Leddy Beach North,green,Jul 29 2025 8:00AM,Open
+2025-07-29T08:00:00.000000+00:00,Leddy Beach South,green,Jul 29 2025 8:00AM,Open
+2025-07-29T08:00:00.000000+00:00,North Beach North,green,Jul 29 2025 8:00AM,Open
+2025-07-29T08:00:00.000000+00:00,North Beach South,green,Jul 29 2025 8:00AM,Open
+2025-07-29T08:00:00.000000+00:00,Texaco Beach,green,Jul 29 2025 8:00AM,Open
+2025-07-29T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 29 2025 8:00AM,Open
+2025-07-29T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 29 2025 8:00AM,Open
+2025-07-29T08:00:00.000000+00:00,Oakledge Cove,green,Jul 29 2025 8:00AM,Open
+2025-07-29T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 29 2025 8:00AM,Open
+2025-07-30T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 30 2025 8:00AM,Open
+2025-07-30T08:00:00.000000+00:00,Leddy Beach North,green,Jul 30 2025 8:00AM,Open
+2025-07-30T08:00:00.000000+00:00,Leddy Beach South,green,Jul 30 2025 8:00AM,Open
+2025-07-30T08:00:00.000000+00:00,North Beach North,green,Jul 30 2025 8:00AM,Open
+2025-07-30T08:00:00.000000+00:00,North Beach South,green,Jul 30 2025 8:00AM,Open
+2025-07-30T08:00:00.000000+00:00,Texaco Beach,green,Jul 30 2025 8:00AM,Open
+2025-07-30T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 30 2025 8:00AM,Open
+2025-07-30T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 30 2025 8:00AM,Open
+2025-07-30T08:00:00.000000+00:00,Oakledge Cove,green,Jul 30 2025 8:00AM,Open
+2025-07-30T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 30 2025 8:00AM,Open
+2025-07-31T08:00:00.000000+00:00,North Shore Natural Area,green,Jul 31 2025 8:00AM,Open
+2025-07-31T08:00:00.000000+00:00,Leddy Beach North,green,Jul 31 2025 8:00AM,Open
+2025-07-31T08:00:00.000000+00:00,Leddy Beach South,green,Jul 31 2025 8:00AM,Open
+2025-07-31T08:00:00.000000+00:00,North Beach North,green,Jul 31 2025 8:00AM,Open
+2025-07-31T08:00:00.000000+00:00,North Beach South,green,Jul 31 2025 8:00AM,Open
+2025-07-31T08:00:00.000000+00:00,Texaco Beach,green,Jul 31 2025 8:00AM,Open
+2025-07-31T08:00:00.000000+00:00,Blanchard Beach North,green,Jul 31 2025 8:00AM,Open
+2025-07-31T08:00:00.000000+00:00,Blanchard Beach South,green,Jul 31 2025 8:00AM,Open
+2025-07-31T08:00:00.000000+00:00,Oakledge Cove,green,Jul 31 2025 8:00AM,Open
+2025-07-31T08:00:00.000000+00:00,Blodgett Water Access Point,green,Jul 31 2025 8:00AM,Open
+2025-08-01T08:00:00.000000+00:00,North Shore Natural Area,green,Aug 1 2025 8:00AM,Open
+2025-08-01T08:00:00.000000+00:00,Leddy Beach North,green,Aug 1 2025 8:00AM,Open
+2025-08-01T08:00:00.000000+00:00,Leddy Beach South,green,Aug 1 2025 8:00AM,Open
+2025-08-01T08:00:00.000000+00:00,North Beach North,green,Aug 1 2025 8:00AM,Open
+2025-08-01T08:00:00.000000+00:00,North Beach South,green,Aug 1 2025 8:00AM,Open
+2025-08-01T08:00:00.000000+00:00,Texaco Beach,green,Aug 1 2025 8:00AM,Open
+2025-08-01T08:00:00.000000+00:00,Blanchard Beach North,green,Aug 1 2025 8:00AM,Open
+2025-08-01T08:00:00.000000+00:00,Blanchard Beach South,green,Aug 1 2025 8:00AM,Open
+2025-08-01T08:00:00.000000+00:00,Oakledge Cove,green,Aug 1 2025 8:00AM,Open
+2025-08-01T08:00:00.000000+00:00,Blodgett Water Access Point,green,Aug 1 2025 8:00AM,Open
+2025-08-02T08:00:00.000000+00:00,North Shore Natural Area,green,Aug 2 2025 8:00AM,Open
+2025-08-02T08:00:00.000000+00:00,Leddy Beach North,green,Aug 2 2025 8:00AM,Open
+2025-08-02T08:00:00.000000+00:00,Leddy Beach South,green,Aug 2 2025 8:00AM,Open
+2025-08-02T08:00:00.000000+00:00,North Beach North,green,Aug 2 2025 8:00AM,Open
+2025-08-02T08:00:00.000000+00:00,North Beach South,green,Aug 2 2025 8:00AM,Open
+2025-08-02T08:00:00.000000+00:00,Texaco Beach,green,Aug 2 2025 8:00AM,Open
+2025-08-02T08:00:00.000000+00:00,Blanchard Beach North,green,Aug 2 2025 8:00AM,Open
+2025-08-02T08:00:00.000000+00:00,Blanchard Beach South,green,Aug 2 2025 8:00AM,Open
+2025-08-02T08:00:00.000000+00:00,Oakledge Cove,green,Aug 2 2025 8:00AM,Open
+2025-08-02T08:00:00.000000+00:00,Blodgett Water Access Point,green,Aug 2 2025 8:00AM,Open 
