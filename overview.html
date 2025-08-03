@@ -7,18 +7,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f5f5f5;
+            background-image: url('images/background.jpg');
+            background-size: cover;
+            background-position: center center;
+            background-attachment: fixed;
         }
         
         .header {
-            background-color: #007bff;
             color: white;
-            padding: 20px;
+            padding: 40px 20px 20px 20px;
             text-align: center;
         }
         
@@ -36,12 +39,14 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
+            margin-top: 20px;
+            margin-bottom: 20px;
         }
         
         .layout-wrapper {
             display: flex;
             gap: 30px;
-            align-items: flex-start;
+            align-items: stretch;
         }
         
         .table-section {
@@ -51,6 +56,8 @@
             overflow: hidden;
             flex: 1;
             min-width: 0;
+            display: flex;
+            flex-direction: column;
         }
         
         .map-section {
@@ -60,6 +67,8 @@
             overflow: hidden;
             flex: 1;
             min-width: 0;
+            display: flex;
+            flex-direction: column;
         }
         
         .map-header {
@@ -73,8 +82,9 @@
         }
         
         #map {
-            height: 600px;
+            height: 100%;
             width: 100%;
+            min-height: 400px;
         }
         
         .table-header {
@@ -182,6 +192,14 @@
             overflow-x: auto;
         }
         
+        #d3-heatmap {
+            width: 100%;
+            min-height: 500px;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
         .heatmap-table {
             border-collapse: collapse;
             width: 100%;
@@ -220,15 +238,15 @@
         }
         
         .heatmap-cell.green {
-            background-color: #00ff6a;
+            background-color: #00a045;
         }
         
         .heatmap-cell.yellow {
-            background-color: #ffdd00;
+            background-color: #c7a900;
         }
         
         .heatmap-cell.red {
-            background-color: #ff1c1c;
+            background-color: #c21616;
         }
         
         .heatmap-cell.unknown {
@@ -240,6 +258,33 @@
             font-weight: bold;
             color: #333;
             min-width: 150px;
+        }
+        
+        .percentage-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .percentage-badge.excellent {
+            background-color: #00a045;
+            color: white;
+        }
+        
+        .percentage-badge.good {
+            background-color: #c7a900;
+            color: white;
+        }
+        
+        .percentage-badge.fair {
+            background-color: #ff8c00;
+            color: white;
+        }
+        
+        .percentage-badge.poor {
+            background-color: #c21616;
+            color: white;
         }
         
         .loading {
@@ -301,7 +346,11 @@
     <div class="header">
         <h1>Beach Overview</h1>
         <p>All Burlington beaches and their current water quality status</p>
-        <a href="index.html" class="nav-link">← Back to Lakewood Beach Status</a>
+        <p style="margin-top: 20px;">
+            <a href="index.html" style="color: white; text-decoration: none; font-size: 0.9em;">
+                ← Back to Lakewood Beach Status
+            </a>
+        </p>
     </div>
     
     <div class="container">
@@ -354,22 +403,22 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Custom icons for different statuses
+        // Custom icons for different statuses - matching index page colors
         const statusIcons = {
             green: L.divIcon({
-                html: '<div style="background-color: #00ff6a; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>',
+                html: '<div style="background-color: #00a045; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>',
                 className: 'custom-div-icon',
                 iconSize: [20, 20],
                 iconAnchor: [10, 10]
             }),
             yellow: L.divIcon({
-                html: '<div style="background-color: #ffdd00; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>',
+                html: '<div style="background-color: #c7a900; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>',
                 className: 'custom-div-icon',
                 iconSize: [20, 20],
                 iconAnchor: [10, 10]
             }),
             red: L.divIcon({
-                html: '<div style="background-color: #ff1c1c; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>',
+                html: '<div style="background-color: #c21616; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>',
                 className: 'custom-div-icon',
                 iconSize: [20, 20],
                 iconAnchor: [10, 10]
@@ -384,6 +433,7 @@
 
         let beaches = [];
         let markers = [];
+        let fakeHistoricalData = [];
 
         async function fetchBeachData() {
             try {
@@ -443,6 +493,9 @@
                 return;
             }
 
+            // Calculate summer open percentages for each beach
+            const summerOpenPercentages = calculateSummerOpenPercentages();
+
             const tableHTML = `
                 <table class="beach-table">
                     <thead>
@@ -451,21 +504,30 @@
                             <th>Status</th>
                             <th>Last Updated</th>
                             <th>Note</th>
+                            <th>Aug 2025 Open Rate</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${beaches.map(beach => `
-                            <tr>
-                                <td class="beach-name">${beach.beach_name}</td>
-                                <td>
-                                    <span class="status-badge status-${beach.status}">
-                                        ${beach.status.toUpperCase()}
-                                    </span>
-                                </td>
-                                <td class="last-updated">${beach.date}</td>
-                                <td class="note">${beach.note || 'No additional information'}</td>
-                            </tr>
-                        `).join('')}
+                        ${beaches.map(beach => {
+                            const openPercentage = summerOpenPercentages[beach.beach_name] || 0;
+                            return `
+                                <tr>
+                                    <td class="beach-name">${beach.beach_name}</td>
+                                    <td>
+                                        <span class="status-badge status-${beach.status}">
+                                            ${beach.status.toUpperCase()}
+                                        </span>
+                                    </td>
+                                    <td class="last-updated">${beach.date}</td>
+                                    <td class="note">${beach.note || 'No additional information'}</td>
+                                    <td>
+                                        <span class="percentage-badge ${getPercentageClass(openPercentage)}">
+                                            ${openPercentage}%
+                                        </span>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
                     </tbody>
                 </table>
             `;
@@ -473,14 +535,68 @@
             tableContent.innerHTML = tableHTML;
         }
 
+        function calculateSummerOpenPercentages() {
+            // Define summer season dates for 2025 (Aug 1 to current date)
+            const startDate2025 = new Date('2025-08-01'); // Start collecting data Aug 1, 2025
+            const currentDate = new Date(); // Today's date
+            
+            const percentages = {};
+            
+            // Get unique beach names from the current beach data
+            const beachNames = beaches.map(beach => beach.beach_name);
+            
+            beachNames.forEach(beachName => {
+                let totalDays = 0;
+                let openDays = 0;
+                
+                // Count days from Aug 1 to today
+                const checkDate = new Date(startDate2025);
+                while (checkDate <= currentDate) {
+                    totalDays++;
+                    
+                    // Check if this date exists in our real historical data
+                    const dateString = checkDate.toLocaleDateString();
+                    const historicalEntry = fakeHistoricalData.find(entry => {
+                        const entryDate = new Date(entry.record_timestamp_utc);
+                        return entry.beach_name === beachName && 
+                               entryDate.getFullYear() === checkDate.getFullYear() &&
+                               entryDate.getMonth() === checkDate.getMonth() &&
+                               entryDate.getDate() === checkDate.getDate();
+                    });
+                    
+                    if (historicalEntry && historicalEntry.status === 'green') {
+                        openDays++;
+                    } else if (!historicalEntry) {
+                        // If no historical data for this date, assume it's open (current status)
+                        openDays++;
+                    }
+                    
+                    checkDate.setDate(checkDate.getDate() + 1);
+                }
+                
+                const percentage = totalDays > 0 ? Math.round((openDays / totalDays) * 100) : 0;
+                percentages[beachName] = percentage;
+            });
+            
+            return percentages;
+        }
+
+        function getPercentageClass(percentage) {
+            if (percentage >= 80) return 'excellent';
+            if (percentage >= 60) return 'good';
+            if (percentage >= 40) return 'fair';
+            return 'poor';
+        }
+
         async function fetchHistoricalData() {
             try {
-                // Use the fake dataset for testing the timeline visualization
-                const response = await fetch('https://raw.githubusercontent.com/tjamjam/beach-app/main/backend/fake_historical_status.csv');
+                // Use the real historical dataset
+                const response = await fetch('../backend/historical_status.csv');
                 if (!response.ok) throw new Error('Failed to fetch historical data');
                 
                 const csvText = await response.text();
                 const historicalData = parseCSV(csvText);
+                fakeHistoricalData = historicalData; // Store globally for percentage calculations
                 updateTimeline(historicalData);
                 
             } catch (error) {
@@ -521,6 +637,9 @@
                 return;
             }
 
+            // Clear previous content
+            timelineContent.innerHTML = '<div id="d3-heatmap"></div>';
+
             // Group data by date and beach
             const dateBeachMap = {};
             const beaches = new Set();
@@ -542,34 +661,198 @@
             
             // Sort dates and beaches
             const sortedDates = Array.from(dates).sort();
-            const sortedBeaches = Array.from(beaches).sort();
             
-            // Create heatmap table
-            const heatmapHTML = `
-                <div class="timeline-heatmap">
-                    <table class="heatmap-table">
-                        <thead>
-                            <tr>
-                                <th class="beach-name-cell">Beach</th>
-                                ${sortedDates.map(date => `<th>${date}</th>`).join('')}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${sortedBeaches.map(beach => `
-                                <tr>
-                                    <td class="beach-name-cell">${beach}</td>
-                                    ${sortedDates.map(date => {
-                                        const status = dateBeachMap[date]?.[beach] || 'unknown';
-                                        return `<td><div class="heatmap-cell ${status}" title="${beach} - ${date}: ${status.toUpperCase()}"></div></td>`;
-                                    }).join('')}
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+            // Order beaches to match the chart at the top, with Blodgett moved below Texaco
+            const beachOrder = [
+                "North Shore Natural Area",
+                "Leddy Beach North", 
+                "Leddy Beach South",
+                "North Beach North",
+                "North Beach South", 
+                "Texaco Beach",
+                "Blodgett Water Access Point",
+                "Blanchard Beach North",
+                "Blanchard Beach South",
+                "Oakledge Cove"
+            ];
             
-            timelineContent.innerHTML = heatmapHTML;
+            const sortedBeaches = beachOrder.filter(beach => beaches.has(beach));
+            
+            // Create data for D3 heatmap
+            const heatmapData = [];
+            sortedBeaches.forEach((beach, beachIndex) => {
+                sortedDates.forEach((date, dateIndex) => {
+                    const status = dateBeachMap[date]?.[beach] || 'unknown';
+                    heatmapData.push({
+                        beach: beach,
+                        date: date,
+                        status: status,
+                        beachIndex: beachIndex,
+                        dateIndex: dateIndex
+                    });
+                });
+            });
+
+            // Create D3 heatmap
+            createD3Heatmap(heatmapData, sortedBeaches, sortedDates);
+        }
+
+        function createD3Heatmap(data, beaches, dates) {
+            // Get container width for responsive design
+            const container = document.getElementById('d3-heatmap');
+            const containerWidth = container.offsetWidth || 1200;
+            
+            const margin = {top: 50, right: 50, bottom: 150, left: 200};
+            const width = Math.min(containerWidth - margin.left - margin.right, 1000);
+            const height = 400 - margin.top - margin.bottom;
+
+            // Clear previous SVG
+            d3.select("#d3-heatmap").selectAll("*").remove();
+
+            const svg = d3.select("#d3-heatmap")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // Color scale for status - matching index page colors
+            const colorScale = d3.scaleOrdinal()
+                .domain(['green', 'yellow', 'red', 'unknown'])
+                .range(['#00a045', '#c7a900', '#c21616', '#cccccc']);
+
+            // X scale (dates) - responsive to number of days
+            const xScale = d3.scaleBand()
+                .domain(dates)
+                .range([0, width])
+                .padding(0.05); // Reduced padding for more days
+
+            // Y scale (beaches)
+            const yScale = d3.scaleBand()
+                .domain(beaches)
+                .range([0, height])
+                .padding(0.1);
+
+            // Create rectangles for each cell
+            svg.selectAll("rect")
+                .data(data)
+                .enter()
+                .append("rect")
+                .attr("x", d => xScale(d.date))
+                .attr("y", d => yScale(d.beach))
+                .attr("width", xScale.bandwidth())
+                .attr("height", yScale.bandwidth())
+                .attr("fill", d => colorScale(d.status))
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 1)
+                .style("opacity", 0.8)
+                .on("mouseover", function(event, d) {
+                    d3.select(this)
+                        .style("opacity", 1)
+                        .attr("stroke-width", 2);
+                    
+                    // Show tooltip
+                    const tooltip = d3.select("body").append("div")
+                        .attr("class", "tooltip")
+                        .style("position", "absolute")
+                        .style("background", "rgba(0,0,0,0.8)")
+                        .style("color", "white")
+                        .style("padding", "8px")
+                        .style("border-radius", "4px")
+                        .style("font-size", "12px")
+                        .style("pointer-events", "none")
+                        .style("z-index", "1000");
+                    
+                    tooltip.html(`
+                        <strong>${d.beach}</strong><br/>
+                        Date: ${d.date}<br/>
+                        Status: ${d.status.toUpperCase()}
+                    `)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 10) + "px");
+                })
+                .on("mouseout", function(event, d) {
+                    d3.select(this)
+                        .style("opacity", 0.8)
+                        .attr("stroke-width", 1);
+                    d3.selectAll(".tooltip").remove();
+                });
+
+            // Add X axis (dates) with responsive text rotation
+            const xAxis = svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(xScale));
+
+            // Adjust text rotation based on number of dates
+            const textRotation = dates.length > 10 ? -45 : -30;
+            xAxis.selectAll("text")
+                .style("text-anchor", "end")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", `rotate(${textRotation})`);
+
+            // Add Y axis (beaches) with better spacing
+            svg.append("g")
+                .call(d3.axisLeft(yScale))
+                .selectAll("text")
+                .style("font-size", "11px");
+
+            // Add legend at the bottom
+            const legend = svg.append("g")
+                .attr("class", "legend")
+                .attr("transform", `translate(0, ${height + 80})`);
+
+            // Add legend title
+            legend.append("text")
+                .attr("x", 0)
+                .attr("y", -10)
+                .text("Beach Status Legend")
+                .style("font-size", "14px")
+                .style("font-weight", "bold");
+
+            const legendData = [
+                {status: 'green', label: 'Open for Swimming', description: 'Safe water quality'},
+                {status: 'yellow', label: 'Proceed with Caution', description: 'Elevated bacteria levels'},
+                {status: 'red', label: 'Closed for Swimming', description: 'Unsafe water quality'},
+                {status: 'unknown', label: 'Status Unknown', description: 'No data available'}
+            ];
+
+            // Create horizontal legend layout
+            const legendItemWidth = width / legendData.length;
+            legend.selectAll("g")
+                .data(legendData)
+                .enter()
+                .append("g")
+                .attr("transform", (d, i) => `translate(${i * legendItemWidth}, 0)`)
+                .each(function(d, i) {
+                    const g = d3.select(this);
+                    
+                    // Color box
+                    g.append("rect")
+                        .attr("x", 0)
+                        .attr("y", 0)
+                        .attr("width", 15)
+                        .attr("height", 15)
+                        .attr("fill", colorScale(d.status))
+                        .attr("stroke", "#333")
+                        .attr("stroke-width", 1);
+                    
+                    // Label
+                    g.append("text")
+                        .attr("x", 20)
+                        .attr("y", 5)
+                        .text(d.label)
+                        .style("font-size", "11px")
+                        .style("font-weight", "bold");
+                    
+                    // Description
+                    g.append("text")
+                        .attr("x", 20)
+                        .attr("y", 18)
+                        .text(d.description)
+                        .style("font-size", "9px")
+                        .style("fill", "#666");
+                });
         }
 
         // Initialize the page

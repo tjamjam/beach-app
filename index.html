@@ -557,10 +557,13 @@
             function displayAlternativeBeach(allBeaches, targetBeachName) {
                 const targetBeach = allBeaches.find(b => b.beach_name === targetBeachName);
                 const adviceContainer = document.getElementById('alternative-beach-info');
+                const divider = document.querySelector('.divider');
                 
                 // If the target beach is open or we can't find its data, hide the suggestion.
                 if (!targetBeach || targetBeach.status === 'green' || !targetBeach.coordinates) {
                     adviceContainer.innerHTML = ''; // Clear any previous suggestion
+                    // Hide the divider when alternative beach info is not present
+                    if (divider) divider.style.display = 'none';
                     return;
                 }
 
@@ -570,6 +573,8 @@
                 // If the list of open beaches is empty, display the specific message.
                 if (openBeaches.length === 0) {
                     adviceContainer.innerHTML = `<p style="font-style: italic; color: #666; margin-top: 15px;">There are no other open beaches at this time.</p>`;
+                    // Show the divider when alternative beach info is present
+                    if (divider) divider.style.display = 'block';
                     return;
                 }
 
@@ -586,6 +591,8 @@
                     <p class="alternative-beach-intro">Instead, the closest open beach is:</p>
                     <p class="alternative-beach-name">${closestBeach.beach_name}</p>
                 `;
+                // Show the divider when alternative beach info is present
+                if (divider) divider.style.display = 'block';
             }
 
 
