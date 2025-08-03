@@ -590,8 +590,8 @@
 
         async function fetchHistoricalData() {
             try {
-                // Use the real historical dataset
-                const response = await fetch('../backend/historical_status.csv');
+                // Use the real historical dataset - fetch from the correct URL for live site
+                const response = await fetch('https://raw.githubusercontent.com/tjamjam/beach-app/main/backend/historical_status.csv');
                 if (!response.ok) throw new Error('Failed to fetch historical data');
                 
                 const csvText = await response.text();
