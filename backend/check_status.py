@@ -47,7 +47,7 @@ BEACH_COORDINATES = {
     "North Beach North": {"lat": 44.492299, "lon": -73.241944},
     "North Beach South": {"lat": 44.491225, "lon": -73.237259},
     "Texaco Beach": {"lat": 44.488690, "lon": -73.231108},
-    "Blanchard Beach North": {"lat": 44.4571966, "lon": -73.2244185},
+    "Blanchard Beach North": {"lat": 44.457661, "lon": -73.224039},
     "Blanchard Beach South": {"lat": 44.456550, "lon": -73.225007},
     "Oakledge Cove": {"lat": 44.454203, "lon": -73.229385},
     "Blodgett Water Access Point": {"lat": 44.465701, "lon": -73.219072}
