@@ -46,6 +46,12 @@ jobs:
         with:
           node-version: '20' # Updated to meet Wrangler requirements
 
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Tailwind CSS
+        run: npm run build:css:prod
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:

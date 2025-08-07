@@ -309,7 +309,7 @@ def main():
         json.dump(all_new_data, f, indent=2)
     print(f"Updated {JSON_OUTPUT_FILE} with data for {len(all_new_data)} beaches.")
 
-    # 5. Handle notifications for the specific target beach (logic is unchanged)
+    # 5. Handle notifications for the specific target beach (Lakewood Beach - Leddy Beach South only)
     target_beach_data = next((beach for beach in all_new_data if beach["beach_name"] == PDF_TARGET_BEACH), None)
     if target_beach_data:
         old_target_status = last_known_states.get(PDF_TARGET_BEACH, {}).get('status', 'unknown')
@@ -317,8 +317,9 @@ def main():
         print(f"Last known status for {DISPLAY_BEACH_NAME}: {old_target_status.upper()}")
         print(f"Newly fetched status for {DISPLAY_BEACH_NAME}: {new_target_status.upper()}")
         
+        # Only send notifications if Leddy Beach South status has changed
         if new_target_status != "error" and new_target_status != old_target_status:
-            print("Status for target beach has changed! Sending notifications.")
+            print("Status for Lakewood Beach (Leddy Beach South) has changed! Sending notifications.")
             subscriber_emails = get_subscribers()
             message = f"{DISPLAY_BEACH_NAME} status changed from {old_target_status.upper()} to {new_target_status.upper()}."
             if target_beach_data["note"]: message += f" Note: {target_beach_data['note']}"
@@ -327,7 +328,9 @@ def main():
             else:
                 print("No subscribers found to notify.")
         else:
-            print("Status for target beach has not changed.")
+            print("Status for Lakewood Beach has not changed.")
+    else:
+        print(f"Warning: {PDF_TARGET_BEACH} not found in beach data. No notifications will be sent.")
             
     print("--- Check Complete ---")
 

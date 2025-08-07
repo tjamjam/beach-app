@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Custom base styles */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+/* Custom component styles */
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-soft border border-gray-200;
+  }
+  
+  .status-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .status-badge-green {
+    @apply bg-beach-green text-white;
+  }
+  
+  .status-badge-yellow {
+    @apply bg-beach-yellow text-white;
+  }
+  
+  .status-badge-red {
+    @apply bg-beach-red text-white;
+  }
+  
+  .map-pin {
+    @apply w-6 h-6 rounded-full border-2 border-white shadow-medium;
+  }
+  
+  .map-pin-green {
+    @apply bg-beach-green;
+  }
+  
+  .map-pin-yellow {
+    @apply bg-beach-yellow;
+  }
+  
+  .map-pin-red {
+    @apply bg-beach-red;
+  }
+}
+
+/* Custom utility styles */
+@layer utilities {
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .backdrop-blur {
+    backdrop-filter: blur(8px);
+  }
+} 

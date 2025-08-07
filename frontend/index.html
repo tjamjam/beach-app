@@ -3,872 +3,359 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lakewood Beach Status & Weather</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.ripples/0.5.3/jquery.ripples.min.js"></script>
-    <style>
-        body {
-            /* This will now have the background image */
-            background-image: url('images/background.jpg');
-            background-size: cover; /* Make the image cover the entire screen */
-            background-position: center center; /* Center the image */
-            background-attachment: fixed;
-
-            /* These existing styles remain */
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px 0;
-            margin: 0;
-            color: #333;
-        }        
-        .container {
-            /* These properties remain the same */
-            text-align: center;
-            background-color: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            
-            /* --- THIS IS THE NEW RESPONSIVE LOGIC --- */
-            
-            /* 1. Set the maximum width for desktop */
-            max-width: 450px; 
-            
-            /* 2. Make it flexible for mobile, leaving 5% on each side */
-            width: 90%;
-            
-            /* 3. Center the container and add vertical breathing room */
-            margin: 20px auto;
-
-            /* 4. Use padding that works well on mobile */
-            padding: 20px 25px;
-
-            /* 5. A best-practice for responsive layouts */
-            box-sizing: border-box; 
-        }
-        h1 { margin-top: 0; }
-        .stoplight { background-color: #222; width: 120px; height: 340px; border-radius: 20px; display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 20px 0; margin: 20px auto; border: 5px solid #111; }
-        .light { width: 90px; height: 90px; border-radius: 50%; background-color: #444; transition: all 0.3s ease; }
-        .light.red { background-color: #ff1c1c; box-shadow: 0 0 25px #ff1c1c; }
-        .light.yellow { background-color: #ffdd00; box-shadow: 0 0 25px #ffdd00; }
-        .light.green { background-color: #00ff6a; box-shadow: 0 0 25px #00ff6a; }
-        #status-text { font-size: 1.5em; font-weight: bold; margin-top: 20px; min-height: 1em; margin-bottom: 0.5em}
-        #status-details { margin-top: 10px; font-size: 0.9em; color: #555; }
-        #official-update, #status-note { display: none; }
-        #status-note { font-style: italic; margin-top: 5px; }
-        .timestamp { font-size: 0.8em; color: #888; }
-        .pdf-link { margin-top: 10px; font-size: 0.9em; }
-        .pdf-link a { color: #007bff; text-decoration: none; }
-        .pdf-link a:hover { text-decoration: underline; }
-        .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid #3498db; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .divider { border-top: 1px solid #eee; margin: 30px 0; }
-        .current-weather-card {
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .current-weather-card .current-icon img {
-            width: 100px;
-            height: 100px;
-        }
-        .current-weather-card .current-temp {
-            font-size: 4em;
-            font-weight: bold;
-            margin: -10px 0;
-            color: #333;
-        }
-        .current-weather-card .current-description {
-            font-size: 1.2em;
-            color: #666;
-            text-transform: capitalize;
-        }
-        .current-details-list {
-            list-style: none;
-            padding: 0;
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* Two neat columns */
-            gap: 15px;
-        }
-        .current-details-list li {
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 1.1em;
-        }
-        .current-details-list li strong {
-            display: block; /* Puts the value on a new line */
-            font-size: 1.4em;
-            color: #0056b3;
-            margin-top: 5px;
-        }
-        .weather-details p strong { color: #0056b3; }
-        .weather-link a:hover { text-decoration: underline;}
-        #data-source-info { font-size: 0.9em; color: #666; margin-top: 15px; text-align: center; }
-        .suggestion-section { margin-top: 20px; text-align: center; }
-        .suggestion-list {
-            list-style: none;
-            padding: 0;
-            margin-top: 10px;
-            display: grid;
-            grid-template-columns: 1fr; /* Default to a single, full-width column */
-            gap: 10px;
-            text-align: left;
-        }        
-        .suggestion-item { display: flex; align-items: center; background-color: #f9f9f9; padding: 8px; border-radius: 8px; }
-        .suggestion-item i {
-            font-size: 36px; /* Increased from 24px */
-            color: #007bff;
-            margin-right: 15px; /* Added a little more space */
-            width: 40px;        /* Increased width for better alignment */
-            text-align: center;
-        }
-        .suggestion-item span { font-size: 1.1em; }
-        .subscribe-form { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; text-align: center;}
-        .subscribe-form input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 200px; }
-        .subscribe-form button { padding: 10px 15px; border: none; background-color: #007bff; color: white; border-radius: 5px; cursor: pointer; }
-        #form-message { margin-top: 10px; font-size: 0.9em; }
-        #hourly-forecast-section { margin-top: 20px; text-align: center; }
-        #hourly-forecast-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .forecast-hour { padding: 10px; border-radius: 8px; font-size: 0.9em; }
-        .forecast-time { font-weight: bold; font-size: 1.1em; }
-        .forecast-icon img { width: 50px; height: 50px; border-radius: 4px;}
-        .forecast-temp { font-size: 1.4em; }
-        .forecast-detail { color: #666; }
-        #status-advice {
-            display: none; /* Hidden by default */
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 1.1em;
-            line-height: 1.4;
-        }
-        .air-quality-section {
-            text-align: center;
-        }
-        .aqi-display {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            padding: 10px;
-            border-radius: 10px;
-        }
-        .aqi-circle {
-            width: 100%;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5em;
-            font-weight: bold;
-        }
-        .aqi-text {
-            font-size: 1.5em;
-            font-weight: bold;
-            display: none;
-        }
-        /* AQI Color Classes */
-        .aqi-good { background-color: #00e400; color: #004d00; }
-        .aqi-fair { background-color: #ffff00; color: #808000; }
-        .aqi-moderate { background-color: #ff7e00; color: #4d2600; }
-        .aqi-poor { background-color: #ff0000; color: #ffffff; }
-        .aqi-very-poor { background-color: #8f3f97; color: #ffffff; }
-        #aqi-details {
-            margin-top: 10px;
-            font-size: 0.9em;
-            color: #666;
-        }
-        #aqi-advice {
-            display: none; /* Hidden by default */
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 1.1em;
-            line-height: 1.4;
-        }
-        .wave-report-section {
-            text-align: center;
-            padding: 10px 0;
-        }
-        #wave-report-main {
-            font-size: 1.6em;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #0056b3; /* Use the existing strong blue color */
-        }
-        #wave-report-note {
-            font-size: 0.9em;
-            color: #666;
-            font-style: italic;
-            max-width: 85%; /* Keep the lines from getting too long */
-            margin: 0 auto; /* Center the text block */
-            line-height: 1.4;
-        }
-         /* --- Mobile-First Form Styles --- */
-
-        /* 1. Style the form itself for mobile */
-        .subscribe-form form {
-            display: flex;
-            flex-direction: column; /* Stack the input and button vertically */
-            gap: 12px;             /* This adds the space between them! */
-        }
-
-        /* 2. Make sure the input and button have consistent sizing */
-        .subscribe-form input,
-        .subscribe-form button {
-            width: 100%; /* Make them both full-width by default */
-            /* This is a best-practice to ensure padding doesn't break the layout */
-            box-sizing: border-box; 
-        }
-        .alternative-beach-intro {
-            font-weight: bold;
-            margin-top: 15px;
-            margin-bottom: 5px; /* A little space between the intro and the name */
-        }
-
-        .alternative-beach-name {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #00a045; /* The 'go' green color */
-            margin-top: 0; /* Remove the default top margin for a tighter look */
-        }
-
-        /* 3. Media query to adjust for wider screens (tablets and desktops) */
-        @media (min-width: 480px) {
-            .subscribe-form form {
-                /* Switch back to a horizontal layout */
-                flex-direction: row;
-            }
-
-            .subscribe-form input {
-                /* Allow the input to grow and take up the available space */
-                flex-grow: 1;
-                width: auto; /* Reset width to be flexible */
-            }
-
-            .subscribe-form button {
-                /* The button will only be as wide as its content */
-                width: auto; /* Reset width to be flexible */
-            }
-        }
-        @media (min-width: 420px) {
-          .suggestion-list {
-            /* On wider screens, switch back to two columns */
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-        @media (min-width: 600px) {
-          .container {
-            /* Restore the more generous horizontal padding for desktop */
-            padding: 30px 40px;
-          }
-        }
-    </style>
+    <title>Burlington Beach Status - All City Beaches</title>
+    <meta name="description" content="Real-time water quality status for all Burlington beaches. Check current conditions, weather, and air quality for your perfect beach day.">
+    
+    <!-- Tailwind CSS -->
+    <link href="./dist/output.css" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
-<body>
-    <div class="container">
-        <h1>Lakewood Beach Status</h1>
-        <p>Water quality from Leddy South (729.57 ft away)</p>
-        <div class="stoplight">
-            <div id="red-light" class="light"></div>
-            <div id="yellow-light" class="light"></div>
-            <div id="green-light" class="light"></div>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <i class="fas fa-water text-primary-600 text-2xl mr-3"></i>
+                    <h1 class="text-2xl font-bold text-gray-900">Burlington Beaches</h1>
+                </div>
+                <div class="text-sm text-gray-500">
+                    <i class="fas fa-clock mr-1"></i>
+                    <span id="last-updated">Loading...</span>
+                </div>
+            </div>
         </div>
-        <p id="status-text">Checking status...</p>
-        <p id="status-advice"></p>
-        <div id="status-details">
-            <p id="official-update"></p>
-            <p id="status-note"></p> 
-            <p class="pdf-link">
-                <a href="https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx" target="_blank">
-                    View Official Report (PDF)
-                </a>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Hero Section -->
+        <div class="text-center mb-8">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Find Your Perfect Beach</h2>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                Real-time water quality status for all Burlington beaches. Check current conditions and plan your perfect beach day.
             </p>
-            <p class="timestamp">Last checked: <span id="last-checked"></span></p>
         </div>
 
-        <div class="divider"></div>
-
-        <div id="alternative-beach-info"></div>
-        
-        <div class="subscribe-form">
-            <p>Stay informed: We'll email you as soon as the PDF status updates (checked hourly):</p>
-            <form id="email-form">
-                <input type="email" id="email-input" placeholder="Enter your email" required>
-                <button type="submit">Subscribe</button>
-            </form>
-            <p id="form-message"></p>
-            <!-- <p style="margin-top: 15px; text-align: center;">
-                <a href="overview.html" style="color: #007bff; text-decoration: none; font-size: 0.9em;">
-                    <i class="fas fa-map"></i> View All Beaches Overview
-                </a>
-            </p> -->
+        <!-- Search Bar -->
+        <div class="mb-6">
+            <div class="relative max-w-md mx-auto">
+                <input type="text" id="beach-search" placeholder="Search beaches..." 
+                       class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
         </div>
 
-        <div class="divider"></div>
-        
-        <div class="weather-map-section">
-            <h2 style="text-align: center;">Current Conditions</h2>
-            <div id="weather-loader" class="loader"></div>
-            <div id="weather-content" style="display: none;">
-                <div class="weather-details" id="weather-details"></div>
-                <p id="data-source-info"></p>
-
-                <div class="wave-report-section">
-                    <h3 style="text-align: center;">Wave Forecast</h3>
-                    <div id="wave-report-content">
-                        <p id="wave-report-main"></p>
-                        <p id="wave-report-note"></p>
+        <!-- Content Grid -->
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Beach List -->
+            <div class="order-2 lg:order-1">
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">All Beaches</h3>
+                    <div id="beach-list" class="space-y-3">
+                        <!-- Beaches will be populated here -->
                     </div>
                 </div>
-                        
-                <div class="suggestion-section">
-                    <h3>Suggestions</h3>
-                    <div id="suggestion-container"></div>
-                </div>
-                <div id="hourly-forecast-section">
-                    <h3>Upcoming Conditions</h3>
-                    <div id="hourly-forecast-grid"></div>
-                </div>
+            </div>
 
-                <p class="weather-link" style="text-align: center; margin-top: 20px; font-size: 0.9em;">
-                    <a href="https://openweathermap.org/city/5234861" 
-                       target="_blank" 
-                       style="color: #007bff; text-decoration: none;">
-                        View Source on OpenWeatherMap
-                    </a>
+            <!-- Map -->
+            <div class="order-1 lg:order-2">
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Beach Map</h3>
+                    <div id="map" class="h-96 rounded-lg overflow-hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historical Timeline -->
+        <div class="mt-8">
+            <div class="card p-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Historical Timeline</h3>
+                <p class="text-gray-600 mb-4">See how beach conditions have changed over time</p>
+                <div id="timeline-content">
+                    <!-- Timeline will be populated here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <p class="text-gray-300">
+                    Data provided by Vermont Department of Health • 
+                    Weather data from OpenWeatherMap • 
+                    Air quality data from AirNow
                 </p>
-                
             </div>
         </div>
+    </footer>
 
-        <div class="divider"></div>
-
-        <div class="air-quality-section">
-            <h2 style="text-align: center;">Air Quality</h2>
-            <div id="aqi-loader" class="loader"></div>
-            <div id="aqi-content" style="display: none;">
-<!--                 <p id="aqi-details"></p> -->
-                <p id="aqi-advice"></p>
-            </div>
-        </div>
-    </div>
-
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Custom JS -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        // Configuration
+        const BASE_API_URL = "https://beach-api.terrencefradet.workers.dev";
+        let map;
+        let beaches = [];
+        let fakeHistoricalData = [];
 
-            // --- UPDATED Mock Data ---
-            const mockPoorAQI = {
-                aqi: 165,
-                text: "Unhealthy",
-                advice: "Some members of the general public may experience health effects...",
-                categoryNumber: 4, // <-- This now uses the official AirNow number for "Unhealthy"
-                pollutants: { pm2_5: 85.5 }
-            };
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMap();
+            fetchBeachData();
+            fetchHistoricalData();
+            setupSearch();
+        });
+
+        // Initialize Leaflet map
+        function initializeMap() {
+            map = L.map('map').setView([44.48, -73.22], 12);
             
-            // $('body').ripples({
-            //     resolution: 512,
-            //     dropRadius: 15,   // Smaller radius for a more delicate "plop"
-            //     perturbance: 0.001, // Very low value makes ripples subtle and almost invisible when static
-            //     interactive: true, // This ensures it reacts to the cursor
-            //     crossOrigin: 'anonymous' // Good practice for images
-            // });
-            
-            // --- SECTION 1: CONFIGURATION ---
-                        // --- SECTION 1: CONFIGURATION (with smart environment switching) ---
-            
-            // This is the single switch that controls everything.
-            const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        }
 
-            // Set the base URL for the Cloudflare Worker API
-            // Always use production API since local worker isn't running
-            const BASE_API_URL = 'https://beach-api.terrencefradet.workers.dev';
+        // Fetch beach data from status.json
+        async function fetchBeachData() {
+            try {
+                const response = await fetch('https://raw.githubusercontent.com/tjamjam/beach-app/main/status.json');
+                if (!response.ok) throw new Error('Failed to fetch beach data');
+                
+                beaches = await response.json();
+                displayBeaches();
+                updateMap();
+                updateLastUpdated();
+                
+            } catch (error) {
+                console.error('Error fetching beach data:', error);
+                document.getElementById('beach-list').innerHTML = `
+                    <div class="text-red-600 text-center py-8">
+                        <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                        <p>Failed to load beach data. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
 
-            // Set the URL for the status.json data file
-            const STATUS_JSON_URL = isLocal
-                ? '../status.json' // Use local file for development
-                : 'https://raw.githubusercontent.com/tjamjam/beach-app/main/status.json'; // Use live file for production
+        // Display beaches in the list
+        function displayBeaches() {
+            const beachList = document.getElementById('beach-list');
+            beachList.innerHTML = '';
 
-            // All other API endpoints are built from the base URL and will switch automatically.
-            const SUBSCRIBE_API_URL = BASE_API_URL + '/subscribe';
-            const MARINE_WEATHER_API_URL = BASE_API_URL + '/weather';
-            const AIR_QUALITY_API_URL = BASE_API_URL + '/air-quality';
-
-            // Static configuration
-            const LAKEWOOD_BEACH = { lat: 44.501457, lon: -73.252218 };
-
-            // Log the current environment for easy debugging
-            console.log(`-- App running in ${isLocal ? 'LOCAL' : 'PRODUCTION'} mode --`);
-            console.log(`API endpoints pointing to: ${BASE_API_URL}`);
-            console.log(`Status data sourced from: ${STATUS_JSON_URL}`);
-
-
-    
-            // --- SECTION 2: DOM ELEMENTS ---
-            const dom = {};
-            [
-                'red-light', 'yellow-light', 'green-light', 'status-text',
-                'weather-loader', 'weather-content', 'weather-details',
-                'data-source-info', 'suggestion-container', 'email-form', 'email-input',
-                'form-message', 'last-checked', 'official-update', 'status-note',
-                'hourly-forecast-grid', 'refresh-weather', 'status-advice', 'aqi-loader', 'aqi-content', 'wave-report-main', 'wave-report-note'
-            ].forEach(id => dom[id] = document.getElementById(id));
-    
-            // --- SECTION 3: EVENT LISTENERS ---
-            // Email Subscription Form
-            dom['email-form'].addEventListener('submit', async (event) => {
-                event.preventDefault();
-                console.log('Form submitted');
-                const email = dom['email-input'].value;
-                console.log('Attempting to subscribe email:', email);
-                try {
-                    const response = await fetch(SUBSCRIBE_API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: email })
-                    });
-                    console.log('Subscribe response status:', response.status);
-                    const data = await response.json();
-                    console.log('Subscribe response data:', data);
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Subscription failed');
+            beaches.forEach(beach => {
+                const statusClass = getStatusClass(beach.status);
+                const statusText = getStatusText(beach.status);
+                
+                const beachCard = document.createElement('div');
+                beachCard.className = 'border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow';
+                beachCard.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-900">${beach.beach_name}</h4>
+                            <p class="text-sm text-gray-600 mt-1">${beach.note || 'No additional information'}</p>
+                            <p class="text-xs text-gray-500 mt-1">Last updated: ${beach.date}</p>
+                        </div>
+                        <div class="ml-4">
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                    </div>
+                `;
+                
+                beachCard.addEventListener('click', () => {
+                    if (beach.coordinates) {
+                        map.setView([beach.coordinates.lat, beach.coordinates.lon], 15);
                     }
-                    dom['form-message'].textContent = 'Successfully subscribed!';
-                    dom['form-message'].style.color = 'green';
-                    dom['email-input'].value = '';
-                } catch (error) {
-                    console.error('Subscription error:', error);
-                    dom['form-message'].textContent = 'Subscription failed. Please try again.';
-                    dom['form-message'].style.color = 'red';
+                });
+                
+                beachList.appendChild(beachCard);
+            });
+        }
+
+        // Update map with beach markers
+        function updateMap() {
+            // Clear existing markers
+            map.eachLayer((layer) => {
+                if (layer instanceof L.Marker) {
+                    map.removeLayer(layer);
                 }
             });
-            
-            // --- SECTION 4: FUNCTIONS ---
-    
-            // Status Functions
-            async function fetchAndUpdateStatus() {
-                try {
-                    // This fetches the status.json file, which is now an array of all beaches.
-                    const response = await fetch(`${STATUS_JSON_URL}?t=${new Date().getTime()}`);
-                    if (!response.ok) throw new Error('Status JSON network error');
+
+            beaches.forEach(beach => {
+                if (beach.coordinates) {
+                    const statusClass = getStatusClass(beach.status);
+                    const statusText = getStatusText(beach.status);
                     
-                    const allBeaches = await response.json(); // This variable now holds the full list.
+                    const marker = L.marker([beach.coordinates.lat, beach.coordinates.lon])
+                        .addTo(map)
+                        .bindPopup(`
+                            <div class="text-center">
+                                <h3 class="font-semibold text-lg">${beach.beach_name}</h3>
+                                <span class="status-badge ${statusClass} mt-2">${statusText}</span>
+                                <p class="text-sm text-gray-600 mt-2">${beach.note || 'No additional information'}</p>
+                                <p class="text-xs text-gray-500 mt-1">Updated: ${beach.date}</p>
+                            </div>
+                        `);
+                }
+            });
+        }
 
-                    // --- THIS IS THE CRITICAL FIX ---
-                    // We need to find the specific beach we want to display in the stoplight.
-                    const targetBeachName = "Leddy Beach South"; 
-                    const targetBeachData = allBeaches.find(beach => beach.beach_name === targetBeachName);
-
-                    if (targetBeachData) {
-                        // If we found our target beach, pass ITS data to the display function.
-                        updateStoplight(targetBeachData);
+        // Setup search functionality
+        function setupSearch() {
+            const searchInput = document.getElementById('beach-search');
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const beachCards = document.querySelectorAll('#beach-list > div');
+                
+                beachCards.forEach(card => {
+                    const beachName = card.querySelector('h4').textContent.toLowerCase();
+                    if (beachName.includes(searchTerm)) {
+                        card.style.display = 'block';
                     } else {
-                        // If for some reason our target beach isn't in the report, show an error.
-                        throw new Error(`Target beach '${targetBeachName}' not found in the status report.`);
+                        card.style.display = 'none';
                     }
-                    
-                    displayAlternativeBeach(allBeaches, targetBeachName);
-
-                } catch (error) {
-                    console.error("Failed to fetch or process status:", error);
-                    // This error handler will now catch the "not found" error as well.
-                    updateStoplight({ status: 'error', date: 'N/A', note: 'Could not retrieve beach status.' });
-                }
-            }
-
-    
-            function updateStoplight(data) {
-                const { status, date, note } = data;
-                if(!dom['red-light']) return; // Safety check
-
-                // --- Reset all elements first ---
-                dom['red-light'].classList.remove('red');
-                dom['yellow-light'].classList.remove('yellow');
-                dom['green-light'].classList.remove('green');
-                if (dom['status-advice']) dom['status-advice'].style.display = 'none';
-
-                let message = '', color = '#555';
-                
-                switch (status) {
-                    case 'green':
-                        dom['green-light'].classList.add('green');
-                        message = 'Open for Swimming';
-                        color = '#00a045';
-                        break;
-                    
-                    case 'yellow':
-                        dom['yellow-light'].classList.add('yellow');
-                        message = 'Proceed with Caution';
-                        color = '#c7a900';
-                        if (dom['status-advice']) {
-                            dom['status-advice'].textContent = "Be cautious, especially if you're sensitive or have pets/small children.";
-                            dom['status-advice'].style.backgroundColor = '#fffbe6'; // Light yellow background
-                            dom['status-advice'].style.color = '#8a6d3b'; // Darker yellow text
-                            dom['status-advice'].style.display = 'block';
-                        }
-                        break;
-
-                    case 'red':
-                        dom['red-light'].classList.add('red');
-                        message = 'Closed for Swimming';
-                        color = '#c21616';
-                        if (dom['status-advice']) {
-                            dom['status-advice'].textContent = "Do NOT enter the water, as it poses a significant health risk to everyone.";
-                            dom['status-advice'].style.backgroundColor = '#f2dede'; // Light red background
-                            dom['status-advice'].style.color = '#a94442'; // Darker red text
-                            dom['status-advice'].style.display = 'block';
-                        }
-                        break;
-                        
-                    default:
-                        message = 'Could not determine status.';
-                }
-
-                // Update the main status text and official notes
-                dom['status-text'].textContent = message;
-                dom['status-text'].style.color = color;
-                if(dom['official-update']) dom['official-update'].textContent = `Official Update: ${date}`;
-                if(dom['official-update']) dom['official-update'].style.display = 'block';
-                if (note && dom['status-note']) {
-                    dom['status-note'].textContent = `Note: ${note}`;
-                    dom['status-note'].style.display = 'block';
-                } else if (dom['status-note']) {
-                    dom['status-note'].style.display = 'none';
-                }
-            }
-
-            // --- NEW HELPER FUNCTIONS ---
-            function calculateDistance(coord1, coord2) {
-                // Simple Euclidean distance is fine for these short distances.
-                const dx = coord1.lon - coord2.lon;
-                const dy = coord1.lat - coord2.lat;
-                return Math.sqrt(dx * dx + dy * dy);
-            }
-
-            function displayAlternativeBeach(allBeaches, targetBeachName) {
-                const targetBeach = allBeaches.find(b => b.beach_name === targetBeachName);
-                const adviceContainer = document.getElementById('alternative-beach-info');
-                const divider = document.querySelector('.divider');
-                
-                // If the target beach is open or we can't find its data, hide the suggestion.
-                if (!targetBeach || targetBeach.status === 'green' || !targetBeach.coordinates) {
-                    adviceContainer.innerHTML = ''; // Clear any previous suggestion
-                    // Hide the divider when alternative beach info is not present
-                    if (divider) divider.style.display = 'none';
-                    return;
-                }
-
-                const openBeaches = allBeaches.filter(b => b.status === 'green' && b.coordinates);
-
-                // --- THIS IS THE LOGIC FOR YOUR FIRST REQUEST ---
-                // If the list of open beaches is empty, display the specific message.
-                if (openBeaches.length === 0) {
-                    adviceContainer.innerHTML = `<p style="font-style: italic; color: #666; margin-top: 15px;">There are no other open beaches at this time.</p>`;
-                    // Show the divider when alternative beach info is present
-                    if (divider) divider.style.display = 'block';
-                    return;
-                }
-
-                // Calculate distances and find the closest
-                openBeaches.forEach(beach => {
-                    beach.distance = calculateDistance(targetBeach.coordinates, beach.coordinates);
                 });
-                openBeaches.sort((a, b) => a.distance - b.distance);
-                const closestBeach = openBeaches[0];
+            });
+        }
 
-                // --- THIS IS THE LOGIC FOR YOUR SECOND REQUEST ---
-                // Build the new two-paragraph HTML structure using our new CSS classes.
-                adviceContainer.innerHTML = `
-                    <p class="alternative-beach-intro">Instead, the closest open beach is:</p>
-                    <p class="alternative-beach-name">${closestBeach.beach_name}</p>
-                `;
-                // Show the divider when alternative beach info is present
-                if (divider) divider.style.display = 'block';
-            }
-
-
-    
-            // Weather Functions
-            async function fetchWeatherData() {
-                try {
-                    const response = await fetch(`${MARINE_WEATHER_API_URL}?t=${new Date().getTime()}`);
-                    if (!response.ok) throw new Error(`Weather API returned ${response.status}`);
-                    
-                    const data = await response.json();
-
-                    console.log("Data received from worker:", data);
-                    
-                    if (data.error) throw new Error(data.details || 'API returned an error');
-
-                    // Check if the 'current' data exists and pass it to the UI function.
-                    if (data.current) {
-                        updateWeatherUI(data.current);
-                    } else {
-                        // If there's no 'current' data, something is wrong with the format.
-                        throw new Error('Received weather data in an unexpected format.');
-                    }
-                    
-                    // Check if the 'hourly' data exists and pass it to its UI function.
-                    if (data.hourly) {
-                        updateHourlyForecastUI(data.hourly);
-                    }
-
-                } catch (error) {
-                    console.error('Weather fetch failed:', error);
-                    displayWeatherError();
-                }
-            }
-    
-            function parseWeatherData(data) {
-                return data;
-            }
-            
-            // ADD this new helper function above updateWeatherUI
-            function getConditionIcon(conditionText) {
-                const condition = conditionText.toLowerCase();
-                if (condition.includes('clear')) return 'fa-sun';
-                if (condition.includes('clouds')) return 'fa-cloud';
-                if (condition.includes('rain')) return 'fa-cloud-showers-heavy';
-                if (condition.includes('drizzle')) return 'fa-cloud-rain';
-                if (condition.includes('snow')) return 'fa-snowflake';
-                if (condition.includes('thunderstorm')) return 'fa-cloud-bolt';
-                if (condition.includes('mist') || condition.includes('haze') || condition.includes('fog')) return 'fa-smog';
-                return 'fa-water'; // A default icon
-            }
-
-            function updateWeatherUI(weatherData) {
-                const waveHeight = estimateWaveHeight(weatherData.windSpeed, weatherData.windDirection);
-
-                // Populate the Wave Forecast section
-                if (dom['wave-report-main']) dom['wave-report-main'].textContent = waveHeight;
-                if (dom['wave-report-note']) dom['wave-report-note'].innerHTML = `Wave height is estimated based on wind speed and direction. At this location, significant waves primarily form from <strong>North (N)</strong>, <strong>Northwest (NW)</strong> or <strong>West (W)</strong> winds due to the long stretch of open water.`;
+        // Fetch historical data for timeline
+        async function fetchHistoricalData() {
+            try {
+                const response = await fetch('https://raw.githubusercontent.com/tjamjam/beach-app/main/backend/historical_status.csv');
+                if (!response.ok) throw new Error('Failed to fetch historical data');
                 
-                // Build the HTML for the "Current Conditions" section
-                const windDisplay = parseFloat(weatherData.windSpeed) === 0 ? 'Calm' : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
-
-                dom['weather-details'].innerHTML = `
-                    <div class="current-weather-card">
-                        <div class="current-icon"><img src="${weatherData.icon}" alt="${weatherData.conditions}"></div>
-                        <div class="current-temp">${weatherData.temperature}°F</div>
-                        <div class="current-description">${weatherData.conditions}</div>
+                const csvText = await response.text();
+                const historicalData = parseCSV(csvText);
+                fakeHistoricalData = historicalData;
+                updateTimeline(historicalData);
+                
+            } catch (error) {
+                console.error('Error fetching historical data:', error);
+                document.getElementById('timeline-content').innerHTML = `
+                    <div class="text-red-600 text-center py-8">
+                        <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                        <p>Failed to load historical data. Please try again later.</p>
                     </div>
-                    
-                    <ul class="current-details-list">
-                        <li>Wind<strong>${windDisplay}</strong></li>
-                        <li>Humidity<strong>${weatherData.humidity}%</strong></li>
-                    </ul>
-                    
-                    <!-- NEW: Note about the data source location -->
-                    <p style="text-align:center; font-size: 0.9em; color: #888; margin-top: 20px;">
-                        Data for New North End (05408). Last Updated: ${weatherData.timestamp}
-                    </p>
                 `;
+            }
+        }
+
+        // Parse CSV data
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',');
+            const data = [];
             
-                updateSuggestions(weatherData);
-                
-                dom['weather-loader'].style.display = 'none';
-                dom['weather-content'].style.display = 'block';
-            }
-    
-            function estimateWaveHeight(windSpeed, windDirection) {
-                const speed = parseFloat(windSpeed);
-
-                // This check remains the same.
-                if (isNaN(speed) || speed < 1) {
-                    return "Calm (< 0.5 ft)";
-                }
-
-                // This check also remains the same.
-                const isWaveDirection = (windDirection === 'N' || windDirection === 'NW' || windDirection === 'NNW' || windDirection === 'W');
-                if (!isWaveDirection) {
-                    return "Calm (Sheltered by Land)";
-                }
-
-                // If wind IS from a wave-making direction, now we check the speed.
-                
-                // --- THIS IS THE NEW LOGIC YOU REQUESTED ---
-                // If the wind is very light (1-4.9 mph), it's still calm.
-                if (speed < 5) {
-                    return "Calm (< 0.5 ft)";
-                }
-                // --- END OF NEW LOGIC ---
-
-                // The rest of the tiers now handle stronger winds.
-                if (speed < 10) return "Light Chop (0.5 - 1 ft)";
-                if (speed < 18) return "Moderate Waves (1 - 3 ft)";
-                if (speed < 25) return "Choppy (3 - 5 ft)";
-                return "Rough (5+ ft)";
-            }
-
-    
-            function updateSuggestions(weatherData) {
-                const suggestions = [];
-                const temp = parseFloat(weatherData.temperature);
-                const speed = parseFloat(weatherData.windSpeed);
-                const conditions = weatherData.conditions.toLowerCase();
-                const hour = new Date().getHours(); // Get current hour (0-23)
-                const isDayTime = hour >= 6 && hour < 19; // Approx. 6 AM to 7 PM
-                const waveHeight = estimateWaveHeight(weatherData.windSpeed, weatherData.windDirection);
-
-                // 1. Hot Weather Suggestions (Water & Beach Day)
-                if (!isNaN(temp) && temp >= 78) {
-                    suggestions.push({ name: 'Stay Hydrated', icon: 'fa-solid fa-droplet' });
-                    suggestions.push({ name: 'Great Beach Day!', icon: 'fa-solid fa-umbrella-beach' });
-                }
-
-                // 2. Cold Weather Suggestion (Jacket)
-                // Only suggests a jacket if it's actually cool.
-                if (!isNaN(temp) && temp < 63) {
-                    suggestions.push({ name: 'Bring a Jacket', icon: 'fa-solid fa-layer-group' });
-                }
-
-                // 3. Windy Weather Suggestion (Kite)
-                // Good range for kite flying: not too calm, not too stormy.
-                if (!isNaN(speed) && speed >= 12 && speed <= 35) {
-                    suggestions.push({ name: 'Good Day for a Kite!', icon: 'fa-solid fa-paper-plane' });
-                }
-
-                // 4. Calm Water Suggestion (Paddleboarding)
-                // Checks if the wave forecast string includes "Calm".
-                if (waveHeight.toLowerCase().includes('calm')) {
-                    suggestions.push({ name: 'Good for Paddleboarding', icon: 'fa-solid fa-water' });
-                }
-
-                // 5. Sunglasses Suggestion (More often during the day)
-                // Suggests sunglasses during the day unless it's very gloomy.
-                const isGloomy = conditions.includes('rain') || conditions.includes('overcast') || conditions.includes('fog') || conditions.includes('drizzle');
-                if (isDayTime && !isGloomy) {
-                    suggestions.push({ name: 'Sunglasses', icon: 'fa-solid fa-glasses' });
-                }
-
-                // Build and display the final list of suggestions
-                let html = suggestions.length > 0
-                    ? '<ul class="suggestion-list">' + suggestions.map(item => `<li class="suggestion-item"><i class="${item.icon}"></i><span>${item.name}</span></li>`).join('') + '</ul>'
-                    : '<p>No specific suggestions at this time.</p>';
-                
-                if (dom['suggestion-container']) {
-                    dom['suggestion-container'].innerHTML = html;
-                }
-            }
-
-    
-            function displayWeatherError() {
-                dom['weather-loader'].style.display = 'none';
-                dom['weather-details'].innerHTML = `<p style="color: #666;">Weather data temporarily unavailable.</p><p style="font-size: 0.9em;">Please check back in a few minutes.</p>`;
-                dom['weather-content'].style.display = 'block';
-            }
-    
-            function updateLastChecked() {
-                let seconds = 0;
-                dom['last-checked'].textContent = "just now...";
-                setInterval(() => {
-                    seconds++;
-                    dom['last-checked'].textContent = seconds < 60 ? `${seconds}s ago` : `${Math.floor(seconds / 60)}m ago`;
-                }, 1000);
-            }
-    
-            function updateHourlyForecastUI(periods) {
-                if (!periods || periods.length === 0) {
-                    if(dom['hourly-forecast-grid']) dom['hourly-forecast-grid'].innerHTML = `<p style="grid-column: 1 / -1;">Forecast unavailable.</p>`;
-                    return;
-                }
-                
-                let html = '';
-                periods.forEach(period => {
-                    html += `
-                        <div class="forecast-hour">
-                            <div class="forecast-time">${period.time}</div>
-                            <div class="forecast-icon"><img src="${period.icon}" alt="${period.description}"></div>
-                            <div class="forecast-temp">${period.temp}°F</div>
-                            <div class="forecast-detail" style="text-transform: capitalize;">${period.description}</div>
-                        </div>`;
-                });
-                if(dom['hourly-forecast-grid']) dom['hourly-forecast-grid'].innerHTML = html;
-            }
-
-
-            // Add these new functions inside your script tag
-            async function fetchAirQuality() {
-                // Use our mock data instead of calling the API
-                // updateAirQualityUI(mockPoorAQI);
-                try {
-                    const response = await fetch(AIR_QUALITY_API_URL);
-                    if (!response.ok) throw new Error('Air Quality API fetch failed');
-                    const aqiData = await response.json();
-                    updateAirQualityUI(aqiData);
-                } catch (error) {
-                    console.error("Failed to fetch Air Quality:", error);
-                    if(dom['aqi-content']) dom['aqi-content'].innerHTML = `<p>Air quality data unavailable.</p>`;
-                    if(dom['aqi-loader']) dom['aqi-loader'].style.display = 'none';
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim()) {
+                    const values = lines[i].split(',');
+                    const row = {};
+                    headers.forEach((header, index) => {
+                        row[header.trim()] = values[index] ? values[index].trim() : '';
+                    });
+                    data.push(row);
                 }
             }
             
-            function updateAirQualityUI(data) {
-                if (!data || data.error) {
-                    if(dom['aqi-content']) dom['aqi-content'].innerHTML = `<p>Air quality data unavailable.</p>`;
-                    if(dom['aqi-loader']) dom['aqi-loader'].style.display = 'none';
-                    return;
-                }
+            return data;
+        }
 
-                // --- THIS IS THE NEW, ALIGNED LOGIC ---
-                // This map directly translates the AirNow category number to your CSS classes.
-                const aqiClassMap = {
-                    1: "aqi-good",
-                    2: "aqi-fair",
-                    3: "aqi-moderate",
-                    4: "aqi-poor",
-                    5: "aqi-very-poor",
-                    6: "aqi-very-poor" // AirNow uses 6 for Hazardous, we'll map it to our 'very-poor' style.
-                };
-                
-                // Look up the class name using the number from the API.
-                const aqiClass = aqiClassMap[data.categoryNumber] || "";
+        // Update timeline visualization
+        function updateTimeline(data) {
+            const timelineContent = document.getElementById('timeline-content');
+            
+            if (!data || data.length === 0) {
+                timelineContent.innerHTML = '<p class="text-gray-500 text-center">No historical data available</p>';
+                return;
+            }
 
-                const pm2_5 = data.pollutants?.pm2_5 || 0;
-                
-                let adviceHTML = '';
-                if (data.advice) {
-                    adviceHTML = `
-                        <p id="aqi-advice" style="display: block; background-color: #f8f9fa; border: 1px solid #dee2e6; color: #343a40; padding: 10px; border-radius: 8px; margin-top: 15px;">
-                            <strong>Advice:</strong> ${data.advice}
-                        </p>
-                    `;
-                }
+            // Group data by date and beach
+            const groupedData = {};
+            data.forEach(row => {
+                const date = new Date(row.record_timestamp_utc).toISOString().split('T')[0];
+                if (!groupedData[date]) groupedData[date] = {};
+                groupedData[date][row.beach_name] = row.status;
+            });
 
-                dom['aqi-content'].innerHTML = `
-                    <div class="aqi-display ${aqiClass}">
-                        <div class="aqi-circle">${data.aqi} AQI</div>
-                        <div class="aqi-text">${data.text}</div>
+            // Create timeline visualization
+            const dates = Object.keys(groupedData).sort();
+            const beachNames = [...new Set(data.map(row => row.beach_name))];
+            
+            const timelineHTML = `
+                <div class="overflow-x-auto">
+                    <div class="min-w-max">
+                        <div class="grid grid-cols-${dates.length + 1} gap-2 text-xs">
+                            <div class="font-semibold p-2">Beach</div>
+                            ${dates.map(date => `
+                                <div class="font-semibold p-2 text-center">${new Date(date).toLocaleDateString()}</div>
+                            `).join('')}
+                            
+                            ${beachNames.map(beach => `
+                                <div class="font-medium p-2 border-t">${beach}</div>
+                                ${dates.map(date => {
+                                    const status = groupedData[date]?.[beach] || 'unknown';
+                                    const statusClass = getStatusClass(status);
+                                    return `<div class="p-2 text-center">
+                                        <span class="status-badge ${statusClass} text-xs">${status}</span>
+                                    </div>`;
+                                }).join('')}
+                            `).join('')}
+                        </div>
                     </div>
-                    ${adviceHTML}
-                    <p class="data-source-link" style="margin-top: 10px; font-size: 0.9em;">
-                        <a href="https://www.airnow.gov/?city=Burlington&state=VT&country=USA" target="_blank" style="color: #007bff; text-decoration: none;">
-                            View Source on AirNow.gov
-                        </a>
-                    </p>
-                `;
-                
-                dom['aqi-loader'].style.display = 'none';
-                dom['aqi-content'].style.display = 'block';
-            }
-
+                </div>
+            `;
             
-            // --- SECTION 5: INITIALIZATION ---
-            fetchAndUpdateStatus();
-            fetchWeatherData();
-            fetchAirQuality();
-            updateLastChecked();
+            timelineContent.innerHTML = timelineHTML;
+        }
 
-        });
+        // Update last updated timestamp
+        function updateLastUpdated() {
+            if (beaches.length > 0) {
+                const latestUpdate = beaches.reduce((latest, beach) => {
+                    const beachDate = new Date(beach.date);
+                    return beachDate > latest ? beachDate : latest;
+                }, new Date(0));
+                
+                document.getElementById('last-updated').textContent = 
+                    latestUpdate.toLocaleString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        hour: 'numeric', 
+                        minute: '2-digit' 
+                    });
+            }
+        }
+
+        // Helper functions
+        function getStatusClass(status) {
+            switch(status) {
+                case 'green': return 'status-badge-green';
+                case 'yellow': return 'status-badge-yellow';
+                case 'red': return 'status-badge-red';
+                default: return 'bg-gray-500 text-white';
+            }
+        }
+
+        function getStatusText(status) {
+            switch(status) {
+                case 'green': return 'Open';
+                case 'yellow': return 'Alert';
+                case 'red': return 'Closed';
+                default: return 'Unknown';
+            }
+        }
     </script>
 </body>
 </html>
