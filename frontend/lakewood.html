@@ -486,7 +486,7 @@
                         <div class="flex-1 text-right">
                             <div class="text-sm text-gray-900 font-medium">${hour.description}</div>
                             <div class="text-xs text-gray-600 mt-1">
-                                <span class="mr-3">Wind: ${windSpeed} mph</span>
+                                ${windSpeed !== "N/A" ? `<span class="mr-3">Wind: ${windSpeed} mph</span>` : ''}
                                 <span>Waves: ${waveHeight}</span>
                             </div>
                         </div>
