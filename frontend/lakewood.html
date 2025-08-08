@@ -65,6 +65,10 @@
                     Current Weather
                 </h3>
                 <div id="weather-content" class="text-center">
+                    <div class="text-sm text-gray-500 mb-2">
+                        <i class="fas fa-map-marker-alt mr-1"></i>
+                        Burlington, VT (05408)
+                    </div>
                     <div class="text-4xl font-bold text-gray-900 mb-2">
                         <span id="temperature">--</span>°F
                     </div>
@@ -156,11 +160,9 @@
                             <div class="text-sm text-gray-600">Period</div>
                         </div>
                     </div>
-                    <div class="pt-4 border-t border-gray-200">
-                        <a href="https://www.ndbc.noaa.gov/station_page.php?station=45165" target="_blank" class="text-sm text-primary-600 hover:text-primary-700">
-                            <i class="fas fa-external-link-alt mr-1"></i>
-                            View detailed wave data
-                        </a>
+                    <div class="text-xs text-gray-500 text-center">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Estimates based on wind conditions across Lake Champlain
                     </div>
                 </div>
             </div>
@@ -486,18 +488,20 @@
             `;
         }
 
-        // Fetch wave data (mock data for now)
+        // Fetch wave data based on wind conditions
         async function fetchWaveData() {
             try {
-                // For now, we'll use mock data since we don't have a wave API
-                // In the future, this could connect to NOAA buoy data
-                const mockWaveData = {
-                    height: "1-2",
-                    direction: "Southeast",
-                    period: "3-5 seconds"
-                };
+                // Get current weather data to estimate wave conditions
+                const response = await fetch(`${BASE_API_URL}/weather`);
+                if (!response.ok) throw new Error('Weather API failed');
                 
-                displayWaveData(mockWaveData);
+                const data = await response.json();
+                const windSpeed = parseFloat(data.current.windSpeed);
+                const windDirection = data.current.windDirection;
+                
+                // Estimate wave conditions based on wind
+                const waveData = estimateWaveConditions(windSpeed, windDirection);
+                displayWaveData(waveData);
                 
             } catch (error) {
                 console.error('Error fetching wave data:', error);
@@ -508,6 +512,54 @@
                     </div>
                 `;
             }
+        }
+
+        // Estimate wave conditions based on wind speed and direction
+        function estimateWaveConditions(windSpeed, windDirection) {
+            let height, direction, period;
+            
+            // Wave height based on wind speed (Lake Champlain conditions)
+            if (windSpeed < 5) {
+                height = "0-1";
+                period = "1-2";
+            } else if (windSpeed < 10) {
+                height = "1-2";
+                period = "2-3";
+            } else if (windSpeed < 15) {
+                height = "2-3";
+                period = "3-4";
+            } else if (windSpeed < 20) {
+                height = "3-4";
+                period = "4-5";
+            } else {
+                height = "4-5";
+                period = "5-6";
+            }
+            
+            // Wave direction based on wind direction (SW winds create SE waves)
+            if (windDirection.includes('SW') || windDirection.includes('W')) {
+                direction = "SE";
+            } else if (windDirection.includes('S')) {
+                direction = "E";
+            } else if (windDirection.includes('SE')) {
+                direction = "NE";
+            } else if (windDirection.includes('E')) {
+                direction = "NW";
+            } else if (windDirection.includes('NE')) {
+                direction = "SW";
+            } else if (windDirection.includes('N')) {
+                direction = "S";
+            } else if (windDirection.includes('NW')) {
+                direction = "SE";
+            } else {
+                direction = "Variable";
+            }
+            
+            return {
+                height: height,
+                direction: direction,
+                period: period
+            };
         }
 
         // Display wave data
