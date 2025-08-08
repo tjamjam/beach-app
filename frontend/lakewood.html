@@ -21,10 +21,6 @@
                     <i class="fas fa-water text-primary-600 text-2xl mr-3"></i>
                     <h1 class="text-2xl font-bold text-gray-900">Lakewood Beach</h1>
                 </div>
-                <div class="text-sm text-gray-500">
-                    <i class="fas fa-clock mr-1"></i>
-                    <span id="last-updated">Loading...</span>
-                </div>
             </div>
         </div>
     </header>
@@ -46,6 +42,10 @@
                     <p id="status-note" class="text-gray-600 bg-gray-50 rounded-lg p-3">
                         <!-- Additional notes will be populated here -->
                     </p>
+                </div>
+                <div class="text-sm text-gray-500 mt-4">
+                    <i class="fas fa-clock mr-1"></i>
+                    Last updated: <span id="last-updated">Loading...</span>
                 </div>
                 <div class="mt-6 pt-4 border-t border-gray-200">
                     <a href="https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx" target="_blank" class="text-sm text-primary-600 hover:text-primary-700">
@@ -234,10 +234,12 @@
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             fetchBeachData();
-            fetchWeatherData();
+            fetchWeatherData().then(() => {
+                // Fetch wave data after weather data is available
+                fetchWaveData();
+            });
             fetchAirQualityData();
             fetchUpcomingWeather();
-            fetchWaveData();
             setupSubscriptionForm();
         });
 
@@ -384,6 +386,7 @@
                 if (!response.ok) throw new Error('Weather API failed');
                 
                 const data = await response.json();
+                currentWeatherData = data; // Store globally for wave report
                 displayWeather(data.current);
                 
             } catch (error) {
@@ -488,16 +491,22 @@
             `;
         }
 
+        // Global variable to store weather data
+        let currentWeatherData = null;
+
         // Fetch wave data based on wind conditions
         async function fetchWaveData() {
             try {
-                // Get current weather data to estimate wave conditions
-                const response = await fetch(`${BASE_API_URL}/weather`);
-                if (!response.ok) throw new Error('Weather API failed');
+                // Use the weather data that was already fetched
+                if (!currentWeatherData) {
+                    // If weather data isn't available yet, fetch it
+                    const response = await fetch(`${BASE_API_URL}/weather`);
+                    if (!response.ok) throw new Error('Weather API failed');
+                    currentWeatherData = await response.json();
+                }
                 
-                const data = await response.json();
-                const windSpeed = parseFloat(data.current.windSpeed);
-                const windDirection = data.current.windDirection;
+                const windSpeed = parseFloat(currentWeatherData.current.windSpeed);
+                const windDirection = currentWeatherData.current.windDirection;
                 
                 // Estimate wave conditions based on wind
                 const waveData = estimateWaveConditions(windSpeed, windDirection);
