@@ -149,13 +149,13 @@
                         </div>
                         <div>
                             <div class="text-xl font-semibold text-gray-900">
-                                <span id="wind-speed">--</span> mph
+                                <span id="wave-wind-speed">--</span> mph
                             </div>
                             <div class="text-sm text-gray-600">Wind Speed</div>
                         </div>
                         <div>
                             <div class="text-lg font-semibold text-gray-900">
-                                <span id="wind-direction">--</span>
+                                <span id="wave-wind-direction">--</span>
                             </div>
                             <div class="text-sm text-gray-600">Wind Direction</div>
                         </div>
@@ -577,8 +577,8 @@
         // Display wave data
         function displayWaveData(data) {
             document.getElementById('wave-height').textContent = data.height;
-            document.getElementById('wind-speed').textContent = data.windSpeed;
-            document.getElementById('wind-direction').textContent = data.windDirection;
+            document.getElementById('wave-wind-speed').textContent = data.windSpeed;
+            document.getElementById('wave-wind-direction').textContent = data.windDirection;
         }
 
         // Setup subscription form
