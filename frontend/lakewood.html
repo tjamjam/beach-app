@@ -145,24 +145,24 @@
                             <div class="text-3xl font-bold text-gray-900">
                                 <span id="wave-height">--</span> ft
                             </div>
-                            <div class="text-sm text-gray-600">Height</div>
+                            <div class="text-sm text-gray-600">Wave Height</div>
                         </div>
                         <div>
                             <div class="text-xl font-semibold text-gray-900">
-                                <span id="wave-direction">--</span>
+                                <span id="wind-speed">--</span> mph
                             </div>
-                            <div class="text-sm text-gray-600">Direction</div>
+                            <div class="text-sm text-gray-600">Wind Speed</div>
                         </div>
                         <div>
                             <div class="text-lg font-semibold text-gray-900">
-                                <span id="wave-period">--</span>
+                                <span id="wind-direction">--</span>
                             </div>
-                            <div class="text-sm text-gray-600">Period</div>
+                            <div class="text-sm text-gray-600">Wind Direction</div>
                         </div>
                     </div>
                     <div class="text-xs text-gray-500 text-center">
                         <i class="fas fa-info-circle mr-1"></i>
-                        Estimates based on wind conditions across Lake Champlain
+                        Wave estimates based on wind conditions across Lake Champlain
                     </div>
                 </div>
             </div>
@@ -516,57 +516,60 @@
 
         // Estimate wave conditions based on wind speed and direction
         function estimateWaveConditions(windSpeed, windDirection) {
-            let height, direction, period;
+            let height;
             
             // Wave height based on wind speed (Lake Champlain conditions)
             if (windSpeed < 5) {
                 height = "0-1";
-                period = "1-2";
             } else if (windSpeed < 10) {
                 height = "1-2";
-                period = "2-3";
             } else if (windSpeed < 15) {
                 height = "2-3";
-                period = "3-4";
             } else if (windSpeed < 20) {
                 height = "3-4";
-                period = "4-5";
             } else {
                 height = "4-5";
-                period = "5-6";
             }
             
-            // Wave direction based on wind direction (SW winds create SE waves)
-            if (windDirection.includes('SW') || windDirection.includes('W')) {
-                direction = "SE";
-            } else if (windDirection.includes('S')) {
-                direction = "E";
-            } else if (windDirection.includes('SE')) {
-                direction = "NE";
-            } else if (windDirection.includes('E')) {
-                direction = "NW";
-            } else if (windDirection.includes('NE')) {
-                direction = "SW";
-            } else if (windDirection.includes('N')) {
-                direction = "S";
-            } else if (windDirection.includes('NW')) {
-                direction = "SE";
-            } else {
-                direction = "Variable";
-            }
+            // Convert abbreviated wind direction to full name
+            const windDirectionFull = convertWindDirection(windDirection);
             
             return {
                 height: height,
-                direction: direction,
-                period: period
+                windSpeed: windSpeed,
+                windDirection: windDirectionFull
             };
+        }
+
+        // Convert abbreviated wind direction to full name
+        function convertWindDirection(abbreviated) {
+            const directions = {
+                'N': 'North',
+                'NNE': 'North-Northeast',
+                'NE': 'Northeast',
+                'ENE': 'East-Northeast',
+                'E': 'East',
+                'ESE': 'East-Southeast',
+                'SE': 'Southeast',
+                'SSE': 'South-Southeast',
+                'S': 'South',
+                'SSW': 'South-Southwest',
+                'SW': 'Southwest',
+                'WSW': 'West-Southwest',
+                'W': 'West',
+                'WNW': 'West-Northwest',
+                'NW': 'Northwest',
+                'NNW': 'North-Northwest'
+            };
+            
+            return directions[abbreviated] || abbreviated;
         }
 
         // Display wave data
         function displayWaveData(data) {
             document.getElementById('wave-height').textContent = data.height;
-            document.getElementById('wave-direction').textContent = data.direction;
-            document.getElementById('wave-period').textContent = data.period;
+            document.getElementById('wind-speed').textContent = data.windSpeed;
+            document.getElementById('wind-direction').textContent = data.windDirection;
         }
 
         // Setup subscription form
