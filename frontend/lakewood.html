@@ -162,7 +162,7 @@
                     </div>
                     <div class="text-xs text-gray-500 text-center">
                         <i class="fas fa-info-circle mr-1"></i>
-                        Wave estimates based on wind conditions across Lake Champlain
+                        <span id="wave-explanation">Wave estimates based on wind conditions across Lake Champlain</span>
                     </div>
                 </div>
             </div>
@@ -523,21 +523,55 @@
             }
         }
 
-        // Estimate wave conditions based on wind speed and direction
+        // Estimate wave conditions based on wind speed, direction, and fetch
         function estimateWaveConditions(windSpeed, windDirection) {
-            let height;
+            let height, explanation;
             
-            // Wave height based on wind speed (Lake Champlain conditions)
+            // Calculate effective fetch based on wind direction
+            const fetchDistance = calculateFetchDistance(windDirection);
+            
+            // Estimate wave height considering wind speed and fetch
             if (windSpeed < 5) {
                 height = "0-1";
+                explanation = "Light winds with limited fetch";
             } else if (windSpeed < 10) {
-                height = "1-2";
+                if (fetchDistance > 20) {
+                    height = "1-2";
+                    explanation = "Moderate fetch with light winds";
+                } else {
+                    height = "0-1";
+                    explanation = "Light winds with limited fetch";
+                }
             } else if (windSpeed < 15) {
-                height = "2-3";
+                if (fetchDistance > 30) {
+                    height = "2-3";
+                    explanation = "Good fetch with moderate winds";
+                } else if (fetchDistance > 15) {
+                    height = "1-2";
+                    explanation = "Moderate fetch with moderate winds";
+                } else {
+                    height = "1-2";
+                    explanation = "Limited fetch despite moderate winds";
+                }
             } else if (windSpeed < 20) {
-                height = "3-4";
+                if (fetchDistance > 25) {
+                    height = "3-4";
+                    explanation = "Strong winds with good fetch";
+                } else if (fetchDistance > 15) {
+                    height = "2-3";
+                    explanation = "Strong winds with moderate fetch";
+                } else {
+                    height = "2-3";
+                    explanation = "Strong winds but limited fetch";
+                }
             } else {
-                height = "4-5";
+                if (fetchDistance > 20) {
+                    height = "4-5";
+                    explanation = "High winds with good fetch";
+                } else {
+                    height = "3-4";
+                    explanation = "High winds but limited fetch";
+                }
             }
             
             // Convert abbreviated wind direction to full name
@@ -546,8 +580,37 @@
             return {
                 height: height,
                 windSpeed: windSpeed,
-                windDirection: windDirectionFull
+                windDirection: windDirectionFull,
+                explanation: explanation
             };
+        }
+
+        // Calculate effective fetch distance based on wind direction
+        function calculateFetchDistance(windDirection) {
+            // Lake Champlain dimensions and orientation
+            // Lake is roughly 120 miles long, 12 miles wide at Burlington
+            // Burlington is on the eastern shore, facing west
+            
+            const fetchDistances = {
+                'W': 12,    // West wind: full lake width
+                'WSW': 10,  // West-southwest: good fetch
+                'SW': 8,    // Southwest: moderate fetch
+                'SSW': 6,   // South-southwest: limited fetch
+                'S': 4,     // South: very limited fetch
+                'SSE': 3,   // South-southeast: minimal fetch
+                'SE': 2,    // Southeast: minimal fetch
+                'ESE': 2,   // East-southeast: minimal fetch
+                'E': 1,     // East: no fetch (wind blowing away from lake)
+                'ENE': 1,   // East-northeast: no fetch
+                'NE': 2,    // Northeast: minimal fetch
+                'NNE': 3,   // North-northeast: minimal fetch
+                'N': 4,     // North: limited fetch
+                'NNW': 6,   // North-northwest: limited fetch
+                'NW': 8,    // Northwest: moderate fetch
+                'WNW': 10   // West-northwest: good fetch
+            };
+            
+            return fetchDistances[windDirection] || 5; // Default to moderate fetch
         }
 
         // Convert abbreviated wind direction to full name
@@ -579,6 +642,7 @@
             document.getElementById('wave-height').textContent = data.height;
             document.getElementById('wave-wind-speed').textContent = data.windSpeed;
             document.getElementById('wave-wind-direction').textContent = data.windDirection;
+            document.getElementById('wave-explanation').textContent = data.explanation;
         }
 
         // Setup subscription form
