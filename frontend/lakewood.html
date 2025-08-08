@@ -41,15 +41,24 @@
                 <p id="status-text" class="text-xl text-gray-600 mb-4">
                     <!-- Status text will be populated here -->
                 </p>
-                <p id="status-note" class="text-gray-500">
-                    <!-- Additional notes will be populated here -->
-                </p>
+                <div id="status-note-container" class="mb-4" style="display: none;">
+                    <p class="text-sm text-gray-500 mb-1">Note:</p>
+                    <p id="status-note" class="text-gray-600 bg-gray-50 rounded-lg p-3">
+                        <!-- Additional notes will be populated here -->
+                    </p>
+                </div>
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <a href="https://anrweb.vt.gov/FPR/SwimWater/CityOfBurlingtonPublicReport.aspx" target="_blank" class="text-sm text-primary-600 hover:text-primary-700">
+                        <i class="fas fa-file-pdf mr-1"></i>
+                        View official water quality report
+                    </a>
+                </div>
             </div>
         </div>
 
         <!-- Weather and Air Quality Grid -->
         <div class="grid md:grid-cols-2 gap-6 mb-8">
-            <!-- Weather Widget -->
+            <!-- Current Weather Widget -->
             <div class="card p-6">
                 <h3 class="text-xl font-semibold text-gray-900 mb-4">
                     <i class="fas fa-cloud-sun text-primary-600 mr-2"></i>
@@ -72,6 +81,12 @@
                             <span id="humidity">--</span>%
                         </div>
                     </div>
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <a href="https://openweathermap.org/city/5233828" target="_blank" class="text-sm text-primary-600 hover:text-primary-700">
+                            <i class="fas fa-external-link-alt mr-1"></i>
+                            View detailed forecast
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -90,6 +105,53 @@
                     </div>
                     <div class="text-sm text-gray-500">
                         <span id="aqi-advice">Checking air quality...</span>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <a href="https://www.airnow.gov/?city=Burlington&state=VT&country=USA" target="_blank" class="text-sm text-primary-600 hover:text-primary-700">
+                            <i class="fas fa-external-link-alt mr-1"></i>
+                            View detailed air quality
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Weather and Wave Report Grid -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <!-- Upcoming Weather Widget -->
+            <div class="card p-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-calendar-alt text-primary-600 mr-2"></i>
+                    Upcoming Weather
+                </h3>
+                <div id="upcoming-weather-content" class="text-center">
+                    <div class="space-y-3">
+                        <div class="text-sm text-gray-500">Loading hourly forecast...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wave Report Widget -->
+            <div class="card p-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-water text-primary-600 mr-2"></i>
+                    Wave Report
+                </h3>
+                <div id="wave-report-content" class="text-center">
+                    <div class="text-4xl font-bold text-gray-900 mb-2">
+                        <span id="wave-height">--</span> ft
+                    </div>
+                    <div class="text-lg text-gray-600 mb-4">
+                        <span id="wave-direction">Loading...</span>
+                    </div>
+                    <div class="text-sm text-gray-500">
+                        <span id="wave-period">Checking wave conditions...</span>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <a href="https://www.ndbc.noaa.gov/station_page.php?station=45165" target="_blank" class="text-sm text-primary-600 hover:text-primary-700">
+                            <i class="fas fa-external-link-alt mr-1"></i>
+                            View detailed wave data
+                        </a>
                     </div>
                 </div>
             </div>
@@ -163,6 +225,8 @@
             fetchBeachData();
             fetchWeatherData();
             fetchAirQualityData();
+            fetchUpcomingWeather();
+            fetchWaveData();
             setupSubscriptionForm();
         });
 
@@ -195,6 +259,7 @@
             const statusDisplay = document.getElementById('status-display');
             const statusText = document.getElementById('status-text');
             const statusNote = document.getElementById('status-note');
+            const statusNoteContainer = document.getElementById('status-note-container');
             
             let statusIcon, statusClass, statusDescription;
             
@@ -222,7 +287,14 @@
             
             statusDisplay.innerHTML = `<span class="${statusClass}">${statusIcon}</span>`;
             statusText.textContent = statusDescription;
-            statusNote.textContent = beach.note || 'No additional information';
+            
+            // Show note container only if there's a note
+            if (beach.note && beach.note.trim() !== '') {
+                statusNote.textContent = beach.note;
+                statusNoteContainer.style.display = 'block';
+            } else {
+                statusNoteContainer.style.display = 'none';
+            }
         }
 
         // Display alternative beach information
@@ -347,6 +419,86 @@
             document.getElementById('aqi').textContent = data.aqi;
             document.getElementById('aqi-text').textContent = data.text;
             document.getElementById('aqi-advice').textContent = data.advice;
+        }
+
+        // Fetch upcoming weather data
+        async function fetchUpcomingWeather() {
+            try {
+                const response = await fetch(`${BASE_API_URL}/weather`);
+                if (!response.ok) throw new Error('Weather API failed');
+                
+                const data = await response.json();
+                displayUpcomingWeather(data.hourly);
+                
+            } catch (error) {
+                console.error('Error fetching upcoming weather:', error);
+                document.getElementById('upcoming-weather-content').innerHTML = `
+                    <div class="text-red-600">
+                        <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                        <p>Upcoming weather data unavailable</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Display upcoming weather data
+        function displayUpcomingWeather(hourlyData) {
+            const container = document.getElementById('upcoming-weather-content');
+            
+            if (!hourlyData || hourlyData.length === 0) {
+                container.innerHTML = '<div class="text-gray-500">No forecast data available</div>';
+                return;
+            }
+
+            const forecastHTML = hourlyData.map(hour => `
+                <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                    <div class="text-left">
+                        <div class="font-medium text-gray-900">${hour.time}</div>
+                        <div class="text-sm text-gray-600">${hour.description}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-semibold text-gray-900">${hour.temp}°F</div>
+                        <img src="${hour.icon}" alt="${hour.description}" class="w-8 h-8 mx-auto">
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="space-y-2">
+                    ${forecastHTML}
+                </div>
+            `;
+        }
+
+        // Fetch wave data (mock data for now)
+        async function fetchWaveData() {
+            try {
+                // For now, we'll use mock data since we don't have a wave API
+                // In the future, this could connect to NOAA buoy data
+                const mockWaveData = {
+                    height: "1-2",
+                    direction: "Southeast",
+                    period: "3-5 seconds"
+                };
+                
+                displayWaveData(mockWaveData);
+                
+            } catch (error) {
+                console.error('Error fetching wave data:', error);
+                document.getElementById('wave-report-content').innerHTML = `
+                    <div class="text-red-600">
+                        <i class="fas fa-exclamation-triangle text-2xl mb-2"></i>
+                        <p>Wave data unavailable</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Display wave data
+        function displayWaveData(data) {
+            document.getElementById('wave-height').textContent = data.height;
+            document.getElementById('wave-direction').textContent = data.direction;
+            document.getElementById('wave-period').textContent = `${data.period} period`;
         }
 
         // Setup subscription form
