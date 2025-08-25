@@ -11,9 +11,9 @@
   },
   {
     "beach_name": "Leddy Beach North",
-    "status": "green",
-    "date": "Aug 24 2025 12:12PM",
-    "note": "Open",
+    "status": "yellow",
+    "date": "Aug 25 2025 11:26AM",
+    "note": "Alert Category 2 BGA level",
     "coordinates": {
       "lat": 44.502334,
       "lon": -73.25506
@@ -21,9 +21,9 @@
   },
   {
     "beach_name": "Leddy Beach South",
-    "status": "green",
-    "date": "Aug 24 2025 12:12PM",
-    "note": "Open",
+    "status": "yellow",
+    "date": "Aug 25 2025 11:26AM",
+    "note": "Alert Category 2 BGA level",
     "coordinates": {
       "lat": 44.501457,
       "lon": -73.252218
