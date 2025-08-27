@@ -647,10 +647,11 @@
 
             function updateWeatherUI(weatherData) {
                 const waveHeight = estimateWaveHeight(weatherData.windSpeed, weatherData.windDirection);
+                const waveData = estimateWaveConditions(parseFloat(weatherData.windSpeed), weatherData.windDirection);
 
                 // Populate the Wave Forecast section
                 if (dom['wave-report-main']) dom['wave-report-main'].textContent = waveHeight;
-                if (dom['wave-report-note']) dom['wave-report-note'].innerHTML = `Wave height is estimated based on wind speed and direction. At this location, significant waves primarily form from <strong>North (N)</strong>, <strong>Northwest (NW)</strong> or <strong>West (W)</strong> winds due to the long stretch of open water.`;
+                if (dom['wave-report-note']) dom['wave-report-note'].innerHTML = `${waveData.explanation}. Wind from ${waveData.windDirection} at ${waveData.windSpeed} mph.`;
                 
                 // Build the HTML for the "Current Conditions" section
                 const windDisplay = parseFloat(weatherData.windSpeed) === 0 ? 'Calm' : `${weatherData.windDirection} at ${weatherData.windSpeed} mph`;
@@ -679,34 +680,146 @@
                 dom['weather-content'].style.display = 'block';
             }
     
+            // Calculate effective fetch distance based on wind direction for Lakewood Beach
+            function calculateFetchDistance(windDirection) {
+                // Lakewood Beach is located in Appletree Bay on the eastern shore
+                // Based on the actual geography, here are the fetch distances:
+                
+                const fetchDistances = {
+                    'W': 8,     // West wind: crosses Appletree Bay (~8 miles)
+                    'WSW': 7,   // West-southwest: good fetch across bay
+                    'SW': 6,    // Southwest: moderate fetch
+                    'SSW': 4,   // South-southwest: limited fetch
+                    'S': 2,     // South: very limited fetch (land blocks)
+                    'SSE': 1,   // South-southeast: minimal fetch
+                    'SE': 1,    // Southeast: minimal fetch
+                    'ESE': 1,   // East-southeast: no fetch (wind from land)
+                    'E': 0,     // East: no fetch (wind from land)
+                    'ENE': 0,   // East-northeast: no fetch
+                    'NE': 1,    // Northeast: minimal fetch
+                    'NNE': 2,   // North-northeast: limited fetch
+                    'N': 3,     // North: limited fetch
+                    'NNW': 4,   // North-northwest: moderate fetch
+                    'NW': 5,    // Northwest: good fetch
+                    'WNW': 6    // West-northwest: good fetch
+                };
+                
+                return fetchDistances[windDirection] || 3; // Default to limited fetch
+            }
+
+            // Convert abbreviated wind direction to full name
+            function convertWindDirection(abbreviated) {
+                const directions = {
+                    'N': 'North',
+                    'NNE': 'North-Northeast',
+                    'NE': 'Northeast',
+                    'ENE': 'East-Northeast',
+                    'E': 'East',
+                    'ESE': 'East-Southeast',
+                    'SE': 'Southeast',
+                    'SSE': 'South-Southeast',
+                    'S': 'South',
+                    'SSW': 'South-Southwest',
+                    'SW': 'Southwest',
+                    'WSW': 'West-Southwest',
+                    'W': 'West',
+                    'WNW': 'West-Northwest',
+                    'NW': 'Northwest',
+                    'NNW': 'North-Northwest'
+                };
+                
+                return directions[abbreviated] || abbreviated;
+            }
+
+            // Estimate wave conditions based on wind speed, direction, and fetch
+            function estimateWaveConditions(windSpeed, windDirection) {
+                let height, explanation;
+                
+                // Calculate effective fetch based on wind direction
+                const fetchDistance = calculateFetchDistance(windDirection);
+                
+                // Estimate wave height considering wind speed and fetch for Lakewood Beach
+                if (windSpeed < 5) {
+                    height = "0-1";
+                    explanation = "Light winds across Appletree Bay";
+                } else if (windSpeed < 10) {
+                    if (fetchDistance > 5) {
+                        height = "1-2";
+                        explanation = "Light winds with good fetch across bay";
+                    } else {
+                        height = "0-1";
+                        explanation = "Light winds with limited fetch";
+                    }
+                } else if (windSpeed < 15) {
+                    if (fetchDistance > 6) {
+                        height = "2-3";
+                        explanation = "Moderate winds with good fetch across Appletree Bay";
+                    } else if (fetchDistance > 3) {
+                        height = "1-2";
+                        explanation = "Moderate winds with moderate fetch";
+                    } else {
+                        height = "1-2";
+                        explanation = "Moderate winds but limited fetch (land blocks)";
+                    }
+                } else if (windSpeed < 20) {
+                    if (fetchDistance > 5) {
+                        height = "3-4";
+                        explanation = "Strong winds with good fetch across bay";
+                    } else if (fetchDistance > 3) {
+                        height = "2-3";
+                        explanation = "Strong winds with moderate fetch";
+                    } else {
+                        height = "2-3";
+                        explanation = "Strong winds but limited fetch";
+                    }
+                } else {
+                    if (fetchDistance > 4) {
+                        height = "4-5";
+                        explanation = "High winds with good fetch across Appletree Bay";
+                    } else {
+                        height = "3-4";
+                        explanation = "High winds but limited fetch";
+                    }
+                }
+                
+                // Convert abbreviated wind direction to full name
+                const windDirectionFull = convertWindDirection(windDirection);
+                
+                return {
+                    height: height,
+                    windSpeed: windSpeed,
+                    windDirection: windDirectionFull,
+                    explanation: explanation
+                };
+            }
+
+            // Legacy function for backward compatibility - converts new format to old format
             function estimateWaveHeight(windSpeed, windDirection) {
                 const speed = parseFloat(windSpeed);
 
-                // This check remains the same.
+                // Handle invalid input
                 if (isNaN(speed) || speed < 1) {
                     return "Calm (< 0.5 ft)";
                 }
 
-                // This check also remains the same.
-                const isWaveDirection = (windDirection === 'N' || windDirection === 'NW' || windDirection === 'NNW' || windDirection === 'W');
-                if (!isWaveDirection) {
-                    return "Calm (Sheltered by Land)";
-                }
-
-                // If wind IS from a wave-making direction, now we check the speed.
+                // Use new sophisticated estimation
+                const waveData = estimateWaveConditions(speed, windDirection);
+                const heightRange = waveData.height;
                 
-                // --- THIS IS THE NEW LOGIC YOU REQUESTED ---
-                // If the wind is very light (1-4.9 mph), it's still calm.
-                if (speed < 5) {
-                    return "Calm (< 0.5 ft)";
+                // Convert new format to legacy format for existing UI
+                if (heightRange === "0-1") {
+                    return speed < 5 ? "Calm (< 0.5 ft)" : "Light Chop (0.5 - 1 ft)";
+                } else if (heightRange === "1-2") {
+                    return "Light Chop (1 - 2 ft)";
+                } else if (heightRange === "2-3") {
+                    return "Moderate Waves (2 - 3 ft)";
+                } else if (heightRange === "3-4") {
+                    return "Choppy (3 - 4 ft)";
+                } else if (heightRange === "4-5") {
+                    return "Rough (4 - 5 ft)";
+                } else {
+                    return "Moderate Waves (1 - 3 ft)";
                 }
-                // --- END OF NEW LOGIC ---
-
-                // The rest of the tiers now handle stronger winds.
-                if (speed < 10) return "Light Chop (0.5 - 1 ft)";
-                if (speed < 18) return "Moderate Waves (1 - 3 ft)";
-                if (speed < 25) return "Choppy (3 - 5 ft)";
-                return "Rough (5+ ft)";
             }
 
     
