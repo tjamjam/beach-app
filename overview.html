@@ -590,21 +590,49 @@
 
         async function fetchHistoricalData() {
             try {
-                // Use the real historical dataset - fetch from the correct URL for live site
-                const response = await fetch('https://raw.githubusercontent.com/tjamjam/beach-app/main/backend/historical_status.csv');
-                if (!response.ok) throw new Error('Failed to fetch historical data');
+                console.log('🔍 Starting to fetch historical data...');
+                
+                // Use the real historical dataset - try local first, then GitHub as fallback
+                let response;
+                try {
+                    // Try real historical data first (now has rich multi-day data)
+                    console.log('📁 Trying real historical data...');
+                    response = await fetch('../backend/historical_status.csv');
+                    if (!response.ok) throw new Error('Real data not found, trying fake data');
+                    console.log('✅ Real historical data loaded successfully');
+                } catch (localError) {
+                    // Fallback to fake historical data
+                    console.log('❌ Real data not found, trying fake historical data...', localError);
+                    try {
+                        response = await fetch('../backend/fake_historical_status.csv');
+                        if (!response.ok) throw new Error('Fake data not found');
+                        console.log('✅ Fake historical data loaded');
+                    } catch (fakeError) {
+                        // Final fallback to GitHub
+                        console.log('❌ Local files not found, trying GitHub...', fakeError);
+                        response = await fetch('https://raw.githubusercontent.com/tjamjam/beach-app/main/backend/historical_status.csv');
+                        console.log('🌐 GitHub response status:', response.status);
+                    }
+                }
+                if (!response.ok) throw new Error(`Failed to fetch historical data - Status: ${response.status}`);
                 
                 const csvText = await response.text();
+                console.log('📄 CSV text received, length:', csvText.length);
+                console.log('📝 First 200 chars:', csvText.substring(0, 200));
+                
                 const historicalData = parseCSV(csvText);
+                console.log('📊 Parsed historical data:', historicalData.length, 'records');
+                console.log('🔍 Sample record:', historicalData[0]);
+                
                 fakeHistoricalData = historicalData; // Store globally for percentage calculations
                 updateTimeline(historicalData);
                 
             } catch (error) {
-                console.error('Error fetching historical data:', error);
+                console.error('❌ Error fetching historical data:', error);
                 document.getElementById('timeline-content').innerHTML = `
                     <div class="error">
                         <i class="fas fa-exclamation-triangle"></i>
-                        Failed to load historical data. Please try again later.
+                        Failed to load historical data: ${error.message}
                     </div>
                 `;
             }
@@ -630,15 +658,18 @@
         }
 
         function updateTimeline(historicalData) {
+            console.log('📈 Starting updateTimeline with data:', historicalData.length, 'records');
             const timelineContent = document.getElementById('timeline-content');
             
             if (!historicalData || historicalData.length === 0) {
+                console.log('❌ No historical data available');
                 timelineContent.innerHTML = '<div class="error">No historical data available</div>';
                 return;
             }
 
             // Clear previous content
             timelineContent.innerHTML = '<div id="d3-heatmap"></div>';
+            console.log('🧹 Cleared timeline content, added d3-heatmap div');
 
             // Group data by date and beach
             const dateBeachMap = {};
@@ -692,19 +723,36 @@
                     });
                 });
             });
+            
+            console.log('📊 Heatmap data created:', heatmapData.length, 'data points');
+            console.log('🏖️ Sorted beaches:', sortedBeaches);
+            console.log('📅 Sorted dates:', sortedDates);
+            console.log('🔍 Sample heatmap data:', heatmapData.slice(0, 3));
 
             // Create D3 heatmap
+            console.log('🎨 Creating D3 heatmap...');
             createD3Heatmap(heatmapData, sortedBeaches, sortedDates);
         }
 
         function createD3Heatmap(data, beaches, dates) {
+            console.log('🎨 createD3Heatmap called with:', data.length, 'data points,', beaches.length, 'beaches,', dates.length, 'dates');
+            
             // Get container width for responsive design
             const container = document.getElementById('d3-heatmap');
+            
+            if (!container) {
+                console.error('❌ d3-heatmap container not found!');
+                return;
+            }
+            
             const containerWidth = container.offsetWidth || 1200;
+            console.log('📏 Container width:', containerWidth);
             
             const margin = {top: 50, right: 50, bottom: 150, left: 200};
             const width = Math.min(containerWidth - margin.left - margin.right, 1000);
             const height = 400 - margin.top - margin.bottom;
+            
+            console.log('📏 Calculated dimensions:', { width, height, margin });
 
             // Clear previous SVG
             d3.select("#d3-heatmap").selectAll("*").remove();
