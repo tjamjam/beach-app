@@ -739,45 +739,60 @@
                 const fetchDistance = calculateFetchDistance(windDirection);
                 
                 // Estimate wave height considering wind speed and fetch for Lakewood Beach
+                // More conservative estimates based on real-world observations
                 if (windSpeed < 5) {
                     height = "0-1";
                     explanation = `Light winds across Appletree Bay (${fetchDistance} mile fetch)`;
-                } else if (windSpeed < 10) {
-                    if (fetchDistance > 5) {
-                        height = "1-2";
+                } else if (windSpeed < 8) {
+                    if (fetchDistance > 6) {
+                        height = "0-1";
                         explanation = `Light winds with good fetch across bay (${fetchDistance} miles)`;
                     } else {
                         height = "0-1";
                         explanation = `Light winds with limited fetch (${fetchDistance} mile${fetchDistance !== 1 ? 's' : ''})`;
                     }
-                } else if (windSpeed < 15) {
+                } else if (windSpeed < 12) {
                     if (fetchDistance > 6) {
-                        height = "2-3";
+                        height = "1-2";
+                        explanation = `Light-moderate winds with good fetch across bay (${fetchDistance} miles)`;
+                    } else if (fetchDistance > 3) {
+                        height = "0-1";
+                        explanation = `Light-moderate winds with moderate fetch (${fetchDistance} miles)`;
+                    } else {
+                        height = "0-1";
+                        explanation = `Light-moderate winds but limited fetch - land blocks (${fetchDistance} mile${fetchDistance !== 1 ? 's' : ''})`;
+                    }
+                } else if (windSpeed < 18) {
+                    if (fetchDistance > 6) {
+                        height = "1-2";
                         explanation = `Moderate winds with good fetch across Appletree Bay (${fetchDistance} miles)`;
                     } else if (fetchDistance > 3) {
                         height = "1-2";
                         explanation = `Moderate winds with moderate fetch (${fetchDistance} miles)`;
                     } else {
-                        height = "1-2";
+                        height = "0-1";
                         explanation = `Moderate winds but limited fetch - land blocks (${fetchDistance} mile${fetchDistance !== 1 ? 's' : ''})`;
                     }
-                } else if (windSpeed < 20) {
-                    if (fetchDistance > 5) {
-                        height = "3-4";
+                } else if (windSpeed < 25) {
+                    if (fetchDistance > 6) {
+                        height = "2-3";
                         explanation = `Strong winds with good fetch across bay (${fetchDistance} miles)`;
                     } else if (fetchDistance > 3) {
-                        height = "2-3";
+                        height = "1-2";
                         explanation = `Strong winds with moderate fetch (${fetchDistance} miles)`;
                     } else {
-                        height = "2-3";
+                        height = "1-2";
                         explanation = `Strong winds but limited fetch (${fetchDistance} mile${fetchDistance !== 1 ? 's' : ''})`;
                     }
                 } else {
-                    if (fetchDistance > 4) {
-                        height = "4-5";
-                        explanation = `High winds with good fetch across Appletree Bay (${fetchDistance} miles)`;
-                    } else {
+                    if (fetchDistance > 6) {
                         height = "3-4";
+                        explanation = `High winds with good fetch across Appletree Bay (${fetchDistance} miles)`;
+                    } else if (fetchDistance > 3) {
+                        height = "2-3";
+                        explanation = `High winds with moderate fetch (${fetchDistance} miles)`;
+                    } else {
+                        height = "1-2";
                         explanation = `High winds but limited fetch (${fetchDistance} mile${fetchDistance !== 1 ? 's' : ''})`;
                     }
                 }
@@ -806,19 +821,17 @@
                 const waveData = estimateWaveConditions(speed, windDirection);
                 const heightRange = waveData.height;
                 
-                // Convert new format to legacy format for existing UI
+                // Convert new format to legacy format for existing UI - more conservative labels
                 if (heightRange === "0-1") {
-                    return speed < 5 ? "Calm (< 0.5 ft)" : "Light Chop (0.5 - 1 ft)";
+                    return speed < 3 ? "Calm (< 0.5 ft)" : "Light Chop (0.5 - 1 ft)";
                 } else if (heightRange === "1-2") {
-                    return "Light Chop (1 - 2 ft)";
+                    return "Light Waves (1 - 2 ft)";
                 } else if (heightRange === "2-3") {
                     return "Moderate Waves (2 - 3 ft)";
                 } else if (heightRange === "3-4") {
                     return "Choppy (3 - 4 ft)";
-                } else if (heightRange === "4-5") {
-                    return "Rough (4 - 5 ft)";
                 } else {
-                    return "Moderate Waves (1 - 3 ft)";
+                    return "Light Waves (1 - 2 ft)";
                 }
             }
 
