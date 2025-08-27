@@ -741,44 +741,44 @@
                 // Estimate wave height considering wind speed and fetch for Lakewood Beach
                 if (windSpeed < 5) {
                     height = "0-1";
-                    explanation = "Light winds across Appletree Bay";
+                    explanation = `Light winds across Appletree Bay (${fetchDistance} mile fetch)`;
                 } else if (windSpeed < 10) {
                     if (fetchDistance > 5) {
                         height = "1-2";
-                        explanation = "Light winds with good fetch across bay";
+                        explanation = `Light winds with good fetch across bay (${fetchDistance} miles)`;
                     } else {
                         height = "0-1";
-                        explanation = "Light winds with limited fetch";
+                        explanation = `Light winds with limited fetch (${fetchDistance} mile${fetchDistance !== 1 ? 's' : ''})`;
                     }
                 } else if (windSpeed < 15) {
                     if (fetchDistance > 6) {
                         height = "2-3";
-                        explanation = "Moderate winds with good fetch across Appletree Bay";
+                        explanation = `Moderate winds with good fetch across Appletree Bay (${fetchDistance} miles)`;
                     } else if (fetchDistance > 3) {
                         height = "1-2";
-                        explanation = "Moderate winds with moderate fetch";
+                        explanation = `Moderate winds with moderate fetch (${fetchDistance} miles)`;
                     } else {
                         height = "1-2";
-                        explanation = "Moderate winds but limited fetch (land blocks)";
+                        explanation = `Moderate winds but limited fetch - land blocks (${fetchDistance} mile${fetchDistance !== 1 ? 's' : ''})`;
                     }
                 } else if (windSpeed < 20) {
                     if (fetchDistance > 5) {
                         height = "3-4";
-                        explanation = "Strong winds with good fetch across bay";
+                        explanation = `Strong winds with good fetch across bay (${fetchDistance} miles)`;
                     } else if (fetchDistance > 3) {
                         height = "2-3";
-                        explanation = "Strong winds with moderate fetch";
+                        explanation = `Strong winds with moderate fetch (${fetchDistance} miles)`;
                     } else {
                         height = "2-3";
-                        explanation = "Strong winds but limited fetch";
+                        explanation = `Strong winds but limited fetch (${fetchDistance} mile${fetchDistance !== 1 ? 's' : ''})`;
                     }
                 } else {
                     if (fetchDistance > 4) {
                         height = "4-5";
-                        explanation = "High winds with good fetch across Appletree Bay";
+                        explanation = `High winds with good fetch across Appletree Bay (${fetchDistance} miles)`;
                     } else {
                         height = "3-4";
-                        explanation = "High winds but limited fetch";
+                        explanation = `High winds but limited fetch (${fetchDistance} mile${fetchDistance !== 1 ? 's' : ''})`;
                     }
                 }
                 
