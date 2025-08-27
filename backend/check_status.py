@@ -9,6 +9,14 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timezone
 
+# Import daily snapshot helper
+try:
+    from daily_snapshot_helper import should_log_daily_snapshot
+except ImportError:
+    def should_log_daily_snapshot(beach_name):
+        """Fallback function if helper module isn't available"""
+        return False
+
 # Try to load environment variables from .env file if it exists
 try:
     from dotenv import load_dotenv
@@ -286,23 +294,36 @@ def main():
         print("Failed to retrieve any beach data. Exiting.")
         return
 
-    # 3. --- NEW: HISTORICAL LOGGING ---
+    # 3. --- ENHANCED: HISTORICAL LOGGING ---
+    # Option: Log daily snapshots regardless of changes for timeline visualization
+    DAILY_LOGGING = os.environ.get("DAILY_LOGGING", "true").lower() == "true"
+    
     changes_found = 0
+    logged_today = set()
+    
     for new_beach_data in all_new_data:
         beach_name = new_beach_data['beach_name']
         # Get the old state for this specific beach, if it exists
         old_beach_data = last_known_states.get(beach_name, {})
         
         # Check if the status OR the note has changed
-        if (new_beach_data.get('status') != old_beach_data.get('status') or 
-            new_beach_data.get('note') != old_beach_data.get('note')):
-            
+        status_changed = (new_beach_data.get('status') != old_beach_data.get('status') or 
+                         new_beach_data.get('note') != old_beach_data.get('note'))
+        
+        if status_changed:
             print(f"Change detected for {beach_name}! Logging to history.")
             write_to_history(new_beach_data)
+            logged_today.add(beach_name)
             changes_found += 1
+        elif DAILY_LOGGING and should_log_daily_snapshot(beach_name):
+            print(f"Daily snapshot for {beach_name} - logging to history.")
+            write_to_history(new_beach_data)
+            logged_today.add(beach_name)
     
-    if changes_found == 0:
+    if changes_found == 0 and not DAILY_LOGGING:
         print("No meaningful changes detected in any beach status.")
+    elif DAILY_LOGGING:
+        print(f"Historical logging complete: {changes_found} changes + {len(logged_today) - changes_found} daily snapshots.")
 
     # 4. Write the complete new data to status.json (this happens every run)
     with open(JSON_OUTPUT_FILE, 'w') as f:
