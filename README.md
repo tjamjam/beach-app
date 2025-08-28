@@ -1,116 +1,126 @@
-# 🏖️ Burlington Beach Status App
+# 🏖️ Burlington Beach Status Monitor
 
-A comprehensive real-time beach water quality monitoring system for Burlington, Vermont beaches on Lake Champlain. This app provides current beach status, detailed weather conditions with sophisticated wave estimation, and historical data visualization.
+A real-time water quality monitoring system for Burlington, Vermont beaches on Lake Champlain. Tracks beach safety status by parsing official Vermont ANR reports and provides weather conditions with sophisticated wave estimation specifically for Lake Champlain.
 
 ## 🌟 Features
 
-### 🚦 Real-Time Beach Status
-- **Traffic Light System**: Intuitive green/yellow/red status indicators
-- **Water Quality Monitoring**: Tracks E. coli levels and advisories
-- **Multiple Beach Coverage**: Monitors 10+ Burlington area beaches
-- **Official Data**: Pulls from Vermont Agency of Natural Resources reports
+### 🚦 Beach Water Quality Monitoring
+- **PDF Parsing**: Automatically extracts data from Vermont ANR Public Swimming Reports
+- **10 Beach Coverage**: Monitors all Burlington area beaches including Leddy, North Beach, Texaco, Blanchard, etc.
+- **Real-time Status**: Green (Open), Yellow (Caution), Red (Closed) status indicators
+- **Historical Tracking**: CSV logging of all status changes with timestamps
 
-### 🌊 Advanced Wave Estimation
-- **Sophisticated Algorithm**: Considers wind speed, direction, and fetch distance
-- **Geographic Accuracy**: Specific calculations for Appletree Bay geography  
-- **16-Direction Wind Analysis**: More precise than basic 4-direction systems
-- **Real-Time Explanations**: Shows actual fetch distances (e.g., "Strong winds with good fetch across bay (8 miles)")
+### 🌤️ Weather & Wave Conditions
+- **OpenWeatherMap Integration**: Current conditions and 3-hour forecast for Burlington area
+- **Advanced Wave Estimation**: Lake Champlain-specific algorithm considering:
+  - 16-direction wind analysis (not basic 4-direction)
+  - Actual fetch distances across Appletree Bay (0-8 miles depending on wind direction)
+  - Geographic accuracy for Lakewood Beach location
+- **Air Quality**: Real-time AQI data from AirNow API
 
-### 🌤️ Comprehensive Weather
-- **Current Conditions**: Temperature, humidity, wind speed/direction
-- **3-Hour Forecast**: Upcoming weather with wave predictions
-- **Air Quality Index**: Real-time AQI with color-coded status
-- **Smart Suggestions**: Activity recommendations based on conditions
+### 📊 Two Web Applications
 
-### 📊 Data Visualization
-- **Interactive Map**: Clickable beach locations with status pins
-- **Status Table**: Sortable overview of all beaches
+#### Main App (`index.html`)
+- **Single Beach Focus**: Shows Lakewood Beach status (using Leddy Beach South data)
+- **Traffic Light Display**: Visual stoplight with animated status
+- **Detailed Weather**: Current conditions, 3-hour forecast, wave predictions
+- **Smart Suggestions**: Activity recommendations based on weather/wave conditions
+- **Email Subscriptions**: Users can subscribe to status change notifications
+
+#### Overview App (`overview.html`)
+- **All Beaches Table**: Complete status overview with sortable data
+- **Interactive Map**: Leaflet map with color-coded pins for each beach
 - **Historical Timeline**: D3.js heatmap showing status changes over time
-- **Trend Analysis**: Beach availability percentages
+- **Summer Statistics**: Beach availability percentages for August 2025
 
-### 📧 Notifications
-- **Email Subscriptions**: Get notified when beach status changes
-- **Push Notifications**: Via ntfy.sh for instant updates
-- **Status Changes**: Automatic alerts for water quality updates
+### 📧 Notification System
+- **Email Alerts**: SMTP-based notifications when target beach status changes
+- **Push Notifications**: ntfy.sh integration for instant mobile alerts
+- **Subscriber Management**: Cloudflare KV storage for email lists
 
 ## 🏗️ Architecture
 
 ### Frontend
-- **Main App** (`index.html`): Single beach focus with detailed weather
-- **Overview App** (`overview.html`): All beaches with map and timeline
-- **Tailwind CSS**: Modern responsive design
-- **D3.js**: Interactive data visualizations
-- **Leaflet**: Interactive mapping
+- **Pure HTML/CSS/JS**: No build process required
+- **Responsive Design**: Mobile-first approach
+- **External Libraries**: 
+  - Leaflet for mapping
+  - D3.js for data visualization
+  - FontAwesome for icons
 
 ### Backend
-- **Cloudflare Workers** (`backend/index.js`): API endpoints
-- **Python Monitor** (`backend/check_status.py`): Status checking and notifications
-- **Data Storage**: JSON files and CSV historical logs
+- **Cloudflare Worker** (`backend/index.js`): API endpoints for weather, air quality, and subscriptions
+- **Python Monitor** (`backend/check_status.py`): PDF parsing and status checking
+- **Data Storage**: JSON status files and CSV historical logs
 
 ### Data Sources
 - **Beach Status**: Vermont ANR Public Swimming Reports (PDF parsing)
-- **Weather**: OpenWeatherMap API (current + forecast)
-- **Air Quality**: AirNow API
-- **Coordinates**: Precise GPS locations for all beaches
+- **Weather**: OpenWeatherMap API (05408 Burlington area)
+- **Air Quality**: AirNow API (05401 Burlington)
 
 ## 🚀 Deployment
 
-### Live URLs
-- **Main App**: `https://your-domain.com/index.html`
-- **Overview**: `https://your-domain.com/overview.html`
-- **API**: `https://beach-api.terrencefradet.workers.dev`
+### Live Application
+- **API**: Deployed on Cloudflare Workers at `beach-api.terrencefradet.workers.dev`
+- **Frontend**: Static hosting (GitHub Pages, Cloudflare Pages, etc.)
 
 ### Cloudflare Setup
 ```bash
-# Deploy the API worker
+# Deploy the worker
 npx wrangler deploy
 
-# Set environment variables
+# Set environment secrets
 npx wrangler secret put OPENWEATHER_API_KEY
 npx wrangler secret put AIRNOW_API_KEY
+npx wrangler secret put CF_API_TOKEN
 ```
-
-### Frontend Deployment
-- Host static files on any CDN/static hosting
-- Files are ready-to-deploy (no build step required)
-- Or deploy via Cloudflare Pages for seamless integration
 
 ## 🛠️ Development
 
 ### Prerequisites
-- **Node.js**: For Cloudflare Workers
-- **Python 3.8+**: For monitoring scripts
-- **API Keys**: OpenWeatherMap, AirNow
+- **Node.js**: For Cloudflare Workers development
+- **Python 3.8+**: For beach status monitoring
+- **API Keys**: 
+  - OpenWeatherMap (free tier sufficient)
+  - AirNow API (free government API)
+  - Cloudflare account
+
+### Python Dependencies
+```bash
+pip install requests pdfplumber python-dotenv
+```
 
 ### Environment Variables
 ```bash
-# Backend monitoring (.env or environment)
-CF_API_TOKEN=your_cloudflare_api_token
-EMAIL_SENDER=your_email@domain.com
-EMAIL_PASSWORD=your_app_password
+# For Python monitoring script (.env file)
+CF_API_TOKEN=your_cloudflare_worker_api_token
+EMAIL_SENDER=your_email@gmail.com
+EMAIL_PASSWORD=your_app_specific_password
 SMTP_SERVER=smtp.gmail.com
 SMTP_PORT=587
 TEST_MODE=false
+DAILY_LOGGING=true
 
-# Cloudflare Worker (via wrangler)
-OPENWEATHER_API_KEY=your_openweather_key
-AIRNOW_API_KEY=your_airnow_key
+# For Cloudflare Worker (via wrangler secrets)
+OPENWEATHER_API_KEY=your_openweather_api_key
+AIRNOW_API_KEY=your_airnow_api_key
 ```
 
 ### Local Development
 ```bash
-# Install dependencies
-npm install
-
-# Start local worker
+# Start Cloudflare Worker locally
 npx wrangler dev
 
-# Run status checker
+# Run beach status checker
 cd backend
 python check_status.py
 
-# Build CSS (if modifying styles)
-npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch
+# Test individual components
+python test_github_token.py
+python test_notification.py
+
+# Backfill historical data for testing
+python daily_snapshot_helper.py backfill 30
 ```
 
 ## 📁 Project Structure
@@ -118,135 +128,122 @@ npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch
 ```
 beach-app/
 ├── frontend/
-│   ├── index.html          # Main single-beach app
-│   ├── overview.html       # Multi-beach overview with map
-│   ├── images/             # Background and assets
-│   └── src/
-│       └── input.css       # Tailwind source styles
+│   ├── index.html          # Main Lakewood Beach app
+│   ├── overview.html       # All beaches overview with map/timeline
+│   └── images/
+│       └── background.jpg  # Lake Champlain background image
 ├── backend/
-│   ├── index.js            # Cloudflare Worker API
-│   ├── check_status.py     # Beach status monitor
-│   ├── historical_status.csv # Historical data
-│   └── README.md           # Backend documentation
-├── status.json             # Current beach status data
-├── wrangler.toml           # Cloudflare configuration
-└── tailwind.config.js      # Tailwind CSS config
+│   ├── index.js            # Cloudflare Worker (weather/AQI/subscriptions)
+│   ├── check_status.py     # PDF parser and status monitor
+│   ├── daily_snapshot_helper.py # Historical data management
+│   ├── get_token.py        # Cloudflare token utility
+│   ├── test_*.py          # Testing utilities
+│   ├── historical_status.csv # Real historical data
+│   ├── fake_historical_status.csv # Test data for development
+│   └── status.json        # Current beach status (backend copy)
+├── status.json            # Current beach status (main file)
+├── current_status.txt     # Simple status file
+└── wrangler.toml         # Cloudflare Worker configuration
 ```
 
-## 🔧 Configuration
+## 🎯 Wave Estimation Algorithm
 
-### Beach Monitoring
-- **Target Beach**: Configurable in `check_status.py`
-- **Check Frequency**: Set via cron/scheduler
-- **Notification Topics**: Customizable ntfy topics
+The wave estimation system is specifically calibrated for Lake Champlain's Appletree Bay:
 
-### Wave Estimation
-- **Fetch Distances**: Accurate measurements for each wind direction
-- **Wind Thresholds**: Conservative estimates based on real observations
-- **Geographic Model**: Specific to Appletree Bay/Lake Champlain
+### Fetch Distance Calculation
+- **West winds**: 8-mile fetch across Appletree Bay → larger waves
+- **East winds**: 0-mile fetch (blocked by land) → calm conditions  
+- **16 directions**: More accurate than basic N/S/E/W systems
 
-### API Endpoints
-- `GET /weather` - Current weather and forecast
-- `GET /aqi` - Air quality index
-- `GET /beaches` - All beach statuses (if implemented)
+### Conservative Estimates
+- **Light winds (< 8 mph)**: 0-1 ft waves regardless of fetch
+- **Moderate winds (8-18 mph)**: 1-2 ft with good fetch, 0-1 ft with limited fetch
+- **Strong winds (18+ mph)**: 2-4 ft maximum with full fetch across bay
+
+### Real-time Explanations
+Examples of wave prediction output:
+- "Moderate winds with good fetch across Appletree Bay (8 miles)"
+- "Strong winds but limited fetch - land blocks (0 miles)"
 
 ## 📊 Data Management
 
-### Historical Data
-- **CSV Storage**: `backend/historical_status.csv`
-- **Automatic Logging**: Status changes tracked with timestamps
-- **Visualization**: D3.js heatmap in overview app
-
-### Status File Format
+### Beach Status Format
 ```json
-{
-  "beaches": [
-    {
-      "beach_name": "Leddy Beach South",
-      "status": "green",
-      "last_updated": "Aug 2 2025 11:17AM",
-      "note": "Open",
-      "coordinates": {"lat": 44.501457, "lon": -73.252218}
-    }
-  ],
-  "last_checked": "2025-01-10T19:04:44Z"
-}
+[
+  {
+    "beach_name": "Leddy Beach South",
+    "status": "green",
+    "date": "Aug 27 2025 11:13AM", 
+    "note": "Open",
+    "coordinates": {"lat": 44.501457, "lon": -73.252218}
+  }
+]
 ```
 
-## 🎯 Wave Estimation Details
+### Historical Data
+- **CSV Format**: Timestamped records of all status changes
+- **Daily Snapshots**: Automatic logging for timeline visualization
+- **Backfill Capability**: Can generate historical data for testing
 
-### Algorithm Features
-- **Geographic Precision**: 16 wind directions vs basic 4
-- **Fetch Distance Calculation**: Real measurements across Appletree Bay
-- **Conservative Estimates**: Validated against real observations
-- **Dynamic Explanations**: Educational content with actual distances
+## 🔧 Configuration
 
-### Example Predictions
-- **West 15 mph**: "Moderate winds with good fetch across Appletree Bay (8 miles)" → 1-2 ft
-- **East 15 mph**: "Moderate winds but limited fetch - land blocks (0 miles)" → 0-1 ft
-- **Southwest 8 mph**: "Light winds with good fetch across bay (6 miles)" → 0-1 ft
+### Target Beach
+- **Display Name**: "Lakewood Beach" (user-facing)
+- **Data Source**: "Leddy Beach South" (closest official monitoring point)
+- **Distance**: 729.57 feet from Lakewood Beach
 
-## 🚨 Monitoring & Alerts
+### Monitoring Schedule
+- **PDF Checks**: Hourly via cron job
+- **Notifications**: Sent only when status changes
+- **Historical Logging**: Daily snapshots + change events
 
-### Notification System
-- **Email**: SMTP-based notifications for subscribers
-- **Push**: ntfy.sh integration for instant alerts
-- **Status Changes**: Automatic detection and notification
+## 🧪 Testing
 
-### Health Monitoring
-- **API Status**: Cloudflare Worker health
-- **Data Freshness**: PDF parsing success/failure
-- **Error Handling**: Graceful degradation when APIs fail
+```bash
+cd backend
 
-## 📱 Responsive Design
+# Test PDF parsing
+python check_status.py  # Includes built-in test
 
-- **Mobile-First**: Optimized for phone usage
-- **Progressive Enhancement**: Works on all device sizes
-- **Touch-Friendly**: Large interactive elements
-- **Fast Loading**: Minimal dependencies, optimized assets
+# Test API authentication
+python test_github_token.py
 
-## 🔐 Security & Privacy
+# Test notification system
+python test_notification.py
 
-- **No User Data Storage**: Minimal data collection
-- **CORS Headers**: Secure API access
-- **Environment Variables**: Sensitive data protected
-- **Rate Limiting**: Built-in Cloudflare protection
+# Run in test mode (notifications only to test email)
+TEST_MODE=true python check_status.py
+```
 
-## 📈 Performance
+## 📱 API Endpoints
 
-- **Global CDN**: Cloudflare Workers edge computing
-- **Caching**: Appropriate cache headers
-- **Minimal JS**: Lightweight vanilla JavaScript
-- **Progressive Loading**: Graceful loading states
+- `GET /weather` - Current weather and 3-hour forecast
+- `GET /air-quality` - Air quality index with AirNow data  
+- `POST /subscribe` - Add email to notification list
+- `GET /get-subscribers` - List subscribers (requires API token)
 
 ## 🤝 Contributing
 
-### Areas for Enhancement
-- [ ] Mobile app version
-- [ ] More sophisticated wave modeling
-- [ ] Historical trend analysis
-- [ ] Weather radar integration
-- [ ] Social features (user reports)
+### Known Limitations
+- PDF parsing depends on consistent Vermont ANR report format
+- Wave estimates are conservative and Lake Champlain-specific
+- Historical data starts from deployment date
 
-### Development Workflow
-1. Fork the repository
-2. Create a feature branch
-3. Test locally with `wrangler dev`
-4. Submit pull request
+### Enhancement Ideas
+- Mobile app version
+- Webcam integration
+- Water temperature data
+- Social reporting features
 
-## 📄 License
+## 🏆 Data Sources & Acknowledgments
 
-MIT License - see LICENSE file for details.
-
-## 🏆 Acknowledgments
-
-- **Vermont ANR**: Beach water quality data
-- **OpenWeatherMap**: Weather data API
-- **AirNow**: Air quality information
-- **D3.js**: Data visualization
+- **Vermont Agency of Natural Resources**: Official beach water quality reports
+- **OpenWeatherMap**: Weather data and forecasting
+- **AirNow**: Government air quality monitoring
+- **Cloudflare**: Edge computing and KV storage
+- **D3.js**: Data visualization library
 - **Leaflet**: Interactive mapping
-- **Cloudflare**: Edge computing platform
 
 ---
 
-*Built with ❤️ for the Burlington, VT community*
+*Built for the Burlington, VT community to make informed decisions about Lake Champlain beach safety.*
