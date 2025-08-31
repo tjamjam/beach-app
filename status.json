@@ -51,9 +51,9 @@
   },
   {
     "beach_name": "Texaco Beach",
-    "status": "green",
-    "date": "Aug 31 2025 10:42AM",
-    "note": "Open",
+    "status": "yellow",
+    "date": "Aug 31 2025 12:20PM",
+    "note": "Alert Category 2 BGA level",
     "coordinates": {
       "lat": 44.48869,
       "lon": -73.231108
@@ -62,7 +62,7 @@
   {
     "beach_name": "Blanchard Beach North",
     "status": "green",
-    "date": "Aug 30 2025 12:34PM",
+    "date": "Aug 31 2025 12:42PM",
     "note": "Open",
     "coordinates": {
       "lat": 44.457661,
@@ -72,7 +72,7 @@
   {
     "beach_name": "Blanchard Beach South",
     "status": "green",
-    "date": "Aug 30 2025 12:34PM",
+    "date": "Aug 31 2025 12:42PM",
     "note": "Open",
     "coordinates": {
       "lat": 44.45655,
@@ -82,7 +82,7 @@
   {
     "beach_name": "Oakledge Cove",
     "status": "green",
-    "date": "Aug 30 2025 12:35PM",
+    "date": "Aug 31 2025 12:45PM",
     "note": "Open",
     "coordinates": {
       "lat": 44.454203,
@@ -92,7 +92,7 @@
   {
     "beach_name": "Blodgett Water Access Point",
     "status": "green",
-    "date": "Aug 30 2025 1:01PM",
+    "date": "Aug 31 2025 12:35PM",
     "note": "Open",
     "coordinates": {
       "lat": 44.465701,
