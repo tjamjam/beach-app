@@ -32,7 +32,7 @@
   {
     "beach_name": "North Beach North",
     "status": "green",
-    "date": "Aug 31 2025 10:42AM",
+    "date": "Sep 1 2025 12:06PM",
     "note": "Open",
     "coordinates": {
       "lat": 44.492299,
@@ -42,7 +42,7 @@
   {
     "beach_name": "North Beach South",
     "status": "green",
-    "date": "Aug 31 2025 10:42AM",
+    "date": "Sep 1 2025 12:06PM",
     "note": "Open",
     "coordinates": {
       "lat": 44.491225,
@@ -62,7 +62,7 @@
   {
     "beach_name": "Blanchard Beach North",
     "status": "green",
-    "date": "Aug 31 2025 12:42PM",
+    "date": "Sep 1 2025 12:44PM",
     "note": "Open",
     "coordinates": {
       "lat": 44.457661,
@@ -72,7 +72,7 @@
   {
     "beach_name": "Blanchard Beach South",
     "status": "green",
-    "date": "Aug 31 2025 12:42PM",
+    "date": "Sep 1 2025 12:44PM",
     "note": "Open",
     "coordinates": {
       "lat": 44.45655,
@@ -81,9 +81,9 @@
   },
   {
     "beach_name": "Oakledge Cove",
-    "status": "green",
-    "date": "Aug 31 2025 12:45PM",
-    "note": "Open",
+    "status": "yellow",
+    "date": "Sep 1 2025 12:48PM",
+    "note": "Alert Category 2 BGA level",
     "coordinates": {
       "lat": 44.454203,
       "lon": -73.229385
@@ -91,9 +91,9 @@
   },
   {
     "beach_name": "Blodgett Water Access Point",
-    "status": "green",
-    "date": "Aug 31 2025 12:35PM",
-    "note": "Open",
+    "status": "yellow",
+    "date": "Sep 1 2025 12:32PM",
+    "note": "Alert Category 2 BGA level",
     "coordinates": {
       "lat": 44.465701,
       "lon": -73.219072
