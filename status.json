@@ -12,7 +12,7 @@
   {
     "beach_name": "Leddy Beach North",
     "status": "green",
-    "date": "Sep 1 2025 11:33AM",
+    "date": "Sep 2 2025 11:43AM",
     "note": "Open",
     "coordinates": {
       "lat": 44.502334,
@@ -21,9 +21,9 @@
   },
   {
     "beach_name": "Leddy Beach South",
-    "status": "yellow",
-    "date": "Sep 1 2025 11:34AM",
-    "note": "Alert Category 2 BGA level",
+    "status": "green",
+    "date": "Sep 2 2025 11:43AM",
+    "note": "Open",
     "coordinates": {
       "lat": 44.501457,
       "lon": -73.252218
@@ -31,9 +31,9 @@
   },
   {
     "beach_name": "North Beach North",
-    "status": "green",
-    "date": "Sep 1 2025 12:06PM",
-    "note": "Open",
+    "status": "red",
+    "date": "Sep 2 2025 11:43AM",
+    "note": "Closed Category 3 BGA level",
     "coordinates": {
       "lat": 44.492299,
       "lon": -73.241944
@@ -41,9 +41,9 @@
   },
   {
     "beach_name": "North Beach South",
-    "status": "green",
-    "date": "Sep 1 2025 12:06PM",
-    "note": "Open",
+    "status": "red",
+    "date": "Sep 2 2025 11:43AM",
+    "note": "Closed Category 3 BGA level",
     "coordinates": {
       "lat": 44.491225,
       "lon": -73.237259
@@ -51,9 +51,9 @@
   },
   {
     "beach_name": "Texaco Beach",
-    "status": "yellow",
-    "date": "Sep 1 2025 12:05PM",
-    "note": "Alert Category 2 BGA level",
+    "status": "red",
+    "date": "Sep 2 2025 11:52AM",
+    "note": "Closed Category 3 BGA level",
     "coordinates": {
       "lat": 44.48869,
       "lon": -73.231108
