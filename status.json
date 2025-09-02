@@ -61,9 +61,9 @@
   },
   {
     "beach_name": "Blanchard Beach North",
-    "status": "green",
-    "date": "Sep 1 2025 12:44PM",
-    "note": "Open",
+    "status": "yellow",
+    "date": "Sep 2 2025 2:01PM",
+    "note": "Alert Category 2 BGA level",
     "coordinates": {
       "lat": 44.457661,
       "lon": -73.224039
@@ -71,9 +71,9 @@
   },
   {
     "beach_name": "Blanchard Beach South",
-    "status": "green",
-    "date": "Sep 1 2025 12:44PM",
-    "note": "Open",
+    "status": "yellow",
+    "date": "Sep 2 2025 2:01PM",
+    "note": "Alert Category 2 BGA level",
     "coordinates": {
       "lat": 44.45655,
       "lon": -73.225007
