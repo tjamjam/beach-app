@@ -31,9 +31,9 @@
   },
   {
     "beach_name": "North Beach North",
-    "status": "red",
-    "date": "Sep 2 2025 11:43AM",
-    "note": "Closed Category 3 BGA level",
+    "status": "green",
+    "date": "Sep 3 2025 10:30AM",
+    "note": "Open",
     "coordinates": {
       "lat": 44.492299,
       "lon": -73.241944
@@ -41,9 +41,9 @@
   },
   {
     "beach_name": "North Beach South",
-    "status": "red",
-    "date": "Sep 2 2025 11:43AM",
-    "note": "Closed Category 3 BGA level",
+    "status": "green",
+    "date": "Sep 3 2025 10:30AM",
+    "note": "Open",
     "coordinates": {
       "lat": 44.491225,
       "lon": -73.237259
@@ -51,9 +51,9 @@
   },
   {
     "beach_name": "Texaco Beach",
-    "status": "red",
-    "date": "Sep 2 2025 11:52AM",
-    "note": "Closed Category 3 BGA level",
+    "status": "green",
+    "date": "Sep 3 2025 10:30AM",
+    "note": "Open",
     "coordinates": {
       "lat": 44.48869,
       "lon": -73.231108
